@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# stable-baselines3 が保存する学習済みモデル（再現できるので追跡しない）
+code/ppo_plain.zip
+code/ppo_goal.zip
+code/*.zip
+
+# 実行のたびに書き出される図（assets/ の版をリポジトリの正とする）
+code/trajectories.png
+
+# TensorBoard / ログ
+runs/
+logs/
+*.log
+
+# OS / エディタ
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

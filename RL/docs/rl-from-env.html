@@ -1,0 +1,1332 @@
+<title>環境から入る強化学習</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600&family=IBM+Plex+Sans:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+<style>
+:root {
+  --ground: #F4F6F8;
+  --surface: #FFFFFF;
+  --surface-2: #ECEFF3;
+  --ink: #171A21;
+  --ink-2: #4E5765;
+  --ink-3: #7B8493;
+  --rule: #DDE2E8;
+  --rule-strong: #C4CBD4;
+
+  --z: #A8621B;
+  --z-soft: #F3E6D6;
+
+  --g0: #C0392B;
+  --g1: #2471A3;
+  --g2: #1E8449;
+
+  --code-bg: #1C2028;
+  --code-ink: #DDE3EC;
+  --code-rule: #2E3542;
+  --code-chrome: #141821;
+  --tok-key: #E0A45C;
+  --tok-str: #93C48B;
+  --tok-num: #C99BD6;
+  --tok-com: #737F92;
+  --tok-fn: #7FB3DE;
+  --tok-cls: #E5C07B;
+
+  --shadow: 0 1px 2px rgba(16, 22, 32, .05), 0 8px 24px -12px rgba(16, 22, 32, .18);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #101319;
+    --surface: #171B22;
+    --surface-2: #1E232C;
+    --ink: #E7EBF1;
+    --ink-2: #A8B2C0;
+    --ink-3: #798393;
+    --rule: #272D37;
+    --rule-strong: #39414E;
+    --z: #E0A45C;
+    --z-soft: #33261A;
+    --g0: #E0705F;
+    --g1: #6BA6D6;
+    --g2: #5FB37F;
+    --code-bg: #0C0F15;
+    --code-chrome: #080A0F;
+    --code-rule: #232A35;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -12px rgba(0, 0, 0, .7);
+  }
+}
+
+:root[data-theme="dark"] {
+  --ground: #101319;
+  --surface: #171B22;
+  --surface-2: #1E232C;
+  --ink: #E7EBF1;
+  --ink-2: #A8B2C0;
+  --ink-3: #798393;
+  --rule: #272D37;
+  --rule-strong: #39414E;
+  --z: #E0A45C;
+  --z-soft: #33261A;
+  --g0: #E0705F;
+  --g1: #6BA6D6;
+  --g2: #5FB37F;
+  --code-bg: #0C0F15;
+  --code-chrome: #080A0F;
+  --code-rule: #232A35;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -12px rgba(0, 0, 0, .7);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: "IBM Plex Sans", system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
+  font-size: 16px;
+  line-height: 1.85;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  font-family: "Zilla Slab", Georgia, "Hiragino Mincho ProN", serif;
+  font-weight: 600;
+  line-height: 1.3;
+  text-wrap: balance;
+  margin: 0;
+}
+
+a { color: var(--z); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--z); outline-offset: 3px; border-radius: 3px; }
+code { font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; }
+
+.shell { display: grid; grid-template-columns: 1fr; max-width: 1180px; margin: 0 auto; padding: 0 20px 96px; }
+
+@media (min-width: 1060px) {
+  .shell { grid-template-columns: 200px minmax(0, 1fr); gap: 48px; padding-left: 32px; padding-right: 32px; }
+}
+
+.rail { display: none; }
+
+@media (min-width: 1060px) {
+  .rail { display: block; position: sticky; top: 0; align-self: start; padding-top: 108px; max-height: 100vh; overflow-y: auto; }
+}
+
+.rail-title { font-size: 11px; letter-spacing: .13em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 14px; font-weight: 600; }
+.rail ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+
+.rail a {
+  display: grid; grid-template-columns: 22px 1fr; align-items: baseline; gap: 8px;
+  padding: 5px 8px 5px 12px; font-size: 13.5px; line-height: 1.45;
+  color: var(--ink-2); text-decoration: none;
+  border-left: 2px solid var(--rule); transition: color .15s, border-color .15s;
+}
+
+.rail a:hover { color: var(--ink); border-left-color: var(--z); }
+.rail a .n { font-family: "JetBrains Mono", monospace; font-size: 11px; color: var(--ink-3); }
+
+.masthead { padding: 72px 0 0; }
+
+.eyebrow { font-family: "JetBrains Mono", monospace; font-size: 11.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--z); margin-bottom: 20px; }
+h1 { font-size: clamp(34px, 5.2vw, 50px); letter-spacing: -.015em; }
+.thesis { font-size: clamp(18px, 2.2vw, 21px); line-height: 1.65; color: var(--ink-2); max-width: 34em; margin: 20px 0 0; }
+.thesis strong { color: var(--ink); font-weight: 600; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 28px; }
+.chip { font-family: "JetBrains Mono", monospace; font-size: 12px; padding: 5px 11px; border: 1px solid var(--rule-strong); border-radius: 999px; color: var(--ink-2); background: var(--surface); white-space: nowrap; }
+
+figure { margin: 44px 0 0; }
+figure.diagram { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 28px 24px 20px; box-shadow: var(--shadow); }
+figure.diagram svg { display: block; width: 100%; height: auto; color: var(--ink-2); }
+figcaption { font-size: 14px; line-height: 1.7; color: var(--ink-2); margin-top: 16px; max-width: 62em; }
+
+section { padding-top: 64px; scroll-margin-top: 24px; }
+
+.ch-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; flex-wrap: wrap; }
+.ch-num { font-family: "JetBrains Mono", monospace; font-size: 12px; font-weight: 700; letter-spacing: .08em; color: var(--z); border: 1px solid var(--z); border-radius: 4px; padding: 2px 8px; white-space: nowrap; flex: none; }
+
+h2 { font-size: clamp(24px, 3.2vw, 30px); letter-spacing: -.01em; }
+h3 { font-size: 18px; margin: 40px 0 0; letter-spacing: -.005em; }
+p { margin: 18px 0 0; max-width: 66ch; }
+p.lead { color: var(--ink-2); }
+ul, ol.body { margin: 18px 0 0; padding-left: 20px; max-width: 66ch; }
+li { margin: 7px 0; }
+li::marker { color: var(--ink-3); }
+strong { font-weight: 600; }
+
+.inline-code { font-family: "JetBrains Mono", monospace; font-size: .875em; background: var(--surface-2); border: 1px solid var(--rule); border-radius: 4px; padding: 1px 5px; white-space: nowrap; }
+
+/* the line of reach_env.py each chapter explains */
+.pin {
+  margin: 0 0 4px;
+  padding: 12px 16px;
+  background: var(--z-soft);
+  border-left: 3px solid var(--z);
+  border-radius: 0 5px 5px 0;
+  max-width: 66ch;
+  overflow-x: auto;
+}
+
+.pin .pin-label { display: block; font-family: "JetBrains Mono", monospace; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--z); font-weight: 700; margin-bottom: 5px; }
+.pin code { font-size: 13px; color: var(--ink); white-space: pre; display: block; line-height: 1.7; }
+
+.formula { display: flex; flex-direction: column; margin: 28px 0 0; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; background: var(--surface); max-width: 66ch; }
+.formula-row { display: grid; grid-template-columns: minmax(0, auto) minmax(0, 1fr); gap: 8px 28px; align-items: baseline; padding: 18px 22px; }
+.formula-row + .formula-row { border-top: 1px solid var(--rule); }
+.formula-row.is-z { background: var(--z-soft); }
+.formula-math { font-family: "JetBrains Mono", monospace; font-size: 16px; font-weight: 700; white-space: nowrap; color: var(--ink); }
+.formula-math .zed { color: var(--z); }
+.formula-note { font-size: 14.5px; line-height: 1.6; color: var(--ink-2); }
+
+@media (max-width: 560px) { .formula-row { grid-template-columns: 1fr; } }
+
+.code { margin: 26px 0 0; border-radius: 7px; overflow: hidden; background: var(--code-bg); border: 1px solid var(--code-rule); box-shadow: var(--shadow); }
+@media (min-width: 1060px) { .code { margin-right: -60px; } }
+
+.code-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 12px 9px 16px; background: var(--code-chrome); border-bottom: 1px solid var(--code-rule); }
+.code-name { font-family: "JetBrains Mono", monospace; font-size: 12.5px; color: #9AA6B8; }
+.code-name .dot { color: var(--tok-key); margin-right: 8px; }
+
+.copy { font-family: "JetBrains Mono", monospace; font-size: 11.5px; letter-spacing: .04em; color: #9AA6B8; background: transparent; border: 1px solid #313947; border-radius: 4px; padding: 4px 10px; cursor: pointer; transition: color .15s, border-color .15s, background .15s; white-space: nowrap; }
+.copy:hover { color: #E6EBF3; border-color: #4A5567; background: #1A1F29; }
+.copy[data-done="1"] { color: var(--tok-str); border-color: var(--tok-str); }
+
+.code pre { margin: 0; padding: 18px 20px 20px; overflow-x: auto; font-family: "JetBrains Mono", monospace; font-size: 13px; line-height: 1.72; color: var(--code-ink); tab-size: 4; }
+.code pre code { font-family: inherit; background: none; padding: 0; }
+
+.code.is-out { background: var(--surface); border-color: var(--rule); }
+.code.is-out .code-bar { background: var(--surface-2); border-bottom-color: var(--rule); }
+.code.is-out .code-name, .code.is-out .code-name .dot { color: var(--ink-3); }
+.code.is-out pre { color: var(--ink-2); font-size: 12.5px; }
+.code.is-out .copy { color: var(--ink-3); border-color: var(--rule-strong); }
+.code.is-out .copy:hover { color: var(--ink); border-color: var(--ink-3); background: var(--surface-2); }
+
+.hljs-keyword, .hljs-built_in, .hljs-literal { color: var(--tok-key); }
+.hljs-string, .hljs-meta .hljs-string { color: var(--tok-str); }
+.hljs-number { color: var(--tok-num); }
+.hljs-comment, .hljs-quote { color: var(--tok-com); font-style: italic; }
+.hljs-title, .hljs-title.function_ { color: var(--tok-fn); }
+.hljs-title.class_, .hljs-type { color: var(--tok-cls); }
+.hljs-params, .hljs-attr, .hljs-variable, .hljs-subst { color: var(--code-ink); }
+.hljs-meta { color: var(--tok-com); }
+
+.note { margin: 26px 0 0; padding: 18px 22px; background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--z); border-radius: 0 6px 6px 0; max-width: 66ch; }
+.note p { margin: 0; max-width: none; }
+.note p + p { margin-top: 12px; }
+.note-label { display: block; font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: .13em; text-transform: uppercase; color: var(--z); margin-bottom: 8px; font-weight: 700; }
+
+.tbl { margin: 28px 0 0; border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); overflow-x: auto; max-width: 66ch; }
+.tbl.wide { max-width: none; }
+@media (min-width: 1060px) { .tbl.wide { margin-right: -60px; } }
+
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+th, td { padding: 11px 18px; text-align: left; border-bottom: 1px solid var(--rule); vertical-align: top; }
+tbody tr:last-child td { border-bottom: 0; }
+thead th { font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); font-weight: 700; white-space: nowrap; }
+td.mono { font-family: "JetBrains Mono", monospace; font-size: 12.5px; white-space: nowrap; color: var(--ink); }
+td.ch { font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--z); white-space: nowrap; }
+
+.takeaway { margin-top: 28px; padding: 30px 32px; background: var(--surface); border: 1px solid var(--rule-strong); border-radius: 8px; box-shadow: var(--shadow); }
+.takeaway h3 { margin-top: 0; }
+.takeaway ol { margin: 18px 0 0; padding-left: 22px; max-width: 62ch; }
+.takeaway ol li { margin: 9px 0; }
+.takeaway ol li::marker { font-family: "JetBrains Mono", monospace; font-size: 13px; color: var(--z); }
+
+footer { margin-top: 72px; padding-top: 24px; border-top: 1px solid var(--rule); font-size: 13.5px; color: var(--ink-3); max-width: 66ch; }
+footer p { max-width: none; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="shell">
+
+<nav class="rail" aria-label="目次">
+  <div class="rail-title">Contents</div>
+  <ol>
+    <li><a href="#intro"><span class="n">序</span><span>書くのは環境のほう</span></a></li>
+    <li><a href="#ch1"><span class="n">01</span><span>ループ</span></a></li>
+    <li><a href="#notation"><span class="n">&#167;</span><span>式の読み方</span></a></li>
+    <li><a href="#ch2"><span class="n">02</span><span>観測とマルコフ性</span></a></li>
+    <li><a href="#ch3"><span class="n">03</span><span>空間を宣言する</span></a></li>
+    <li><a href="#ch4"><span class="n">04</span><span>報酬</span></a></li>
+    <li><a href="#ch5"><span class="n">05</span><span>リターンと割引</span></a></li>
+    <li><a href="#ch6"><span class="n">06</span><span>価値</span></a></li>
+    <li><a href="#ch7"><span class="n">07</span><span>終了と打ち切り</span></a></li>
+    <li><a href="#reread"><span class="n">終</span><span>もう一度読む</span></a></li>
+    <li><a href="#glossary"><span class="n">§</span><span>用語の対応表</span></a></li>
+  </ol>
+</nav>
+
+<main>
+
+<header class="masthead">
+  <div class="eyebrow">Reinforcement Learning / 環境側から</div>
+  <h1>環境から入る強化学習</h1>
+  <p class="thesis">強化学習で自分が書くのは、たいてい<strong>環境のほう</strong>です。<span class="inline-code">reach_env.py</span> の各行が、なぜそう書かれているのかを1つずつ埋めていきます。</p>
+  <div class="chips">
+    <span class="chip">全7章</span>
+    <span class="chip">写経コード 7本</span>
+    <span class="chip">数式は最小限</span>
+    <span class="chip">学習は回しません</span>
+  </div>
+</header>
+
+<section id="intro">
+  <div class="ch-head"><span class="ch-num">序</span></div>
+  <h2>書くのは環境のほう</h2>
+  <p class="lead">PPO のアルゴリズム本体は、たいてい既製品（stable-baselines3 など）を使います。自分が手で書くのは、その相手側 ——<strong>環境</strong>です。だから強化学習を理解するとは、まず<strong>この2者がやりとりする約束事を理解すること</strong>だと言い換えられます。</p>
+
+  <figure class="diagram">
+    <svg viewBox="0 0 700 290" role="img" aria-label="方策と環境が行動・観測・報酬・終了フラグをやりとりするループ。環境の側がreach_env.pyで書く部分。">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"></path>
+        </marker>
+        <marker id="ahz" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#A8621B"></path>
+        </marker>
+      </defs>
+
+      <rect x="60" y="80" width="190" height="92" rx="6" fill="none" stroke="currentColor" stroke-width="1.5"></rect>
+      <text x="155" y="118" text-anchor="middle" font-family="Zilla Slab, Georgia, serif" font-size="19" fill="currentColor">方策 &#960;</text>
+      <text x="155" y="143" text-anchor="middle" font-size="12" fill="currentColor" opacity="0.75">PPO が学習する側</text>
+      <text x="155" y="196" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="currentColor" opacity="0.6">既製品を使う</text>
+
+      <rect x="450" y="80" width="190" height="92" rx="6" fill="none" stroke="#A8621B" stroke-width="2"></rect>
+      <text x="545" y="118" text-anchor="middle" font-family="Zilla Slab, Georgia, serif" font-size="19" fill="#A8621B">環境</text>
+      <text x="545" y="143" text-anchor="middle" font-size="12" fill="#A8621B" opacity="0.85">世界の側</text>
+      <text x="545" y="196" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#A8621B">reach_env.py</text>
+
+      <line x1="252" y1="106" x2="446" y2="106" stroke="currentColor" stroke-width="1.5" marker-end="url(#ah)"></line>
+      <text x="349" y="96" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12.5" fill="currentColor">行動 a</text>
+
+      <line x1="448" y1="146" x2="254" y2="146" stroke="#A8621B" stroke-width="1.5" marker-end="url(#ahz)"></line>
+      <text x="349" y="166" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#A8621B">観測 s&#8242; ／ 報酬 r</text>
+      <text x="349" y="184" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#A8621B">terminated ／ truncated</text>
+
+      <line x1="545" y1="60" x2="545" y2="76" stroke="currentColor" stroke-width="1.5" marker-end="url(#ah)" opacity="0.5"></line>
+      <text x="545" y="48" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="currentColor" opacity="0.7">reset() でエピソード開始</text>
+
+      <line x1="60" y1="240" x2="640" y2="240" stroke="currentColor" stroke-width="1" opacity="0.25"></line>
+      <text x="60" y="266" font-size="12.5" fill="currentColor" opacity="0.7">この往復を1ステップと数え、終了か打ち切りまで繰り返した一続きを1エピソードと呼ぶ</text>
+    </svg>
+    <figcaption>強化学習のループ。左から右へ流れるのは行動ひとつ、右から左へ戻るのは観測・報酬・2種類の終了フラグ。オレンジの側が自分で書く部分で、この本はそこだけを扱う。</figcaption>
+  </figure>
+
+  <p>この図に出てくるものが、そのまま <span class="inline-code">reach_env.py</span> の各パーツに対応します。以降の7章は、それぞれ<strong>ファイルの特定の行を出発点にして</strong>、その行がなぜそう書かれているのかを埋めていきます。</p>
+
+  <div class="note">
+    <span class="note-label">この本の読み方</span>
+    <p>各章の頭に、その章が説明する <span class="inline-code">reach_env.py</span> の行を置いてあります。まずその行を見て、「なぜこう書くのか」が言えるか自分に聞いてみてください。言えなければ、その章が埋める場所です。</p>
+    <p>写経コードは <span class="inline-code">reach_env.py</span> と同じディレクトリに置いて実行します。<strong>学習は一度も回しません</strong>ので、どれも数秒で終わります（第6章だけ、学習済みモデルがあれば読み込みます）。</p>
+  </div>
+</section>
+
+<section id="ch1">
+  <div class="ch-head"><span class="ch-num">第 1 章</span></div>
+  <h2>ループ ── reset と step</h2>
+
+  <div class="pin">
+    <span class="pin-label">この章が説明する行</span>
+    <code>def reset(self, *, seed=None, options=None):
+def step(self, action):</code>
+  </div>
+
+  <p class="lead">強化学習の環境は、たった2つのメソッドで世界を表現します。<span class="inline-code">reset()</span> が「最初の観測」を出し、<span class="inline-code">step(action)</span> が「行動を受け取って世界を1つ進める」。この2つが全部です。</p>
+
+  <p><span class="inline-code">step()</span> は5つの値を返します。名前を覚えるより、<strong>それぞれが誰への手紙か</strong>で覚えるほうが早いはずです。</p>
+
+  <div class="tbl">
+    <table>
+      <thead><tr><th>返り値</th><th>誰への手紙か</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">observation</td><td>方策へ。「次にこれを見て決めてください」</td></tr>
+        <tr><td class="mono">reward</td><td>学習アルゴリズムへ。「いまの一手はこれくらいの値打ちでした」</td></tr>
+        <tr><td class="mono">terminated</td><td>学習アルゴリズムへ。「この先はもうありません」</td></tr>
+        <tr><td class="mono">truncated</td><td>学習アルゴリズムへ。「こちらの都合で切りました。先はまだあります」</td></tr>
+        <tr><td class="mono">info</td><td>人間へ。学習には使われない、デバッグ用の置き場</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><span class="inline-code">terminated</span> と <span class="inline-code">truncated</span> の違いは第7章まで持ち越します。ここでは「2つある」とだけ頭に置いてください。</p>
+
+  <h3>写経 ── ループを手で回す</h3>
+  <p>学習は使いません。でたらめな行動を投げて、環境が何を返すかだけを見ます。</p>
+
+  <div class="code">
+    <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>ch1_loop.py</span><button class="copy" type="button">コピー</button></div>
+<pre><code class="language-python">"""第1章: エージェントと環境のループを手で回す。
+
+学習は一切しない。でたらめな行動を投げて、環境が何を返すかだけを見る。
+"""
+
+from reach_env import ReachEnv
+
+env = ReachEnv(goal_conditioned=True, max_steps=10)
+env.action_space.seed(0)  # でたらめさも再現できるように種を固定
+obs, info = env.reset(seed=0, options={"goal_id": 0})
+print(f"reset が返した観測: {obs}")
+print()
+
+total = 0.0
+for t in range(10):
+    action = env.action_space.sample()  # でたらめな方策
+    obs, reward, terminated, truncated, info = env.step(action)
+    total += reward
+    print(
+        f"t={t}  行動 [{action[0]:+.2f} {action[1]:+.2f}]"
+        f"  報酬 {reward:+.3f}  累計 {total:+.3f}"
+        f"  terminated={terminated} truncated={truncated}"
+    )
+
+print()
+print(f"このエピソードのリターン（割引なし）= {total:+.3f}")</code></pre>
+  </div>
+
+  <div class="code is-out">
+    <div class="code-bar"><span class="code-name"><span class="dot">&gt;</span>出力</span><button class="copy" type="button">コピー</button></div>
+<pre><code>reset が返した観測: [0. 0. 1. 0. 0.]
+
+t=0  行動 [+0.27 -0.46]  報酬 -0.714  累計 -0.714  terminated=False truncated=False
+t=1  行動 [-0.92 -0.97]  報酬 -0.672  累計 -1.386  terminated=False truncated=False
+t=2  行動 [+0.63 +0.83]  報酬 -0.700  累計 -2.085  terminated=False truncated=False
+...
+t=9  行動 [-0.40 -0.15]  報酬 -0.826  累計 -7.521  terminated=False truncated=True
+
+このエピソードのリターン（割引なし）= -7.521</code></pre>
+  </div>
+
+  <p>最後の行だけ <span class="inline-code">truncated=True</span> になっています。<span class="inline-code">max_steps=10</span> に達したからです。<strong>目標に着いたから終わったのではなく、こちらが時間で切った</strong>。この区別が第7章の話になります。</p>
+</section>
+
+<section id="notation">
+  <div class="ch-head"><span class="ch-num">&#167;</span></div>
+  <h2>式の読み方</h2>
+
+  <div class="pin">
+    <span class="pin-label">この節が説明する記号</span>
+    <code>P(s&#8242; | s, a)    R(s, a)    &#960;(a | s)    V^&#960;(s) = E[G | s, &#960;]</code>
+  </div>
+
+  <p class="lead">次の章から式が出てきます。といっても覚えることは多くありません。<strong>縦棒の右を「入力」、左を「出力」と読む</strong>——この一手で、この本に出てくる式は全部読めます。順に組み立てます。</p>
+
+  <h3>1. 記号は6つだけ</h3>
+
+  <p>まず登場人物です。すべて第1章の <span class="inline-code">step()</span> でもう見たものに、名前がついただけです。</p>
+
+  <div class="tbl wide">
+    <table>
+      <thead>
+        <tr><th>記号</th><th>読み</th><th>意味</th><th><span class="inline-code">reach_env.py</span> での正体</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="mono">s</td><td>エス</td><td>いま方策に見えているもの（観測・状態）</td><td class="mono">_get_obs() の戻り値</td></tr>
+        <tr><td class="mono">a</td><td>エー</td><td>方策が出す指令（行動）</td><td class="mono">step(action) の引数</td></tr>
+        <tr><td class="mono">s&#8242;</td><td>エス ダッシュ</td><td>1ステップ後の観測。<strong>&#8242; は「次の」の意味</strong>で、微分ではない</td><td class="mono">step() の戻り値 1つ目</td></tr>
+        <tr><td class="mono">r</td><td>アール</td><td>そのステップで貰った点数（報酬）</td><td class="mono">step() の戻り値 2つ目</td></tr>
+        <tr><td class="mono">&#947;</td><td>ガンマ</td><td>先の報酬をどれだけ軽く見るか（割引率、第5章）</td><td class="mono">PPO の gamma</td></tr>
+        <tr><td class="mono">&#960;</td><td>パイ</td><td>観測から行動を決めるもの（方策）</td><td class="mono">model</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>大文字と小文字も区別があります。<span class="inline-code">R</span> は「報酬を決める規則」、<span class="inline-code">r</span> は「実際に返ってきた数値」。同じく <span class="inline-code">G</span> は1本走らせた実績で、<span class="inline-code">V</span> はその平均の見積もりです（第5章・第6章）。<strong>大文字は規則や見積もり、小文字は実際に出た数</strong>と思っておくとほぼ合います。</p>
+
+  <h3>2. 縦棒 <span class="inline-code">|</span> は「〜のとき」</h3>
+
+  <p><span class="inline-code">P(A | B)</span> は「<strong>B が与えられたとき、A が起きる確率</strong>」と読みます。条件付き確率という名前がついていますが、読み方はこの1つだけです。</p>
+
+  <figure class="diagram">
+    <svg viewBox="0 0 700 214" role="img" aria-label="P(s′ | s, a) の各部分の説明。縦棒の左のs′が知りたいことで関数の返り値、右のsとaが与えられているもので関数の引数にあたる。">
+      <text x="344" y="22" text-anchor="middle" font-size="12.5" fill="currentColor" opacity="0.8">&#12300;&#12316;のとき&#12301;と読む</text>
+      <line x1="344" y1="30" x2="344" y2="44" stroke="currentColor" stroke-width="1" opacity="0.45"></line>
+
+      <text x="193" y="68" font-family="JetBrains Mono, monospace" font-size="30" fill="currentColor">P(</text>
+      <text x="245" y="68" font-family="JetBrains Mono, monospace" font-size="30" fill="var(--z)">s&#8242;</text>
+      <text x="335" y="68" font-family="JetBrains Mono, monospace" font-size="30" fill="currentColor" opacity="0.55">|</text>
+      <text x="395" y="68" font-family="JetBrains Mono, monospace" font-size="30" fill="currentColor">s, a</text>
+      <text x="489" y="68" font-family="JetBrains Mono, monospace" font-size="30" fill="currentColor">)</text>
+
+      <path d="M 241 80 L 241 92 L 285 92 L 285 80" fill="none" stroke="var(--z)" stroke-width="1.2"></path>
+      <line x1="263" y1="92" x2="263" y2="116" stroke="var(--z)" stroke-width="1.2"></line>
+      <text x="263" y="136" text-anchor="middle" font-size="13.5" fill="var(--z)">知りたいこと</text>
+      <text x="263" y="155" text-anchor="middle" font-size="12" fill="currentColor" opacity="0.7">＝ 関数の返り値</text>
+
+      <path d="M 391 80 L 391 92 L 471 92 L 471 80" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.7"></path>
+      <line x1="431" y1="92" x2="431" y2="116" stroke="currentColor" stroke-width="1.2" opacity="0.7"></line>
+      <text x="431" y="136" text-anchor="middle" font-size="13.5" fill="currentColor">与えられているもの</text>
+      <text x="431" y="155" text-anchor="middle" font-size="12" fill="currentColor" opacity="0.7">＝ 関数の引数</text>
+
+      <line x1="60" y1="178" x2="640" y2="178" stroke="currentColor" stroke-width="1" opacity="0.18"></line>
+      <text x="60" y="200" font-size="13.5" fill="currentColor">読み下すと ──「観測が s のときに行動 a をとったら、次の観測が s&#8242; になる確率」</text>
+    </svg>
+    <figcaption>縦棒の右が前提、左が知りたいこと。日本語にすると右から左へ読むことになる。この向きさえ間違えなければ、式は関数のシグネチャとして読める。</figcaption>
+  </figure>
+
+  <h3>3. 関数のシグネチャに直す</h3>
+
+  <p>ここが一番効く読み替えです。<strong>縦棒の右は引数、左は返り値</strong>。そう思って Python に直すと、式はすべて<strong>もう書いたコードそのもの</strong>になります。</p>
+
+  <div class="tbl wide">
+    <table>
+      <thead>
+        <tr><th>式</th><th>読み下し</th><th>Python でいうと</th><th>誰が書くか</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="mono">&#960;(a | s)</td>
+          <td>観測 s のとき、行動 a を選ぶ確率</td>
+          <td class="mono">action = model.predict(obs)</td>
+          <td>PPO（学習する）</td>
+        </tr>
+        <tr>
+          <td class="mono">P(s&#8242; | s, a)</td>
+          <td>観測 s で行動 a をしたとき、次が s&#8242; になる確率</td>
+          <td class="mono">obs2, ... = env.step(a) の obs2</td>
+          <td><strong>自分（環境）</strong></td>
+        </tr>
+        <tr>
+          <td class="mono">R(s, a)</td>
+          <td>観測 s で行動 a をしたときに返す報酬</td>
+          <td class="mono">..., reward, ... = env.step(a)</td>
+          <td><strong>自分（環境）</strong></td>
+        </tr>
+        <tr>
+          <td class="mono">V<sup>&#960;</sup>(s)</td>
+          <td>観測 s から方策 &#960; で動いたときの、リターンの平均</td>
+          <td class="mono">第6章で実際に数える</td>
+          <td>PPO（推定する）</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>4つとも <span class="inline-code">step()</span> と <span class="inline-code">predict()</span> の言い換えです。<strong>どの式が自分の担当かは、縦棒の左を見れば分かります</strong>。左が <span class="inline-code">s&#8242;</span> や報酬なら世界の話（＝自分が書く環境）、左が <span class="inline-code">a</span> なら方策の話（＝PPO の担当）です。<span class="inline-code">P</span> と <span class="inline-code">&#960;</span> はここで区別します。</p>
+
+  <div class="note">
+    <span class="note-label">なぜ「確率」で書くのか</span>
+    <p>同じ <span class="inline-code">s</span> で同じ <span class="inline-code">a</span> をしても結果がばらつく環境があるからです（風が吹く、相手が動く、センサに雑音が乗る）。ばらつくなら行き先は1点では書けないので、分布——つまり確率で書くしかありません。</p>
+    <p>この本の環境の遷移は <span class="inline-code">pos + 0.05 * a</span> で<strong>決定的</strong>です。行き先の確率は 1。ですから <span class="inline-code">P(s&#8242; | s, a)</span> は<strong>普通の関数だと思って読んで構いません</strong>。それでも確率の形で書いておくのは、ばらつく環境も同じ式で扱えるようにするためです。</p>
+  </div>
+
+  <h3>4. 式を読む3手順</h3>
+
+  <p>式に出くわしたら、意味を思い出すのではなく、この3つを機械的にやります。</p>
+
+  <div class="takeaway">
+    <ol>
+      <li><strong>縦棒の右を全部書き出す。</strong>これが「与えられているもの」の全部で、ここに無い情報は使えない。</li>
+      <li><strong>右側を固定したとき、左側が1つに決まるか自問する。</strong>同じ右側で左側が揺れないか。</li>
+      <li><strong>決まらないなら、右側に足りないものがある。</strong>足すか、諦めるか、履歴を持たせるかの3択になる。</li>
+    </ol>
+  </div>
+
+  <p>この手順をこの環境でやると、そのまま次の章になります。<span class="inline-code">R(s, a)</span> の右側は <span class="inline-code">s</span> と <span class="inline-code">a</span> だけ。ところが <span class="inline-code">s = [x, y]</span> にすると、報酬 <span class="inline-code">-dist</span> は今回の目標次第で変わるので、<strong>手順2で「決まらない」になります</strong>。だから <span class="inline-code">goal_id</span> を <span class="inline-code">s</span> に入れる——それが第2章の <span class="inline-code">goal_conditioned</span> です。</p>
+
+  <h3>5. <span class="inline-code">E[&hellip;]</span> は「平均」</h3>
+
+  <p>第6章に <span class="inline-code">V<sup>&#960;</sup>(s) = E[G | s, &#960;]</span> が出てきます。<span class="inline-code">E</span> は expectation（期待値）、つまり<strong>ばらつくものの平均</strong>です。手順どおりに読むと「<span class="inline-code">s</span> から <span class="inline-code">&#960;</span> で動く、という前提を与えたときの、リターン <span class="inline-code">G</span> の平均」。第6章では実際に何本も走らせて平均を取り、この式の定義どおりに数えます。<strong>式が定義で、写経がその実行</strong>という関係になっています。</p>
+
+  <div class="note">
+    <span class="note-label">よくある詰まり</span>
+    <p><span class="inline-code">s&#8242;</span> の <strong>&#8242; は微分ではありません</strong>。「次の <span class="inline-code">s</span>」というだけの印です。</p>
+    <p><span class="inline-code">P</span> と <span class="inline-code">&#960;</span> は役割が逆です。<span class="inline-code">P</span> は世界の振る舞い（環境が決める）、<span class="inline-code">&#960;</span> は方策の振る舞い（学習が決める）。縦棒の左で見分けます。</p>
+    <p>添字つきの <span class="inline-code">r&#8320;, r&#8321;, r&#8322;</span> は「0手目の報酬、1手目の報酬、&hellip;」。時刻を表しているだけです（第5章）。</p>
+  </div>
+</section>
+
+<section id="ch2">
+  <div class="ch-head"><span class="ch-num">第 2 章</span></div>
+  <h2>観測とマルコフ性</h2>
+
+  <div class="pin">
+    <span class="pin-label">この章が説明する行</span>
+    <code>def _get_obs(self) -&gt; np.ndarray:
+    if not self.goal_conditioned:
+        return self.pos.copy()
+    z = np.zeros(N_GOALS, dtype=np.float32)
+    z[self.goal_id] = 1.0
+    return np.concatenate([self.pos, z]).astype(np.float32)</code>
+  </div>
+
+  <p class="lead">環境を書くとき、いちばん設計判断が要るのが「<strong>何を見せるか</strong>」です。持っている情報を全部渡す必要はありませんが、足りないと解けなくなります。その境目を決めるのが<strong>マルコフ性</strong>という条件で、この章の <span class="inline-code">goal_conditioned</span> は、その境目をまたぐスイッチです。</p>
+
+  <h3>goal_conditioned は何のスイッチか</h3>
+
+  <p>この環境には的が3つあります（左・右・上）。そして<strong>エピソードごとに、そのうち1つだけが「今回の目標」</strong>になります。目標は <span class="inline-code">reset()</span> がランダムに選び、<span class="inline-code">self.goal_id</span> として環境の中に持っています。報酬も、その的との距離で決まります。</p>
+
+  <p>つまり<strong>環境は目標を知っています</strong>。<span class="inline-code">goal_conditioned</span> が決めるのは、その知っている目標を<strong>方策にも見せるかどうか</strong>、それだけです。学習アルゴリズムの設定でも、報酬の設定でもありません。</p>
+
+  <div class="tbl">
+    <table>
+      <thead>
+        <tr><th>環境の中身</th><th>goal_conditioned = False</th><th>goal_conditioned = True</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>方策に渡す観測</td><td class="mono">[x, y]</td><td class="mono">[x, y, z0, z1, z2]</td></tr>
+        <tr><td>観測の次元</td><td class="mono">2</td><td class="mono">5</td></tr>
+        <tr><td>目標 <span class="inline-code">goal_id</span></td><td>環境の中にはあるが、<strong>見せない</strong></td><td>one-hot の <span class="inline-code">z</span> にして<strong>見せる</strong></td></tr>
+        <tr><td>的の位置・動き方</td><td>同じ</td><td>同じ</td></tr>
+        <tr><td>報酬の式</td><td>同じ（<span class="inline-code">goal_id</span> を使う）</td><td>同じ（<span class="inline-code">goal_id</span> を使う）</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>変わるのは <span class="inline-code">_get_obs()</span> の戻り値だけです。世界の側は1ミリも変わっていません。<strong>方策に開けてある窓の大きさ</strong>だけが変わります。</p>
+
+  <h3>なぜ「見せない」と解けなくなるのか</h3>
+
+  <p>理由はひとつだけです。<strong>方策は「観測を受け取って行動を返す関数」</strong>だから。関数なので、<strong>入力が同じなら出力も同じ</strong>になります。</p>
+
+  <figure class="diagram">
+    <svg viewBox="0 0 700 396" role="img" aria-label="goal_conditioned=False では3つの目標が同じ観測になり方策は同じ行動しか出せない。True では観測が3通りに分かれ、方策が的ごとに打ち分けられる。">
+      <defs>
+        <marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"></path>
+        </marker>
+        <marker id="ah2z" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--z)"></path>
+        </marker>
+      </defs>
+
+      <text x="0" y="14" font-family="JetBrains Mono, monospace" font-size="12.5" font-weight="700" fill="currentColor">goal_conditioned = False ── 目標を見せない</text>
+
+      <text x="0" y="52" font-size="12" fill="currentColor" opacity="0.7">今回の目標</text>
+      <text x="185" y="52" font-size="12" fill="currentColor" opacity="0.7">方策が受け取る観測</text>
+
+      <text x="0" y="80" font-size="13" fill="currentColor">目標 = 左</text>
+      <text x="0" y="112" font-size="13" fill="currentColor">目標 = 右</text>
+      <text x="0" y="144" font-size="13" fill="currentColor">目標 = 上</text>
+
+      <rect x="185" y="63" width="104" height="24" rx="4" fill="none" stroke="currentColor" stroke-width="1" opacity="0.55"></rect>
+      <rect x="185" y="95" width="104" height="24" rx="4" fill="none" stroke="currentColor" stroke-width="1" opacity="0.55"></rect>
+      <rect x="185" y="127" width="104" height="24" rx="4" fill="none" stroke="currentColor" stroke-width="1" opacity="0.55"></rect>
+      <text x="237" y="80" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12.5" fill="currentColor">[0. 0.]</text>
+      <text x="237" y="112" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12.5" fill="currentColor">[0. 0.]</text>
+      <text x="237" y="144" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12.5" fill="currentColor">[0. 0.]</text>
+
+      <line x1="70" y1="75" x2="179" y2="75" stroke="currentColor" stroke-width="1" opacity="0.4" marker-end="url(#ah2)"></line>
+      <line x1="70" y1="107" x2="179" y2="107" stroke="currentColor" stroke-width="1" opacity="0.4" marker-end="url(#ah2)"></line>
+      <line x1="70" y1="139" x2="179" y2="139" stroke="currentColor" stroke-width="1" opacity="0.4" marker-end="url(#ah2)"></line>
+
+      <path d="M 295 75 L 340 75 L 340 107 L 384 107" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"></path>
+      <path d="M 295 139 L 340 139 L 340 107 L 384 107" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"></path>
+      <line x1="295" y1="107" x2="384" y2="107" stroke="currentColor" stroke-width="1" opacity="0.5" marker-end="url(#ah2)"></line>
+      <text x="340" y="168" text-anchor="middle" font-size="11.5" fill="currentColor" opacity="0.75">3つとも同じ入力</text>
+
+      <rect x="390" y="83" width="74" height="48" rx="5" fill="none" stroke="currentColor" stroke-width="1.5"></rect>
+      <text x="427" y="113" text-anchor="middle" font-family="Zilla Slab, Georgia, serif" font-size="17" fill="currentColor">方策 &#960;</text>
+
+      <line x1="466" y1="107" x2="510" y2="107" stroke="currentColor" stroke-width="1" opacity="0.5" marker-end="url(#ah2)"></line>
+      <text x="518" y="100" font-size="13" fill="currentColor">出せる行動は1通り</text>
+      <text x="518" y="120" font-size="12.5" fill="currentColor" opacity="0.75">＝3つの的の平均あたりへ</text>
+      <text x="518" y="140" font-size="12.5" fill="currentColor" opacity="0.75">どの的にも届かない</text>
+
+      <line x1="0" y1="196" x2="700" y2="196" stroke="currentColor" stroke-width="1" opacity="0.2"></line>
+
+      <text x="0" y="234" font-family="JetBrains Mono, monospace" font-size="12.5" font-weight="700" fill="var(--z)">goal_conditioned = True ── 観測に z を足す</text>
+
+      <text x="0" y="272" font-size="12" fill="currentColor" opacity="0.7">今回の目標</text>
+      <text x="185" y="272" font-size="12" fill="currentColor" opacity="0.7">方策が受け取る観測</text>
+
+      <text x="0" y="300" font-size="13" fill="currentColor">目標 = 左</text>
+      <text x="0" y="332" font-size="13" fill="currentColor">目標 = 右</text>
+      <text x="0" y="364" font-size="13" fill="currentColor">目標 = 上</text>
+
+      <rect x="185" y="283" width="104" height="24" rx="4" fill="var(--z-soft)" stroke="var(--z)" stroke-width="1"></rect>
+      <rect x="185" y="315" width="104" height="24" rx="4" fill="var(--z-soft)" stroke="var(--z)" stroke-width="1"></rect>
+      <rect x="185" y="347" width="104" height="24" rx="4" fill="var(--z-soft)" stroke="var(--z)" stroke-width="1"></rect>
+      <text x="237" y="300" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="var(--z)">[0. 0. 1. 0. 0.]</text>
+      <text x="237" y="332" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="var(--z)">[0. 0. 0. 1. 0.]</text>
+      <text x="237" y="364" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="var(--z)">[0. 0. 0. 0. 1.]</text>
+
+      <line x1="70" y1="295" x2="179" y2="295" stroke="currentColor" stroke-width="1" opacity="0.4" marker-end="url(#ah2)"></line>
+      <line x1="70" y1="327" x2="179" y2="327" stroke="currentColor" stroke-width="1" opacity="0.4" marker-end="url(#ah2)"></line>
+      <line x1="70" y1="359" x2="179" y2="359" stroke="currentColor" stroke-width="1" opacity="0.4" marker-end="url(#ah2)"></line>
+
+      <path d="M 295 295 L 340 295 L 340 327 L 384 327" fill="none" stroke="var(--z)" stroke-width="1" opacity="0.75"></path>
+      <path d="M 295 359 L 340 359 L 340 327 L 384 327" fill="none" stroke="var(--z)" stroke-width="1" opacity="0.75"></path>
+      <line x1="295" y1="327" x2="384" y2="327" stroke="var(--z)" stroke-width="1" opacity="0.75" marker-end="url(#ah2z)"></line>
+      <text x="340" y="388" text-anchor="middle" font-size="11.5" fill="var(--z)">入力が3通りに分かれる</text>
+
+      <rect x="390" y="303" width="74" height="48" rx="5" fill="none" stroke="currentColor" stroke-width="1.5"></rect>
+      <text x="427" y="333" text-anchor="middle" font-family="Zilla Slab, Georgia, serif" font-size="17" fill="currentColor">方策 &#960;</text>
+
+      <line x1="466" y1="327" x2="500" y2="327" stroke="var(--z)" stroke-width="1" opacity="0.75"></line>
+      <path d="M 500 327 L 500 296 L 526 296" fill="none" stroke="var(--z)" stroke-width="1" opacity="0.75" marker-end="url(#ah2z)"></path>
+      <path d="M 500 327 L 526 327" fill="none" stroke="var(--z)" stroke-width="1" opacity="0.75" marker-end="url(#ah2z)"></path>
+      <path d="M 500 327 L 500 358 L 526 358" fill="none" stroke="var(--z)" stroke-width="1" opacity="0.75" marker-end="url(#ah2z)"></path>
+      <text x="536" y="301" font-size="13" fill="currentColor">左へ動く</text>
+      <text x="536" y="332" font-size="13" fill="currentColor">右へ動く</text>
+      <text x="536" y="363" font-size="13" fill="currentColor">上へ動く</text>
+    </svg>
+    <figcaption>同じ方策（同じ重み）でも、受け取る観測が分かれていれば行動を打ち分けられる。分かれていなければ、どれだけ学習しても1通りしか出せない。</figcaption>
+  </figure>
+
+  <p>エピソードの最初、位置はいつも原点です。だから <span class="inline-code">goal_conditioned=False</span> では、目標が左でも右でも上でも観測は <span class="inline-code">[0. 0.]</span>。方策から見ると3つは<strong>区別のつかない同じ場面</strong>なので、同じ行動しか返せません。「左へ」を覚えれば右と上で損をし、「右へ」を覚えれば左と上で損をする。損がいちばん小さいのは<strong>3つの的の平均あたりへ行く</strong>ことで、結果としてどの的にも届きません。</p>
+
+  <p><strong>これは学習が下手なせいではありません。</strong>学習時間を10倍にしても、もっと強いアルゴリズムに替えても変わりません。同じ入力に別々の出力を返す関数は存在しない、というだけの話だからです。</p>
+
+  <p>観測に <span class="inline-code">z</span> を足すと、3つの場面は別々の入力になります。入力が違えば出力を変えられる。<strong>1つのネットワークが3つの打ち分けを覚えられるようになる</strong>——変えたのは環境の引数1つだけです。</p>
+
+  <h3>マルコフ性 ── 足りているかどうかの基準</h3>
+
+  <p>「観測が足りている」を厳密に言ったものが<strong>マルコフ性</strong>です。条件は2行しかありません（記号の読み方は <a href="#notation">§ 式の読み方</a>。<span class="inline-code">|</span> の右が「与えられているもの」、左が「知りたいこと」です）。</p>
+
+  <div class="formula">
+    <div class="formula-row">
+      <div class="formula-math">P(s&#8242; | s, a)</div>
+      <div class="formula-note"><strong>次に何が起きるかが、いまの観測と行動だけで決まる。</strong>過去の履歴を持ち出さなくていい</div>
+    </div>
+    <div class="formula-row is-z">
+      <div class="formula-math">R(s, a)</div>
+      <div class="formula-note"><strong>もらえる報酬も、いまの観測と行動だけで決まる。</strong>観測に映っていない事情で報酬が変わってはいけない</div>
+    </div>
+  </div>
+
+  <p>この2行のどちらかが崩れていると、方策は原理的に正しく判断できません。写経で、崩れている様子を目で見ます。</p>
+
+  <div class="note">
+    <span class="note-label">この環境で崩れているのは下の行</span>
+    <p>位置の更新は <span class="inline-code">pos + 0.05 * a</span> で、<span class="inline-code">goal_id</span> とは無関係です。つまり<strong>1行目（遷移）は <span class="inline-code">[x, y]</span> だけでも成り立っています</strong>。崩れるのは2行目で、報酬 <span class="inline-code">-dist</span> が観測に映っていない <span class="inline-code">goal_id</span> に依存しているからです。</p>
+    <p>結果として、<strong>まったく同じ観測・同じ行動に、エピソードごとに違う報酬がつきます</strong>。この状態を「マルコフでない」と呼びます。「良い状態とは何か」が定まらないので、第6章の価値もここで一緒に壊れます。</p>
+  </div>
+
+  <h3>写経 ── 観測が状況を区別できるか調べる</h3>
+
+  <div class="code">
+    <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>ch2_markov.py</span><button class="copy" type="button">コピー</button></div>
+<pre><code class="language-python">"""第2章: その観測だけで行動を決められるか（マルコフ性）を確かめる。
+
+同じ状況で観測が一致してしまうなら、観測だけでは正しい行動を選べない。
+"""
+
+import numpy as np
+
+from reach_env import ReachEnv
+
+for goal_conditioned in (False, True):
+    env = ReachEnv(goal_conditioned=goal_conditioned)
+    print(f"--- goal_conditioned={goal_conditioned} ---")
+
+    seen = []
+    for goal_id, name in enumerate(["左", "右", "上"]):
+        obs, _ = env.reset(seed=0, options={"goal_id": goal_id})
+        seen.append(obs.copy())
+        print(f"  目標={name}  reset 直後の観測: {obs}")
+
+    same = all(np.array_equal(seen[0], o) for o in seen)
+    print(f"  3つとも同じ観測か: {same}")
+    print("  →", "区別できない（マルコフでない）" if same else "区別できる（マルコフ）")
+    print()</code></pre>
+  </div>
+
+  <div class="code is-out">
+    <div class="code-bar"><span class="code-name"><span class="dot">&gt;</span>出力</span><button class="copy" type="button">コピー</button></div>
+<pre><code>--- goal_conditioned=False ---
+  目標=左  reset 直後の観測: [0. 0.]
+  目標=右  reset 直後の観測: [0. 0.]
+  目標=上  reset 直後の観測: [0. 0.]
+  3つとも同じ観測か: True
+  → 区別できない（マルコフでない）
+
+--- goal_conditioned=True ---
+  目標=左  reset 直後の観測: [0. 0. 1. 0. 0.]
+  目標=右  reset 直後の観測: [0. 0. 0. 1. 0.]
+  目標=上  reset 直後の観測: [0. 0. 0. 0. 1.]
+  3つとも同じ観測か: False
+  → 区別できる（マルコフ）</code></pre>
+  </div>
+
+  <p>やっていることは単純で、<strong>違う状況を並べて、観測が一致しないかを見る</strong>だけです。自分の環境でも同じことができます。「本来なら別々の行動をとるべき2つの場面」を用意して、観測を print して見比べてください。</p>
+
+  <h3>よくある勘違い</h3>
+
+  <div class="tbl wide">
+    <table>
+      <thead>
+        <tr><th>思いがちなこと</th><th>実際</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="inline-code">goal_conditioned</span> は学習アルゴリズムのオプション</td>
+          <td>環境が<strong>観測に何を入れるか</strong>のスイッチ。PPO 側のコードは <span class="inline-code">step1_plain.py</span> と <span class="inline-code">step2_goal.py</span> でまったく同じ</td>
+        </tr>
+        <tr>
+          <td><span class="inline-code">z</span> を渡すのは答えを教えるズル</td>
+          <td>教えているのは「<strong>どれを狙うか</strong>」であって「どう動くか」ではない。動き方は学習が自分で見つける</td>
+        </tr>
+        <tr>
+          <td>見せなくても、学習を長く回せばいつかは解ける</td>
+          <td>解けない。同じ入力に別々の出力を返す関数は作れないので、原理的に不可能</td>
+        </tr>
+        <tr>
+          <td><span class="inline-code">z</span> は的の座標</td>
+          <td>ここでは3つのうちどれかを表す one-hot。座標を渡す設計もありうる。<strong>何を渡すかは設計判断</strong>（第3章）</td>
+        </tr>
+        <tr>
+          <td>観測は多いほど良い</td>
+          <td>足りないと解けないが、要らない次元は学習を遅くする。基準は「<strong>その観測だけで正しい行動が決まるか</strong>」</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note">
+    <span class="note-label">ここが効く</span>
+    <p>目標が3つあるのに観測が <span class="inline-code">[0. 0.]</span> しかないなら、方策は3つの状況を区別できません。<strong>学習が下手なのではなく、渡している情報が足りていない。</strong></p>
+    <p>環境がうまく学習しないとき、真っ先に疑うのはここです。報酬をいじる前に、「<strong>その観測だけで、人間なら正しい行動を選べるか</strong>」を確かめてください。選べないなら、方策にも選べません。</p>
+  </div>
+
+  <p>ちなみに「観測が足りない問題」には名前があります。<strong>部分観測マルコフ決定過程（POMDP）</strong>です。対処は2つしかありません。<strong>足りない情報を観測に足す</strong>か、<strong>過去の履歴を持たせる</strong>（LSTM やフレーム重ねなど）か。目標ベクトル <span class="inline-code">z</span> は前者の一例です。</p>
+</section>
+
+<section id="ch3">
+  <div class="ch-head"><span class="ch-num">第 3 章</span></div>
+  <h2>空間を宣言する</h2>
+
+  <div class="pin">
+    <span class="pin-label">この章が説明する行</span>
+    <code>self.action_space = spaces.Box(-1.0, 1.0, shape=(2,), dtype=np.float32)
+self.observation_space = spaces.Box(-np.inf, np.inf, shape=(obs_dim,), ...)</code>
+  </div>
+
+  <p class="lead">この2行は、環境が外部に対して出す<strong>型の宣言</strong>です。「行動として何を受け付けるか」「観測として何を返すか」を先に約束しておく。学習アルゴリズムはこれを読んで、ネットワークの入力層と出力層のかたちを決めます。</p>
+
+  <p>だから <span class="inline-code">MlpPolicy</span> と書くだけで動くわけです。入力を5次元にするか2次元にするかを、あなたが指定した覚えがないのは、<span class="inline-code">observation_space</span> がそれを伝えているからです。</p>
+
+  <ul>
+    <li><span class="inline-code">Box</span> ── 連続値。ロボットのトルクや速度指令</li>
+    <li><span class="inline-code">Discrete(n)</span> ── 離散値。上下左右のような選択肢</li>
+    <li>ほかに <span class="inline-code">MultiDiscrete</span>、<span class="inline-code">Dict</span> などもあります</li>
+  </ul>
+
+  <h3>写経 ── 空間の中身を覗く</h3>
+
+  <div class="code">
+    <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>ch3_space.py</span><button class="copy" type="button">コピー</button></div>
+<pre><code class="language-python">"""第3章: 行動空間と観測空間の中身を覗く。"""
+
+import numpy as np
+
+from reach_env import ReachEnv
+
+env = ReachEnv(goal_conditioned=True)
+env.action_space.seed(0)
+
+print("action_space      :", env.action_space)
+print("  low  / high     :", env.action_space.low, "/", env.action_space.high)
+print("  sample()        :", env.action_space.sample())
+print()
+print("observation_space :", env.observation_space)
+print("  shape           :", env.observation_space.shape)
+print()
+
+print("宣言した範囲の外を投げるとどうなるか")
+for a in ([10.0, 0.0], [1.0, 0.0]):
+    env.reset(seed=0, options={"goal_id": 1})
+    env.step(np.array(a, dtype=np.float32))
+    print(f"  行動 {a} → 位置 {env.pos}")
+print("→ step() の中で clip しているので同じ結果になる。宣言は約束であって、強制ではない。")</code></pre>
+  </div>
+
+  <div class="code is-out">
+    <div class="code-bar"><span class="code-name"><span class="dot">&gt;</span>出力</span><button class="copy" type="button">コピー</button></div>
+<pre><code>action_space      : Box(-1.0, 1.0, (2,), float32)
+  low  / high     : [-1. -1.] / [1. 1.]
+  sample()        : [ 0.27392337 -0.46042657]
+
+observation_space : Box(-inf, inf, (5,), float32)
+  shape           : (5,)
+
+宣言した範囲の外を投げるとどうなるか
+  行動 [10.0, 0.0] → 位置 [0.05 0.  ]
+  行動 [1.0, 0.0] → 位置 [0.05 0.  ]</code></pre>
+  </div>
+
+  <p>最後の実験が要点です。<strong>宣言は約束であって、強制ではありません。</strong>範囲外の行動を投げても Gymnasium は止めてくれない。だから <span class="inline-code">step()</span> の1行目で自分で <span class="inline-code">np.clip</span> しています。環境を書く側の責任です。</p>
+</section>
+
+<section id="ch4">
+  <div class="ch-head"><span class="ch-num">第 4 章</span></div>
+  <h2>報酬 ── 何をしてほしいかだけを書く</h2>
+
+  <div class="pin">
+    <span class="pin-label">この章が説明する行</span>
+    <code>dist = float(np.linalg.norm(self.pos - TARGETS[self.goal_id]))
+reward = -dist  # 目標に近いほど高い</code>
+  </div>
+
+  <p class="lead">報酬はスカラー1個です。ベクトルでも辞書でもなく、数字がひとつ。ここに書けるのは「<strong>何をしてほしいか</strong>」だけで、「<strong>どうやってほしいか</strong>」は書けません。やり方のほうは学習が見つけます。</p>
+
+  <p>設計上の分かれ道は、密か疎かです。</p>
+
+  <div class="tbl">
+    <table>
+      <thead><tr><th>種類</th><th>書き方</th><th>性質</th></tr></thead>
+      <tbody>
+        <tr><td>密（dense）</td><td class="mono">-dist</td><td>毎ステップ手がかりが返る。学習は速いが、設計者の想定が濃く入る</td></tr>
+        <tr><td>疎（sparse）</td><td class="mono">到達で +1</td><td>やってほしいことだけを正直に書ける。ただし当たるまで何も返らない</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>写経 ── どれだけ手がかりが返るか測る</h3>
+
+  <div class="code">
+    <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>ch4_reward.py</span><button class="copy" type="button">コピー</button></div>
+<pre><code class="language-python">"""第4章: 密な報酬とまばらな報酬で、返ってくる手がかりの量を比べる。
+
+でたらめな方策で100エピソード回し、報酬がどれだけ情報を持つかを見る。
+"""
+
+import numpy as np
+
+from reach_env import ReachEnv
+
+N_EPISODES = 100
+
+
+def run(kind: str) -> np.ndarray:
+    env = ReachEnv(goal_conditioned=True)
+    env.action_space.seed(0)
+    totals = []
+    for ep in range(N_EPISODES):
+        env.reset(seed=ep)
+        total = 0.0
+        for _ in range(env.max_steps):
+            _, r, term, trunc, info = env.step(env.action_space.sample())
+            if kind == "dense":
+                total += r  # -距離 をそのまま
+            else:
+                total += 1.0 if info["dist"] < 0.1 else 0.0  # 触れたら +1
+            if term or trunc:
+                break
+        totals.append(total)
+    return np.array(totals)
+
+
+dense = run("dense")
+sparse = run("sparse")
+
+print(f"{'':10} {'平均':>10} {'標準偏差':>10} {'ゼロでない回':>14}")
+print("-" * 48)
+print(f"{'密な報酬':10} {dense.mean():>10.2f} {dense.std():>10.2f}"
+      f" {np.count_nonzero(dense):>10} /{N_EPISODES}")
+print(f"{'疎な報酬':10} {sparse.mean():>10.2f} {sparse.std():>10.2f}"
+      f" {np.count_nonzero(sparse):>10} /{N_EPISODES}")
+print()
+print("疎な報酬では、でたらめに動いている限りほとんど何も返ってこない。")
+print("学習の前に「そもそも手がかりがあるか」を確かめるのが報酬設計。")</code></pre>
+  </div>
+
+  <div class="code is-out">
+    <div class="code-bar"><span class="code-name"><span class="dot">&gt;</span>出力</span><button class="copy" type="button">コピー</button></div>
+<pre><code>                   平均       標準偏差         ゼロでない回
+------------------------------------------------
+密な報酬           -42.71       6.90        100 /100
+疎な報酬             0.00       0.00          0 /100</code></pre>
+  </div>
+
+  <p><strong>疎な報酬では100エピソード中0回。</strong>でたらめに動いている限り、的に触れることが一度もありません。報酬が全部ゼロなら、方策を良くする手がかりもゼロです。</p>
+  <p>これが<strong>スパース報酬問題</strong>です。対処には、密な報酬に作り替える（reward shaping）、お手本を見せる（模倣学習）、失敗を目標として読み替える（HER）などがあります。<span class="inline-code">-dist</span> と書いたのは、この問題を最初から避けるための選択でした。</p>
+</section>
+
+<section id="ch5">
+  <div class="ch-head"><span class="ch-num">第 5 章</span></div>
+  <h2>リターンと割引</h2>
+
+  <div class="pin">
+    <span class="pin-label">この章が説明する行</span>
+    <code># reach_env.py には書かれていない。PPO 側の gamma がこれを決める</code>
+  </div>
+
+  <p class="lead">報酬は一手ぶんの点数です。方策が最大化したいのは一手ではなく、<strong>これから貰う報酬の合計</strong>。これを<strong>リターン</strong>と呼びます。</p>
+
+  <p>式の記号は <a href="#notation">§ 式の読み方</a> のとおりです。<span class="inline-code">r&#8320;</span> は0手目の報酬、<span class="inline-code">r&#8321;</span> は1手目の報酬、添字は時刻を表します。</p>
+
+  <div class="formula">
+    <div class="formula-row is-z">
+      <div class="formula-math">G = r&#8320; + &#947;r&#8321; + &#947;&#178;r&#8322; + &hellip;</div>
+      <div class="formula-note">いま貰う報酬はそのまま、1手先は &#947; 倍、2手先は &#947;&#178; 倍。<strong>先の報酬ほど割り引く</strong></div>
+    </div>
+  </div>
+
+  <p>&#947;（ガンマ）は 0 以上 1 以下の数で、<strong>どれだけ先まで気にするか</strong>のつまみです。0 なら次の一手しか見ない近視眼。1 に近いほど遠い将来まで勘定に入れます。</p>
+
+  <p>なぜ割り引くのか。理由は2つあります。<strong>終わらないエピソードでも合計が発散しないため</strong>と、<strong>遠い先の予測ほど当てにならないため</strong>。実務では 0.99 が既定値としてよく使われます。</p>
+
+  <h3>写経 ── gamma で判断が変わる瞬間を見る</h3>
+
+  <div class="code">
+    <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>ch5_return.py</span><button class="copy" type="button">コピー</button></div>
+<pre><code class="language-python">"""第5章: リターンと割引率 gamma。
+
+同じ報酬の並びでも、gamma を変えると「どちらが得か」の判断が変わる。
+"""
+
+NOW = [1.0] + [0.0] * 9        # いますぐ +1
+LATER = [0.0] * 9 + [10.0]     # 9手待って +10
+
+
+def discounted_return(rewards, gamma: float) -> float:
+    """G = r0 + γr1 + γ²r2 + ... を後ろから畳んで計算する。"""
+    g = 0.0
+    for r in reversed(rewards):
+        g = r + gamma * g
+    return g
+
+
+print(f"{'gamma':>6} | {'いますぐ+1':>12} | {'9手後に+10':>12} | 選ぶのは")
+print("-" * 50)
+for gamma in (0.0, 0.5, 0.9, 0.95, 0.99, 1.0):
+    a = discounted_return(NOW, gamma)
+    b = discounted_return(LATER, gamma)
+    print(f"{gamma:>6.2f} | {a:>12.4f} | {b:>12.4f} | {'いますぐ' if a > b else 'あとで'}")
+
+print()
+print("gamma は「どれだけ先まで気にするか」を決めるつまみ。")
+print("0 なら次の一手だけ、1 に近いほど遠い将来まで勘定に入れる。")</code></pre>
+  </div>
+
+  <div class="code is-out">
+    <div class="code-bar"><span class="code-name"><span class="dot">&gt;</span>出力</span><button class="copy" type="button">コピー</button></div>
+<pre><code> gamma |       いますぐ+1 |      9手後に+10 | 選ぶのは
+--------------------------------------------------
+  0.00 |       1.0000 |       0.0000 | いますぐ
+  0.50 |       1.0000 |       0.0195 | いますぐ
+  0.90 |       1.0000 |       3.8742 | あとで
+  0.95 |       1.0000 |       6.3025 | あとで
+  0.99 |       1.0000 |       9.1352 | あとで
+  1.00 |       1.0000 |      10.0000 | あとで</code></pre>
+  </div>
+
+  <p>&#947; = 0.5 と 0.9 の間で判断が裏返っています。<strong>報酬の設計を変えていないのに、gamma だけで方策の狙いが変わる。</strong>gamma は「学習の速さのつまみ」ではなく、<strong>解く問題そのものを変えるパラメータ</strong>だと分かります。</p>
+
+  <p>実装では <span class="inline-code">reversed()</span> で後ろから畳んでいます。素直に &#947;<sup>t</sup> を毎回計算するより速く、数値的にも安定します。この畳み方は、このあと価値の計算でも同じ形で出てきます。</p>
+</section>
+
+<section id="ch6">
+  <div class="ch-head"><span class="ch-num">第 6 章</span></div>
+  <h2>価値 ── 状態に点数をつける</h2>
+
+  <div class="pin">
+    <span class="pin-label">この章が説明する行</span>
+    <code># これも reach_env.py にはない。PPO が内部で推定している量</code>
+  </div>
+
+  <p class="lead">リターンは1回走ってみないと分かりません。走る前に「この状態から始めたら、だいたいどれくらい貰えるか」を見積もりたい。それが<strong>価値</strong>です。</p>
+
+  <div class="formula">
+    <div class="formula-row is-z">
+      <div class="formula-math">V<sup>&#960;</sup>(s) = E[G | s, &#960;]</div>
+      <div class="formula-note">状態 s から方策 &#960; で動いたときの、<strong>リターンの期待値</strong></div>
+    </div>
+  </div>
+
+  <p>読み方は <a href="#notation">§ 式の読み方</a> の手順どおりです。<span class="inline-code">E</span> は期待値＝<strong>ばらつくものの平均</strong>、縦棒の右の <span class="inline-code">s, &#960;</span> が「与えられているもの」。つまり「s から &#960; で動く、という前提でのリターンの平均」と読みます。</p>
+
+  <p>ここで見落としやすいのが、右肩の <strong>&#960;</strong> です。<strong>価値は状態だけでは決まりません。</strong>「どの方策で動くか」とセットで初めて決まる量です。同じ状態でも、下手な方策なら価値は低く、上手な方策なら高い。</p>
+
+  <h3>写経 ── 定義どおりに数える</h3>
+  <p>期待値なので、たくさん試して平均を取れば出ます。これを<strong>モンテカルロ推定</strong>と呼びます。</p>
+
+  <div class="code">
+    <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>ch6_value.py</span><button class="copy" type="button">コピー</button></div>
+<pre><code class="language-python">"""第6章: 価値を定義どおりに見積もる。
+
+V(s) = その状態から先に貰えるリターンの期待値。
+定義そのままに、たくさん試して平均を取る（モンテカルロ推定）。
+
+ppo_goal.zip があれば、学習済み方策の価値とも比べる。
+"""
+
+import numpy as np
+
+from reach_env import ReachEnv
+
+GAMMA = 0.99
+N_EPISODES = 300
+NAMES = ["左", "右", "上"]
+
+
+def discounted_return(rewards) -> float:
+    g = 0.0
+    for r in reversed(rewards):
+        g = r + GAMMA * g
+    return g
+
+
+def estimate_value(policy, goal_id: int) -> tuple:
+    """原点から始めたときのリターンを N 回集めて平均する。"""
+    env = ReachEnv(goal_conditioned=True)
+    env.action_space.seed(0)
+    returns = []
+    for ep in range(N_EPISODES):
+        obs, _ = env.reset(seed=ep, options={"goal_id": goal_id})
+        rewards = []
+        for _ in range(env.max_steps):
+            obs, r, term, trunc, _ = env.step(policy(obs, env))
+            rewards.append(r)
+            if term or trunc:
+                break
+        returns.append(discounted_return(rewards))
+    xs = np.array(returns)
+    return xs.mean(), xs.std() / np.sqrt(len(xs))
+
+
+def random_policy(obs, env):
+    return env.action_space.sample()
+
+
+print(f"V(原点) のモンテカルロ推定   gamma={GAMMA}, {N_EPISODES}エピソード")
+print()
+print(f"{'':14} {'でたらめな方策':>16} {'学習済み方策':>16}")
+print("-" * 50)
+
+trained = None
+try:
+    from stable_baselines3 import PPO
+
+    model = PPO.load("ppo_goal")
+
+    def trained_policy(obs, env):
+        action, _ = model.predict(obs, deterministic=True)
+        return action
+
+    trained = trained_policy
+except Exception:
+    pass
+
+for goal_id, name in enumerate(NAMES):
+    m, se = estimate_value(random_policy, goal_id)
+    left = f"{m:+.1f} ± {se:.1f}"
+    if trained is None:
+        right = "（ppo_goal.zip なし）"
+    else:
+        tm, tse = estimate_value(trained, goal_id)
+        right = f"{tm:+.1f} ± {tse:.1f}"
+    print(f"{'z = ' + name:14} {left:>16} {right:>16}")
+
+print()
+print("同じ状態でも方策が変われば価値が変わる。")
+print("価値は「状態の性質」ではなく「その方策で動いたときの見込み」。")
+print()
+print("3つの z で値がほぼ同じなのは、3つの的が原点から等距離だから。")
+print("目標の位置を非対称にすれば、z ごとに価値が割れる。")</code></pre>
+  </div>
+
+  <div class="code is-out">
+    <div class="code-bar"><span class="code-name"><span class="dot">&gt;</span>出力</span><button class="copy" type="button">コピー</button></div>
+<pre><code>V(原点) のモンテカルロ推定   gamma=0.99, 300エピソード
+
+                        でたらめな方策           学習済み方策
+--------------------------------------------------
+z = 左               -32.5 ± 0.3       -4.5 ± 0.0
+z = 右               -32.3 ± 0.3       -4.5 ± 0.0
+z = 上               -32.4 ± 0.3       -4.5 ± 0.0</code></pre>
+  </div>
+
+  <p>まったく同じ原点なのに、価値が <strong>-32 と -4.5</strong> に分かれました。状態は1つ、違うのは方策だけです。<strong>価値は状態の性質ではなく、その方策で動いたときの見込み</strong>だということが、この2列に出ています。</p>
+
+  <p>3つの z でほぼ同じ値になっているのは、3つの的が原点から等距離だからです。的の位置を非対称にすれば、z ごとに価値が割れます。</p>
+
+  <div class="note">
+    <span class="note-label">PPO が実際にやっていること</span>
+    <p>PPO はこの価値を毎回300回走って測ったりはしません。<strong>ニューラルネットにこの値を予測させます</strong>（value function、critic）。そして「実際に貰ったリターン」と「予測した価値」の差を使って、方策を押す向きを決めます。この差が<strong>アドバンテージ</strong>です。</p>
+    <p>つまりアドバンテージとは「<strong>予想より良かったか、悪かったか</strong>」。予想より良かった行動の確率を上げ、悪かった行動の確率を下げる。それが方策の更新です。</p>
+  </div>
+</section>
+
+<section id="ch7">
+  <div class="ch-head"><span class="ch-num">第 7 章</span></div>
+  <h2>終了と打ち切りを分ける理由</h2>
+
+  <div class="pin">
+    <span class="pin-label">この章が説明する行</span>
+    <code>terminated = False
+truncated = self.t &gt;= self.max_steps</code>
+  </div>
+
+  <p class="lead">環境を書く人がいちばん間違えるのがここです。<strong>「終わった」には2種類あって、学習の扱いが違います。</strong></p>
+
+  <div class="tbl">
+    <table>
+      <thead><tr><th></th><th>意味</th><th>例</th><th>この先の価値</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">terminated</td><td>世界の側の理由で本当に終わった</td><td>ゴール到達、転倒、失格</td><td><strong>ゼロ</strong></td></tr>
+        <tr><td class="mono">truncated</td><td>こちらの都合で切っただけ</td><td>時間切れ、<span class="inline-code">max_steps</span></td><td><strong>まだある</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>第6章のアドバンテージを思い出してください。学習は「いま貰った報酬 + この先の見込み」を目標にします。この<strong>「この先」をゼロにするかどうか</strong>が、2つの違いです。</p>
+
+  <h3>写経 ── 取り違えるとどれだけずれるか</h3>
+
+  <div class="code">
+    <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>ch7_bootstrap.py</span><button class="copy" type="button">コピー</button></div>
+<pre><code class="language-python">"""第7章: terminated と truncated を取り違えると何がずれるか。
+
+価値の更新では「いま貰った報酬 + この先の見込み」を目標にする。
+本当に終わった(terminated)なら、この先はゼロ。
+時間切れ(truncated)なら、この先はまだ続いている。ゼロにしてはいけない。
+"""
+
+GAMMA = 0.99
+REWARD = -0.5      # 打ち切り時点で貰った報酬
+V_NEXT = -50.0     # 打ち切った先の状態の価値（この先も -0.5 が続く見込み）
+
+correct = REWARD + GAMMA * V_NEXT   # truncated: 先を足す
+wrong = REWARD + GAMMA * 0.0        # terminated 扱い: 先をゼロにする
+
+print("打ち切った1ステップの学習目標")
+print(f"  truncated として扱う（正しい）: {correct:+8.3f}")
+print(f"  terminated として扱う（誤り） : {wrong:+8.3f}")
+print(f"  ずれ                          : {correct - wrong:+8.3f}")
+print()
+print("誤ると「時間切れの直前はやけに良い状態だ」と学習してしまう。")
+print("max_steps による打ち切りは truncated であって terminated ではない。")
+print("だから step() は2つを別の値として返す。")</code></pre>
+  </div>
+
+  <div class="code is-out">
+    <div class="code-bar"><span class="code-name"><span class="dot">&gt;</span>出力</span><button class="copy" type="button">コピー</button></div>
+<pre><code>打ち切った1ステップの学習目標
+  truncated として扱う（正しい）:  -50.000
+  terminated として扱う（誤り） :   -0.500
+  ずれ                          :  -49.500</code></pre>
+  </div>
+
+  <div class="note">
+    <span class="note-label">症状で覚える</span>
+    <p>取り違えると、方策は「<strong>時間切れの直前がやけに良い状態だ</strong>」と学習します。ペナルティが続く環境なら、エージェントは終盤で妙に消極的になったり、逆に打ち切りを待つような動きをしたりする。</p>
+    <p>学習曲線は伸びているのに挙動が変、というときの定番の原因です。<span class="inline-code">max_steps</span> による打ち切りは <span class="inline-code">truncated</span> であって <span class="inline-code">terminated</span> ではありません。</p>
+  </div>
+
+  <p>この <span class="inline-code">reach_env.py</span> では <span class="inline-code">terminated</span> は常に <span class="inline-code">False</span> です。到達しても終わらせず、必ず60ステップ走らせている。<strong>「近づいて、そこに留まる」まで含めて評価したい</strong>からです。到達したら即終了にすると、通り過ぎるだけの方策も高得点になってしまいます。</p>
+</section>
+
+<section id="reread">
+  <div class="ch-head"><span class="ch-num">終章</span></div>
+  <h2>もう一度 reach_env.py を読む</h2>
+  <p class="lead">ここまでの7章が、ファイルのどの行に対応していたかの一覧です。写経しながら「いま何の話を書いているか」を確かめるのに使ってください。</p>
+
+  <div class="tbl wide">
+    <table>
+      <thead><tr><th>コード</th><th>何の話か</th><th>章</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">spaces.Box(-1.0, 1.0, shape=(2,))</td><td>行動として何を受け付けるかの宣言。範囲は約束であって強制ではない</td><td class="ch">3</td></tr>
+        <tr><td class="mono">obs_dim = 2 + (N_GOALS if ...)</td><td>観測の次元。学習側の入力層のかたちがここで決まる</td><td class="ch">3</td></tr>
+        <tr><td class="mono">z[self.goal_id] = 1.0</td><td>状況を区別できる観測にするための情報。これがないとマルコフでない</td><td class="ch">2</td></tr>
+        <tr><td class="mono">def reset(...)</td><td>エピソードの開始。最初の観測を出す</td><td class="ch">1</td></tr>
+        <tr><td class="mono">self.pos = np.zeros(2)</td><td>初期状態。毎回同じか、散らすかは設計判断</td><td class="ch">1</td></tr>
+        <tr><td class="mono">np.clip(action, -1.0, 1.0)</td><td>宣言した範囲を自分で守らせる。環境側の責任</td><td class="ch">3</td></tr>
+        <tr><td class="mono">reward = -dist</td><td>何をしてほしいかだけを書く。密にしてスパース報酬問題を避けた</td><td class="ch">4</td></tr>
+        <tr><td class="mono">terminated = False</td><td>世界の側の理由では終わらせない。到達後も留まらせて評価する</td><td class="ch">7</td></tr>
+        <tr><td class="mono">truncated = self.t &gt;= self.max_steps</td><td>時間切れ。この先の価値はゼロではない</td><td class="ch">7</td></tr>
+        <tr><td class="mono">info = {"dist": ..., "goal_id": ...}</td><td>人間用。学習には使われない</td><td class="ch">1</td></tr>
+        <tr><td class="mono">（コードに出てこない）gamma</td><td>どこまで先を気にするか。解く問題そのものを変える</td><td class="ch">5</td></tr>
+        <tr><td class="mono">（コードに出てこない）value / advantage</td><td>PPO が内部で推定する。予想より良かったか悪かったか</td><td class="ch">6</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="takeaway">
+    <h3>環境を書くときに毎回する4つの判断</h3>
+    <ol>
+      <li><strong>何を見せるか</strong> ── その観測だけで人間なら正しい行動を選べるか（第2章）</li>
+      <li><strong>何を報酬にするか</strong> ── でたらめに動いて手がかりが返ってくるか（第4章）</li>
+      <li><strong>いつ終わらせるか</strong> ── 世界の理由か、こちらの都合か（第7章）</li>
+      <li><strong>どこまで先を見るか</strong> ── gamma とエピソード長の釣り合い（第5章）</li>
+    </ol>
+    <p>アルゴリズムの中身を知らなくても、この4つを言葉で説明できれば環境は書けます。逆に、学習がうまくいかないときに最初に疑うのもこの4つです。</p>
+  </div>
+</section>
+
+<section id="glossary">
+  <div class="ch-head"><span class="ch-num">付録</span></div>
+  <h2>用語の対応表</h2>
+  <p class="lead">日本語の文献と英語の文献とコードで、同じものが違う名前で出てきます。</p>
+
+  <div class="tbl wide">
+    <table>
+      <thead><tr><th>日本語</th><th>英語</th><th>コード上の名前</th><th>ひとことで</th></tr></thead>
+      <tbody>
+        <tr><td>方策</td><td class="mono">policy, &#960;</td><td class="mono">model</td><td>観測を受けて行動を出すもの</td></tr>
+        <tr><td>観測 / 状態</td><td class="mono">observation, state</td><td class="mono">obs</td><td>方策に見せる情報</td></tr>
+        <tr><td>報酬</td><td class="mono">reward</td><td class="mono">reward</td><td>一手ぶんの点数（スカラー）</td></tr>
+        <tr><td>リターン / 収益</td><td class="mono">return, G</td><td>—</td><td>これから貰う報酬の割引合計</td></tr>
+        <tr><td>割引率</td><td class="mono">discount factor, &#947;</td><td class="mono">gamma</td><td>どこまで先を気にするか</td></tr>
+        <tr><td>価値関数</td><td class="mono">value function, V</td><td class="mono">critic</td><td>リターンの見込み</td></tr>
+        <tr><td>アドバンテージ</td><td class="mono">advantage, A</td><td class="mono">gae_lambda で調整</td><td>予想よりどれだけ良かったか</td></tr>
+        <tr><td>エピソード</td><td class="mono">episode</td><td>—</td><td>reset から終了までの一続き</td></tr>
+        <tr><td>ステップ</td><td class="mono">step, timestep</td><td class="mono">total_timesteps</td><td>行動と観測の1往復</td></tr>
+        <tr><td>探索と活用</td><td class="mono">exploration / exploitation</td><td class="mono">ent_coef</td><td>試すか、いまの最善を取るか</td></tr>
+        <tr><td>部分観測</td><td class="mono">POMDP</td><td>—</td><td>観測だけでは状況が決まらない</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>右端の列を <span class="inline-code">PPO()</span> の引数と見比べると、いつも渡している記号が何の話だったかが繋がります。<span class="inline-code">gamma</span> は第5章、<span class="inline-code">gae_lambda</span> は第6章のアドバンテージ、<span class="inline-code">ent_coef</span> は探索の強さです。</p>
+</section>
+
+<footer>
+  <p>掲載した出力はすべて実行して確認したものです（Python 3.11 / gymnasium 1.3.0 / numpy 2.4、第6章のみ stable-baselines3 2.9.0）。乱数は種を固定してあるので、同じ数字が出るはずです。</p>
+  <p>この本は <span class="inline-code">reach_env.py</span> を前提にしています。次に読む『写経で覚える目標ベクトル』も同じファイルを使い、そちらでは実際に学習を回して、第2章の <span class="inline-code">z</span> があると解けるようになるところを見ます。</p>
+</footer>
+
+</main>
+</div>
+
+<script>
+(function () {
+  if (window.hljs) {
+    document.querySelectorAll('pre code[class^="language-"]').forEach(function (el) {
+      try { window.hljs.highlightElement(el); } catch (e) {}
+    });
+  }
+
+  document.querySelectorAll('.copy').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var block = btn.closest('.code');
+      var code = block ? block.querySelector('pre code') : null;
+      if (!code) return;
+      var text = code.textContent;
+
+      var done = function () {
+        btn.textContent = 'コピーしました';
+        btn.setAttribute('data-done', '1');
+        setTimeout(function () {
+          btn.textContent = 'コピー';
+          btn.removeAttribute('data-done');
+        }, 1600);
+      };
+      var fallback = function () {
+        try {
+          var ta = document.createElement('textarea');
+          ta.value = text;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          done();
+        } catch (e) {
+          btn.textContent = '選択してコピー';
+          setTimeout(function () { btn.textContent = 'コピー'; }, 2200);
+        }
+      };
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(fallback);
+      } else {
+        fallback();
+      }
+    });
+  });
+})();
+</script>
