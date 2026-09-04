@@ -367,7 +367,7 @@ from reach_env import ReachEnv
 env = ReachEnv(goal_conditioned=True, max_steps=10)
 env.action_space.seed(0)  # でたらめさも再現できるように種を固定
 obs, info = env.reset(seed=0, options={"goal_id": 0})
-print(f"reset が返した観測: {obs}")
+print(f"obs after reset: {obs}")
 print()
 
 total = 0.0
@@ -376,26 +376,31 @@ for t in range(10):
     obs, reward, terminated, truncated, info = env.step(action)
     total += reward
     print(
-        f"t={t}  行動 [{action[0]:+.2f} {action[1]:+.2f}]"
-        f"  報酬 {reward:+.3f}  累計 {total:+.3f}"
+        f"t={t}  action [{action[0]:+.2f} {action[1]:+.2f}]"
+        f"  reward {reward:+.3f}  total {total:+.3f}"
         f"  terminated={terminated} truncated={truncated}"
     )
 
 print()
-print(f"このエピソードのリターン（割引なし）= {total:+.3f}")</code></pre>
+print(f"undiscounted return of this episode = {total:+.3f}")</code></pre>
   </div>
 
   <div class="code is-out">
     <div class="code-bar"><span class="code-name"><span class="dot">&gt;</span>出力</span><button class="copy" type="button">コピー</button></div>
-<pre><code>reset が返した観測: [0. 0. 1. 0. 0.]
+<pre><code>obs after reset: [0. 0. 1. 0. 0.]
 
-t=0  行動 [+0.27 -0.46]  報酬 -0.714  累計 -0.714  terminated=False truncated=False
-t=1  行動 [-0.92 -0.97]  報酬 -0.672  累計 -1.386  terminated=False truncated=False
-t=2  行動 [+0.63 +0.83]  報酬 -0.700  累計 -2.085  terminated=False truncated=False
-...
-t=9  行動 [-0.40 -0.15]  報酬 -0.826  累計 -7.521  terminated=False truncated=True
+t=0  action [+0.27 -0.46]  reward -0.714  total -0.714  terminated=False truncated=False
+t=1  action [-0.92 -0.97]  reward -0.672  total -1.386  terminated=False truncated=False
+t=2  action [+0.63 +0.83]  reward -0.700  total -2.085  terminated=False truncated=False
+t=3  action [+0.21 +0.46]  reward -0.710  total -2.795  terminated=False truncated=False
+t=4  action [+0.09 +0.87]  reward -0.715  total -3.510  terminated=False truncated=False
+t=5  action [+0.63 -0.99]  reward -0.746  total -4.256  terminated=False truncated=False
+t=6  action [+0.71 -0.93]  reward -0.784  total -5.040  terminated=False truncated=False
+t=7  action [+0.46 -0.65]  reward -0.810  total -5.850  terminated=False truncated=False
+t=8  action [+0.73 +0.08]  reward -0.845  total -6.695  terminated=False truncated=False
+t=9  action [-0.40 -0.15]  reward -0.826  total -7.521  terminated=False truncated=True
 
-このエピソードのリターン（割引なし）= -7.521</code></pre>
+undiscounted return of this episode = -7.521</code></pre>
   </div>
 
   <p>最後の行だけ <span class="inline-code">truncated=True</span> になっています。<span class="inline-code">max_steps=10</span> に達したからです。<strong>目標に着いたから終わったのではなく、こちらが時間で切った</strong>。この区別が第7章の話になります。</p>
@@ -712,32 +717,32 @@ for goal_conditioned in (False, True):
     print(f"--- goal_conditioned={goal_conditioned} ---")
 
     seen = []
-    for goal_id, name in enumerate(["左", "右", "上"]):
+    for goal_id, name in enumerate(["left", "right", "up"]):
         obs, _ = env.reset(seed=0, options={"goal_id": goal_id})
         seen.append(obs.copy())
-        print(f"  目標={name}  reset 直後の観測: {obs}")
+        print(f"  goal={name:&lt;5} obs after reset: {obs}")
 
     same = all(np.array_equal(seen[0], o) for o in seen)
-    print(f"  3つとも同じ観測か: {same}")
-    print("  →", "区別できない（マルコフでない）" if same else "区別できる（マルコフ）")
+    print(f"  all three identical: {same}")
+    print("  ->", "indistinguishable (not Markov)" if same else "distinguishable (Markov)")
     print()</code></pre>
   </div>
 
   <div class="code is-out">
     <div class="code-bar"><span class="code-name"><span class="dot">&gt;</span>出力</span><button class="copy" type="button">コピー</button></div>
 <pre><code>--- goal_conditioned=False ---
-  目標=左  reset 直後の観測: [0. 0.]
-  目標=右  reset 直後の観測: [0. 0.]
-  目標=上  reset 直後の観測: [0. 0.]
-  3つとも同じ観測か: True
-  → 区別できない（マルコフでない）
+  goal=left  obs after reset: [0. 0.]
+  goal=right obs after reset: [0. 0.]
+  goal=up    obs after reset: [0. 0.]
+  all three identical: True
+  -> indistinguishable (not Markov)
 
 --- goal_conditioned=True ---
-  目標=左  reset 直後の観測: [0. 0. 1. 0. 0.]
-  目標=右  reset 直後の観測: [0. 0. 0. 1. 0.]
-  目標=上  reset 直後の観測: [0. 0. 0. 0. 1.]
-  3つとも同じ観測か: False
-  → 区別できる（マルコフ）</code></pre>
+  goal=left  obs after reset: [0. 0. 1. 0. 0.]
+  goal=right obs after reset: [0. 0. 0. 1. 0.]
+  goal=up    obs after reset: [0. 0. 0. 0. 1.]
+  all three identical: False
+  -> distinguishable (Markov)</code></pre>
   </div>
 
   <p>やっていることは単純で、<strong>違う状況を並べて、観測が一致しないかを見る</strong>だけです。自分の環境でも同じことができます。「本来なら別々の行動をとるべき2つの場面」を用意して、観測を print して見比べてください。</p>
@@ -824,12 +829,12 @@ print("observation_space :", env.observation_space)
 print("  shape           :", env.observation_space.shape)
 print()
 
-print("宣言した範囲の外を投げるとどうなるか")
+print("what happens when an action outside the declared range is sent")
 for a in ([10.0, 0.0], [1.0, 0.0]):
     env.reset(seed=0, options={"goal_id": 1})
     env.step(np.array(a, dtype=np.float32))
-    print(f"  行動 {a} → 位置 {env.pos}")
-print("→ step() の中で clip しているので同じ結果になる。宣言は約束であって、強制ではない。")</code></pre>
+    print(f"  action {a} -> pos {env.pos}")
+print("-> step() clips it, so both end up the same. The declaration is a promise, not a guard.")</code></pre>
   </div>
 
   <div class="code is-out">
@@ -841,9 +846,10 @@ print("→ step() の中で clip しているので同じ結果になる。宣�
 observation_space : Box(-inf, inf, (5,), float32)
   shape           : (5,)
 
-宣言した範囲の外を投げるとどうなるか
-  行動 [10.0, 0.0] → 位置 [0.05 0.  ]
-  行動 [1.0, 0.0] → 位置 [0.05 0.  ]</code></pre>
+what happens when an action outside the declared range is sent
+  action [10.0, 0.0] -> pos [0.05 0.  ]
+  action [1.0, 0.0] -> pos [0.05 0.  ]
+-> step() clips it, so both end up the same. The declaration is a promise, not a guard.</code></pre>
   </div>
 
   <p>最後の実験が要点です。<strong>宣言は約束であって、強制ではありません。</strong>範囲外の行動を投げても Gymnasium は止めてくれない。だから <span class="inline-code">step()</span> の1行目で自分で <span class="inline-code">np.clip</span> しています。環境を書く側の責任です。</p>
@@ -901,7 +907,7 @@ def run(kind: str) -> np.ndarray:
             if kind == "dense":
                 total += r  # -距離 をそのまま
             else:
-                total += 1.0 if info["dist"] < 0.1 else 0.0  # 触れたら +1
+                total += 1.0 if info["dist"] &lt; 0.1 else 0.0  # 触れたら +1
             if term or trunc:
                 break
         totals.append(total)
@@ -911,23 +917,26 @@ def run(kind: str) -> np.ndarray:
 dense = run("dense")
 sparse = run("sparse")
 
-print(f"{'':10} {'平均':>10} {'標準偏差':>10} {'ゼロでない回':>14}")
-print("-" * 48)
-print(f"{'密な報酬':10} {dense.mean():>10.2f} {dense.std():>10.2f}"
-      f" {np.count_nonzero(dense):>10} /{N_EPISODES}")
-print(f"{'疎な報酬':10} {sparse.mean():>10.2f} {sparse.std():>10.2f}"
-      f" {np.count_nonzero(sparse):>10} /{N_EPISODES}")
+print(f"{'':8} {'mean':>10} {'std':>10} {'nonzero':>12}")
+print("-" * 42)
+print(f"{'dense':8} {dense.mean():>10.2f} {dense.std():>10.2f}"
+      f" {np.count_nonzero(dense):>8} /{N_EPISODES}")
+print(f"{'sparse':8} {sparse.mean():>10.2f} {sparse.std():>10.2f}"
+      f" {np.count_nonzero(sparse):>8} /{N_EPISODES}")
 print()
-print("疎な報酬では、でたらめに動いている限りほとんど何も返ってこない。")
-print("学習の前に「そもそも手がかりがあるか」を確かめるのが報酬設計。")</code></pre>
+print("With a sparse reward, random moves get almost nothing back.")
+print("Reward design is about checking there is a signal at all, before training.")</code></pre>
   </div>
 
   <div class="code is-out">
     <div class="code-bar"><span class="code-name"><span class="dot">&gt;</span>出力</span><button class="copy" type="button">コピー</button></div>
-<pre><code>                   平均       標準偏差         ゼロでない回
-------------------------------------------------
-密な報酬           -42.71       6.90        100 /100
-疎な報酬             0.00       0.00          0 /100</code></pre>
+<pre><code>               mean        std      nonzero
+------------------------------------------
+dense        -42.71       6.90      100 /100
+sparse         0.00       0.00        0 /100
+
+With a sparse reward, random moves get almost nothing back.
+Reward design is about checking there is a signal at all, before training.</code></pre>
   </div>
 
   <p><strong>疎な報酬では100エピソード中0回。</strong>でたらめに動いている限り、的に触れることが一度もありません。報酬が全部ゼロなら、方策を良くする手がかりもゼロです。</p>
@@ -979,28 +988,31 @@ def discounted_return(rewards, gamma: float) -> float:
     return g
 
 
-print(f"{'gamma':>6} | {'いますぐ+1':>12} | {'9手後に+10':>12} | 選ぶのは")
-print("-" * 50)
+print(f"{'gamma':>6} | {'+1 now':>12} | {'+10 in 9 steps':>14} | pick")
+print("-" * 48)
 for gamma in (0.0, 0.5, 0.9, 0.95, 0.99, 1.0):
     a = discounted_return(NOW, gamma)
     b = discounted_return(LATER, gamma)
-    print(f"{gamma:>6.2f} | {a:>12.4f} | {b:>12.4f} | {'いますぐ' if a > b else 'あとで'}")
+    print(f"{gamma:>6.2f} | {a:>12.4f} | {b:>14.4f} | {'now' if a > b else 'later'}")
 
 print()
-print("gamma は「どれだけ先まで気にするか」を決めるつまみ。")
-print("0 なら次の一手だけ、1 に近いほど遠い将来まで勘定に入れる。")</code></pre>
+print("gamma is the knob for how far ahead you care.")
+print("0 looks only at the next step; closer to 1 counts the distant future.")</code></pre>
   </div>
 
   <div class="code is-out">
     <div class="code-bar"><span class="code-name"><span class="dot">&gt;</span>出力</span><button class="copy" type="button">コピー</button></div>
-<pre><code> gamma |       いますぐ+1 |      9手後に+10 | 選ぶのは
---------------------------------------------------
-  0.00 |       1.0000 |       0.0000 | いますぐ
-  0.50 |       1.0000 |       0.0195 | いますぐ
-  0.90 |       1.0000 |       3.8742 | あとで
-  0.95 |       1.0000 |       6.3025 | あとで
-  0.99 |       1.0000 |       9.1352 | あとで
-  1.00 |       1.0000 |      10.0000 | あとで</code></pre>
+<pre><code> gamma |       +1 now | +10 in 9 steps | pick
+------------------------------------------------
+  0.00 |       1.0000 |         0.0000 | now
+  0.50 |       1.0000 |         0.0195 | now
+  0.90 |       1.0000 |         3.8742 | later
+  0.95 |       1.0000 |         6.3025 | later
+  0.99 |       1.0000 |         9.1352 | later
+  1.00 |       1.0000 |        10.0000 | later
+
+gamma is the knob for how far ahead you care.
+0 looks only at the next step; closer to 1 counts the distant future.</code></pre>
   </div>
 
   <p>&#947; = 0.5 と 0.9 の間で判断が裏返っています。<strong>報酬の設計を変えていないのに、gamma だけで方策の狙いが変わる。</strong>gamma は「学習の速さのつまみ」ではなく、<strong>解く問題そのものを変えるパラメータ</strong>だと分かります。</p>
@@ -1049,7 +1061,7 @@ from reach_env import ReachEnv
 
 GAMMA = 0.99
 N_EPISODES = 300
-NAMES = ["左", "右", "上"]
+NAMES = ["left", "right", "up"]
 
 
 def discounted_return(rewards) -> float:
@@ -1081,9 +1093,9 @@ def random_policy(obs, env):
     return env.action_space.sample()
 
 
-print(f"V(原点) のモンテカルロ推定   gamma={GAMMA}, {N_EPISODES}エピソード")
+print(f"Monte Carlo estimate of V(origin)   gamma={GAMMA}, {N_EPISODES} episodes")
 print()
-print(f"{'':14} {'でたらめな方策':>16} {'学習済み方策':>16}")
+print(f"{'':10} {'random policy':>16} {'trained policy':>16}")
 print("-" * 50)
 
 trained = None
@@ -1104,29 +1116,29 @@ for goal_id, name in enumerate(NAMES):
     m, se = estimate_value(random_policy, goal_id)
     left = f"{m:+.1f} ± {se:.1f}"
     if trained is None:
-        right = "（ppo_goal.zip なし）"
+        right = "(no ppo_goal.zip)"
     else:
         tm, tse = estimate_value(trained, goal_id)
         right = f"{tm:+.1f} ± {tse:.1f}"
-    print(f"{'z = ' + name:14} {left:>16} {right:>16}")
+    print(f"{'z = ' + name:10} {left:>16} {right:>16}")
 
 print()
-print("同じ状態でも方策が変われば価値が変わる。")
-print("価値は「状態の性質」ではなく「その方策で動いたときの見込み」。")
+print("The same state has a different value under a different policy.")
+print("Value is not a property of the state; it is the outlook under that policy.")
 print()
-print("3つの z で値がほぼ同じなのは、3つの的が原点から等距離だから。")
-print("目標の位置を非対称にすれば、z ごとに価値が割れる。")</code></pre>
+print("The three z give nearly the same value because the targets are equidistant.")
+print("Move the targets off-symmetry and the values split per z.")</code></pre>
   </div>
 
   <div class="code is-out">
     <div class="code-bar"><span class="code-name"><span class="dot">&gt;</span>出力</span><button class="copy" type="button">コピー</button></div>
-<pre><code>V(原点) のモンテカルロ推定   gamma=0.99, 300エピソード
+<pre><code>Monte Carlo estimate of V(origin)   gamma=0.99, 300 episodes
 
-                        でたらめな方策           学習済み方策
+              random policy   trained policy
 --------------------------------------------------
-z = 左               -32.5 ± 0.3       -4.5 ± 0.0
-z = 右               -32.3 ± 0.3       -4.5 ± 0.0
-z = 上               -32.4 ± 0.3       -4.5 ± 0.0</code></pre>
+z = left        -32.5 ± 0.3       -4.5 ± 0.0
+z = right       -32.3 ± 0.3       -4.5 ± 0.0
+z = up          -32.4 ± 0.3       -4.5 ± 0.0</code></pre>
   </div>
 
   <p>まったく同じ原点なのに、価値が <strong>-32 と -4.5</strong> に分かれました。状態は1つ、違うのは方策だけです。<strong>価値は状態の性質ではなく、その方策で動いたときの見込み</strong>だということが、この2列に出ています。</p>
@@ -1182,22 +1194,26 @@ V_NEXT = -50.0     # 打ち切った先の状態の価値（この先も -0.5 �
 correct = REWARD + GAMMA * V_NEXT   # truncated: 先を足す
 wrong = REWARD + GAMMA * 0.0        # terminated 扱い: 先をゼロにする
 
-print("打ち切った1ステップの学習目標")
-print(f"  truncated として扱う（正しい）: {correct:+8.3f}")
-print(f"  terminated として扱う（誤り） : {wrong:+8.3f}")
-print(f"  ずれ                          : {correct - wrong:+8.3f}")
+print("learning target for the step that got cut off")
+print(f"  treated as truncated (correct): {correct:+8.3f}")
+print(f"  treated as terminated (wrong) : {wrong:+8.3f}")
+print(f"  gap                           : {correct - wrong:+8.3f}")
 print()
-print("誤ると「時間切れの直前はやけに良い状態だ」と学習してしまう。")
-print("max_steps による打ち切りは truncated であって terminated ではない。")
-print("だから step() は2つを別の値として返す。")</code></pre>
+print("Get it wrong and the agent learns that just before the time limit is a great place to be.")
+print("A cut-off by max_steps is truncated, not terminated.")
+print("That is why step() returns the two as separate values.")</code></pre>
   </div>
 
   <div class="code is-out">
     <div class="code-bar"><span class="code-name"><span class="dot">&gt;</span>出力</span><button class="copy" type="button">コピー</button></div>
-<pre><code>打ち切った1ステップの学習目標
-  truncated として扱う（正しい）:  -50.000
-  terminated として扱う（誤り） :   -0.500
-  ずれ                          :  -49.500</code></pre>
+<pre><code>learning target for the step that got cut off
+  treated as truncated (correct):  -50.000
+  treated as terminated (wrong) :   -0.500
+  gap                           :  -49.500
+
+Get it wrong and the agent learns that just before the time limit is a great place to be.
+A cut-off by max_steps is truncated, not terminated.
+That is why step() returns the two as separate values.</code></pre>
   </div>
 
   <div class="note">

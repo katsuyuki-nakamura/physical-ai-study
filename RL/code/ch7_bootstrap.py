@@ -12,11 +12,11 @@ V_NEXT = -50.0     # 打ち切った先の状態の価値（この先も -0.5 �
 correct = REWARD + GAMMA * V_NEXT   # truncated: 先を足す
 wrong = REWARD + GAMMA * 0.0        # terminated 扱い: 先をゼロにする
 
-print("打ち切った1ステップの学習目標")
-print(f"  truncated として扱う（正しい）: {correct:+8.3f}")
-print(f"  terminated として扱う（誤り） : {wrong:+8.3f}")
-print(f"  ずれ                          : {correct - wrong:+8.3f}")
+print("learning target for the step that got cut off")
+print(f"  treated as truncated (correct): {correct:+8.3f}")
+print(f"  treated as terminated (wrong) : {wrong:+8.3f}")
+print(f"  gap                           : {correct - wrong:+8.3f}")
 print()
-print("誤ると「時間切れの直前はやけに良い状態だ」と学習してしまう。")
-print("max_steps による打ち切りは truncated であって terminated ではない。")
-print("だから step() は2つを別の値として返す。")
+print("Get it wrong and the agent learns that just before the time limit is a great place to be.")
+print("A cut-off by max_steps is truncated, not terminated.")
+print("That is why step() returns the two as separate values.")

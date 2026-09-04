@@ -15,13 +15,13 @@ def discounted_return(rewards, gamma: float) -> float:
     return g
 
 
-print(f"{'gamma':>6} | {'いますぐ+1':>12} | {'9手後に+10':>12} | 選ぶのは")
-print("-" * 50)
+print(f"{'gamma':>6} | {'+1 now':>12} | {'+10 in 9 steps':>14} | pick")
+print("-" * 48)
 for gamma in (0.0, 0.5, 0.9, 0.95, 0.99, 1.0):
     a = discounted_return(NOW, gamma)
     b = discounted_return(LATER, gamma)
-    print(f"{gamma:>6.2f} | {a:>12.4f} | {b:>12.4f} | {'いますぐ' if a > b else 'あとで'}")
+    print(f"{gamma:>6.2f} | {a:>12.4f} | {b:>14.4f} | {'now' if a > b else 'later'}")
 
 print()
-print("gamma は「どれだけ先まで気にするか」を決めるつまみ。")
-print("0 なら次の一手だけ、1 に近いほど遠い将来まで勘定に入れる。")
+print("gamma is the knob for how far ahead you care.")
+print("0 looks only at the next step; closer to 1 counts the distant future.")

@@ -32,12 +32,12 @@ def run(kind: str) -> np.ndarray:
 dense = run("dense")
 sparse = run("sparse")
 
-print(f"{'':10} {'平均':>10} {'標準偏差':>10} {'ゼロでない回':>14}")
-print("-" * 48)
-print(f"{'密な報酬':10} {dense.mean():>10.2f} {dense.std():>10.2f}"
-      f" {np.count_nonzero(dense):>10} /{N_EPISODES}")
-print(f"{'疎な報酬':10} {sparse.mean():>10.2f} {sparse.std():>10.2f}"
-      f" {np.count_nonzero(sparse):>10} /{N_EPISODES}")
+print(f"{'':8} {'mean':>10} {'std':>10} {'nonzero':>12}")
+print("-" * 42)
+print(f"{'dense':8} {dense.mean():>10.2f} {dense.std():>10.2f}"
+      f" {np.count_nonzero(dense):>8} /{N_EPISODES}")
+print(f"{'sparse':8} {sparse.mean():>10.2f} {sparse.std():>10.2f}"
+      f" {np.count_nonzero(sparse):>8} /{N_EPISODES}")
 print()
-print("疎な報酬では、でたらめに動いている限りほとんど何も返ってこない。")
-print("学習の前に「そもそも手がかりがあるか」を確かめるのが報酬設計。")
+print("With a sparse reward, random moves get almost nothing back.")
+print("Reward design is about checking there is a signal at all, before training.")

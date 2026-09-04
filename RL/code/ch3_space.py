@@ -15,9 +15,9 @@ print("observation_space :", env.observation_space)
 print("  shape           :", env.observation_space.shape)
 print()
 
-print("宣言した範囲の外を投げるとどうなるか")
+print("what happens when an action outside the declared range is sent")
 for a in ([10.0, 0.0], [1.0, 0.0]):
     env.reset(seed=0, options={"goal_id": 1})
     env.step(np.array(a, dtype=np.float32))
-    print(f"  行動 {a} → 位置 {env.pos}")
-print("→ step() の中で clip しているので同じ結果になる。宣言は約束であって、強制ではない。")
+    print(f"  action {a} -> pos {env.pos}")
+print("-> step() clips it, so both end up the same. The declaration is a promise, not a guard.")

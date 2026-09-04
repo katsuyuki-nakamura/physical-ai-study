@@ -742,21 +742,21 @@ def rollout(model, env, goal_id: int) -> np.ndarray:
 
 def main():
     env = ReachEnv(goal_conditioned=False)
-    print(f"観測の次元: {env.observation_space.shape[0]}  （位置だけ）")
+    print(f"obs dim: {env.observation_space.shape[0]}  (position only)")
 
     model = PPO("MlpPolicy", env, verbose=0, seed=0)
     model.learn(total_timesteps=TOTAL_TIMESTEPS)
     model.save("ppo_plain")
 
-    print("\n--- 結果 ---")
+    print("\n--- result ---")
     for goal_id in range(N_GOALS):
         final = rollout(model, env, goal_id)
         dist = np.linalg.norm(final - TARGETS[goal_id])
         print(
-            f"目標 {goal_id} {TARGETS[goal_id]} → 到達点 [{final[0]:+.2f} {final[1]:+.2f}]"
-            f"  距離 {dist:.3f}"
+            f"goal {goal_id} {TARGETS[goal_id]} -> reached [{final[0]:+.2f} {final[1]:+.2f}]"
+            f"  dist {dist:.3f}"
         )
-    print("\n到達点が3つとも同じなら、狙い通り「失敗」しています。")
+    print("\nIf all three end up at the same spot, it failed exactly as intended.")
 
 
 if __name__ == "__main__":
@@ -765,12 +765,12 @@ if __name__ == "__main__":
 
   <div class="code is-out">
     <div class="code-bar"><span class="code-name"><span class="dot">&gt;</span>python step1_plain.py</span><button class="copy" type="button">コピー</button></div>
-<pre><code>観測の次元: 2  （位置だけ）
+<pre><code>obs dim: 2  (position only)
 
---- 結果 ---
-目標 0 [-0.7  0. ] → 到達点 [+0.10 +0.30]  距離 0.857
-目標 1 [0.7 0. ] → 到達点 [+0.10 +0.30]  距離 0.670
-目標 2 [0.  0.7] → 到達点 [+0.10 +0.30]  距離 0.411</code></pre>
+--- result ---
+goal 0 [-0.7  0. ] -> reached [+0.10 +0.30]  dist 0.857
+goal 1 [0.7 0. ] -> reached [+0.10 +0.30]  dist 0.670
+goal 2 [0.  0.7] -> reached [+0.10 +0.30]  dist 0.411</code></pre>
   </div>
 
   <div class="note">
@@ -814,22 +814,22 @@ def rollout(model, env, goal_id: int) -> np.ndarray:
 
 def main():
     env = ReachEnv(goal_conditioned=True)  # ← 変えたのはここだけ
-    print(f"観測の次元: {env.observation_space.shape[0]}  （位置2 + 目標ベクトル3）")
+    print(f"obs dim: {env.observation_space.shape[0]}  (position 2 + goal vector 3)")
 
     model = PPO("MlpPolicy", env, verbose=0, seed=0)
     model.learn(total_timesteps=TOTAL_TIMESTEPS)
     model.save("ppo_goal")
 
-    print("\n--- 結果 ---")
+    print("\n--- result ---")
     for goal_id in range(N_GOALS):
         final = rollout(model, env, goal_id)
         dist = np.linalg.norm(final - TARGETS[goal_id])
         print(
-            f"目標 {goal_id} {TARGETS[goal_id]} → 到達点 [{final[0]:+.2f} {final[1]:+.2f}]"
-            f"  距離 {dist:.3f}"
+            f"goal {goal_id} {TARGETS[goal_id]} -> reached [{final[0]:+.2f} {final[1]:+.2f}]"
+            f"  dist {dist:.3f}"
         )
-    print("\n到達点が3つとも違い、それぞれの的に寄っていれば成功です。")
-    print("モデルを ppo_goal.zip に保存しました。")
+    print("\nIf the three end up apart, each near its own target, it worked.")
+    print("Saved the model to ppo_goal.zip")
 
 
 if __name__ == "__main__":
@@ -890,7 +890,7 @@ from stable_baselines3 import PPO
 
 from reach_env import ReachEnv, TARGETS, N_GOALS
 
-LABELS = ["左", "右", "上"]
+LABELS = ["left", "right", "up"]
 
 
 def make_obs(pos: np.ndarray, goal_id: int) -> np.ndarray:
@@ -901,20 +901,20 @@ def make_obs(pos: np.ndarray, goal_id: int) -> np.ndarray:
 
 
 def demo_a(model):
-    print("=== A. 同じ位置・違う z ===")
+    print("=== A. same position, different z ===")
     pos = np.zeros(2, dtype=np.float32)  # 原点に立たせる
     for goal_id in range(N_GOALS):
         obs = make_obs(pos, goal_id)
         action, _ = model.predict(obs, deterministic=True)
         print(
-            f"z = {LABELS[goal_id]}({make_obs(pos, goal_id)[2:].astype(int)})"
-            f" → 行動 [{action[0]:+.2f} {action[1]:+.2f}]"
+            f"z = {LABELS[goal_id]:&lt;5}({make_obs(pos, goal_id)[2:].astype(int)})"
+            f" -> action [{action[0]:+.2f} {action[1]:+.2f}]"
         )
-    print("入力のうち変えたのは z の3つだけ。位置も重みも同じ。\n")
+    print("Only the three z entries changed. Same position, same weights.\n")
 
 
 def demo_b(model, switch_at: int = 20, total: int = 60):
-    print(f"=== B. {switch_at}ステップ目で z を「左」から「右」に差し替える ===")
+    print(f"=== B. swap z from left to right at step {switch_at} ===")
     env = ReachEnv(goal_conditioned=True, max_steps=total)
     obs, _ = env.reset(seed=0, options={"goal_id": 0})  # 左を目指して出発
 
@@ -924,13 +924,13 @@ def demo_b(model, switch_at: int = 20, total: int = 60):
         action, _ = model.predict(obs, deterministic=True)
         obs, _, terminated, truncated, _ = env.step(action)
         if t % 10 == 0 or t == switch_at:
-            mark = "  ← ここで z を差し替え" if t == switch_at else ""
+            mark = "  &lt;- z swapped here" if t == switch_at else ""
             print(f"  t={t:2d}  x={env.pos[0]:+.2f}  y={env.pos[1]:+.2f}{mark}")
         if terminated or truncated:
             break
 
-    print(f"  終了  x={env.pos[0]:+.2f}  y={env.pos[1]:+.2f}")
-    print("x が一度マイナスへ向かってからプラスに折り返していれば成功です。")
+    print(f"  end   x={env.pos[0]:+.2f}  y={env.pos[1]:+.2f}")
+    print("If x first moves negative and then turns back positive, it worked.")
 
 
 def main():
@@ -945,20 +945,20 @@ if __name__ == "__main__":
 
   <div class="code is-out">
     <div class="code-bar"><span class="code-name"><span class="dot">&gt;</span>python step3_switch.py</span><button class="copy" type="button">コピー</button></div>
-<pre><code>=== A. 同じ位置・違う z ===
-z = 左([1 0 0]) → 行動 [-1.00 -0.19]
-z = 右([0 1 0]) → 行動 [+1.00 +0.37]
-z = 上([0 0 1]) → 行動 [+0.43 +1.00]
-入力のうち変えたのは z の3つだけ。位置も重みも同じ。
+<pre><code>=== A. same position, different z ===
+z = left ([1 0 0]) -> action [-1.00 -0.19]
+z = right([0 1 0]) -> action [+1.00 +0.37]
+z = up   ([0 0 1]) -> action [+0.43 +1.00]
+Only the three z entries changed. Same position, same weights.
 
-=== B. 20ステップ目で z を「左」から「右」に差し替える ===
+=== B. swap z from left to right at step 20 ===
   t= 0  x=-0.05  y=-0.01
   t=10  x=-0.55  y=-0.00
-  t=20  x=-0.70  y=+0.00  ← ここで z を差し替え
+  t=20  x=-0.70  y=+0.00  &lt;- z swapped here
   t=30  x=-0.20  y=+0.04
   t=40  x=+0.30  y=+0.02
   t=50  x=+0.70  y=+0.00
-  終了  x=+0.70  y=+0.00</code></pre>
+  end   x=+0.70  y=+0.00</code></pre>
   </div>
 
   <p>デモAでは、同じ位置に立ったまま z の3つの数値だけを入れ替えて、出てくる行動の符号が反転しています。</p>
@@ -1031,7 +1031,7 @@ def main():
          "Step 2: with z  (one policy, three targets)")
     fig.tight_layout()
     fig.savefig("trajectories.png", dpi=140)
-    print("trajectories.png を書き出しました。")
+    print("wrote trajectories.png")
 
 
 if __name__ == "__main__":

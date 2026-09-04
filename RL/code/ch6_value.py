@@ -12,7 +12,7 @@ from reach_env import ReachEnv
 
 GAMMA = 0.99
 N_EPISODES = 300
-NAMES = ["左", "右", "上"]
+NAMES = ["left", "right", "up"]
 
 
 def discounted_return(rewards) -> float:
@@ -44,9 +44,9 @@ def random_policy(obs, env):
     return env.action_space.sample()
 
 
-print(f"V(原点) のモンテカルロ推定   gamma={GAMMA}, {N_EPISODES}エピソード")
+print(f"Monte Carlo estimate of V(origin)   gamma={GAMMA}, {N_EPISODES} episodes")
 print()
-print(f"{'':14} {'でたらめな方策':>16} {'学習済み方策':>16}")
+print(f"{'':10} {'random policy':>16} {'trained policy':>16}")
 print("-" * 50)
 
 trained = None
@@ -67,15 +67,15 @@ for goal_id, name in enumerate(NAMES):
     m, se = estimate_value(random_policy, goal_id)
     left = f"{m:+.1f} ± {se:.1f}"
     if trained is None:
-        right = "（ppo_goal.zip なし）"
+        right = "(no ppo_goal.zip)"
     else:
         tm, tse = estimate_value(trained, goal_id)
         right = f"{tm:+.1f} ± {tse:.1f}"
-    print(f"{'z = ' + name:14} {left:>16} {right:>16}")
+    print(f"{'z = ' + name:10} {left:>16} {right:>16}")
 
 print()
-print("同じ状態でも方策が変われば価値が変わる。")
-print("価値は「状態の性質」ではなく「その方策で動いたときの見込み」。")
+print("The same state has a different value under a different policy.")
+print("Value is not a property of the state; it is the outlook under that policy.")
 print()
-print("3つの z で値がほぼ同じなのは、3つの的が原点から等距離だから。")
-print("目標の位置を非対称にすれば、z ごとに価値が割れる。")
+print("The three z give nearly the same value because the targets are equidistant.")
+print("Move the targets off-symmetry and the values split per z.")

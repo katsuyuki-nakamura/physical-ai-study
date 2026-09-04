@@ -25,21 +25,21 @@ def rollout(model, env, goal_id: int) -> np.ndarray:
 
 def main():
     env = ReachEnv(goal_conditioned=False)
-    print(f"観測の次元: {env.observation_space.shape[0]}  （位置だけ）")
+    print(f"obs dim: {env.observation_space.shape[0]}  (position only)")
 
     model = PPO("MlpPolicy", env, verbose=0, seed=0)
     model.learn(total_timesteps=TOTAL_TIMESTEPS)
     model.save("ppo_plain")
 
-    print("\n--- 結果 ---")
+    print("\n--- result ---")
     for goal_id in range(N_GOALS):
         final = rollout(model, env, goal_id)
         dist = np.linalg.norm(final - TARGETS[goal_id])
         print(
-            f"目標 {goal_id} {TARGETS[goal_id]} → 到達点 [{final[0]:+.2f} {final[1]:+.2f}]"
-            f"  距離 {dist:.3f}"
+            f"goal {goal_id} {TARGETS[goal_id]} -> reached [{final[0]:+.2f} {final[1]:+.2f}]"
+            f"  dist {dist:.3f}"
         )
-    print("\n到達点が3つとも同じなら、狙い通り「失敗」しています。")
+    print("\nIf all three end up at the same spot, it failed exactly as intended.")
 
 
 if __name__ == "__main__":

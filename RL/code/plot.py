@@ -57,7 +57,7 @@ def main():
          "Step 2: with z  (one policy, three targets)")
     fig.tight_layout()
     fig.savefig("trajectories.png", dpi=140)
-    print("trajectories.png を書き出しました。")
+    print("wrote trajectories.png")
 
 
 if __name__ == "__main__":
