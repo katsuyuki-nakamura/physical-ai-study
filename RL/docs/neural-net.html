@@ -1,0 +1,1228 @@
+<title>写経で作るニューラルネットワーク</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600&family=IBM+Plex+Sans:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+<style>
+:root {
+  --ground: #F4F6F8;
+  --surface: #FFFFFF;
+  --surface-2: #ECEFF3;
+  --ink: #171A21;
+  --ink-2: #4E5765;
+  --ink-3: #7B8493;
+  --rule: #DDE2E8;
+  --rule-strong: #C4CBD4;
+
+  --z: #A8621B;
+  --z-soft: #F3E6D6;
+
+  --g0: #C0392B;
+  --g1: #2471A3;
+  --g2: #1E8449;
+
+  --code-bg: #1C2028;
+  --code-ink: #DDE3EC;
+  --code-rule: #2E3542;
+  --code-chrome: #141821;
+  --tok-key: #E0A45C;
+  --tok-str: #93C48B;
+  --tok-num: #C99BD6;
+  --tok-com: #737F92;
+  --tok-fn: #7FB3DE;
+  --tok-cls: #E5C07B;
+
+  --shadow: 0 1px 2px rgba(16, 22, 32, .05), 0 8px 24px -12px rgba(16, 22, 32, .18);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #101319;
+    --surface: #171B22;
+    --surface-2: #1E232C;
+    --ink: #E7EBF1;
+    --ink-2: #A8B2C0;
+    --ink-3: #798393;
+    --rule: #272D37;
+    --rule-strong: #39414E;
+    --z: #E0A45C;
+    --z-soft: #33261A;
+    --g0: #E0705F;
+    --g1: #6BA6D6;
+    --g2: #5FB37F;
+    --code-bg: #0C0F15;
+    --code-chrome: #080A0F;
+    --code-rule: #232A35;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -12px rgba(0, 0, 0, .7);
+  }
+}
+
+:root[data-theme="dark"] {
+  --ground: #101319;
+  --surface: #171B22;
+  --surface-2: #1E232C;
+  --ink: #E7EBF1;
+  --ink-2: #A8B2C0;
+  --ink-3: #798393;
+  --rule: #272D37;
+  --rule-strong: #39414E;
+  --z: #E0A45C;
+  --z-soft: #33261A;
+  --g0: #E0705F;
+  --g1: #6BA6D6;
+  --g2: #5FB37F;
+  --code-bg: #0C0F15;
+  --code-chrome: #080A0F;
+  --code-rule: #232A35;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -12px rgba(0, 0, 0, .7);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: "IBM Plex Sans", system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
+  font-size: 16px;
+  line-height: 1.85;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  font-family: "Zilla Slab", Georgia, "Hiragino Mincho ProN", serif;
+  font-weight: 600;
+  line-height: 1.3;
+  text-wrap: balance;
+  margin: 0;
+}
+
+a { color: var(--z); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--z); outline-offset: 3px; border-radius: 3px; }
+code { font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; }
+
+.shell { display: grid; grid-template-columns: 1fr; max-width: 1180px; margin: 0 auto; padding: 0 20px 96px; }
+
+@media (min-width: 1060px) {
+  .shell { grid-template-columns: 200px minmax(0, 1fr); gap: 48px; padding-left: 32px; padding-right: 32px; }
+}
+
+.rail { display: none; }
+
+@media (min-width: 1060px) {
+  .rail { display: block; position: sticky; top: 0; align-self: start; padding-top: 108px; max-height: 100vh; overflow-y: auto; }
+}
+
+.rail-title { font-size: 11px; letter-spacing: .13em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 14px; font-weight: 600; }
+.rail ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+
+.rail a {
+  display: grid; grid-template-columns: 22px 1fr; align-items: baseline; gap: 8px;
+  padding: 5px 8px 5px 12px; font-size: 13.5px; line-height: 1.45;
+  color: var(--ink-2); text-decoration: none;
+  border-left: 2px solid var(--rule); transition: color .15s, border-color .15s;
+}
+
+.rail a:hover { color: var(--ink); border-left-color: var(--z); }
+.rail a .n { font-family: "JetBrains Mono", monospace; font-size: 11px; color: var(--ink-3); }
+
+.masthead { padding: 72px 0 0; }
+
+.eyebrow { font-family: "JetBrains Mono", monospace; font-size: 11.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--z); margin-bottom: 20px; }
+h1 { font-size: clamp(34px, 5.2vw, 50px); letter-spacing: -.015em; }
+.thesis { font-size: clamp(18px, 2.2vw, 21px); line-height: 1.65; color: var(--ink-2); max-width: 34em; margin: 20px 0 0; }
+.thesis strong { color: var(--ink); font-weight: 600; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 28px; }
+.chip { font-family: "JetBrains Mono", monospace; font-size: 12px; padding: 5px 11px; border: 1px solid var(--rule-strong); border-radius: 999px; color: var(--ink-2); background: var(--surface); white-space: nowrap; }
+
+figure { margin: 44px 0 0; }
+figure.diagram { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 28px 24px 20px; box-shadow: var(--shadow); }
+figure.diagram svg { display: block; width: 100%; height: auto; color: var(--ink-2); }
+figcaption { font-size: 14px; line-height: 1.7; color: var(--ink-2); margin-top: 16px; max-width: 62em; }
+
+section { padding-top: 64px; scroll-margin-top: 24px; }
+
+.ch-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; flex-wrap: wrap; }
+.ch-num { font-family: "JetBrains Mono", monospace; font-size: 12px; font-weight: 700; letter-spacing: .08em; color: var(--z); border: 1px solid var(--z); border-radius: 4px; padding: 2px 8px; white-space: nowrap; flex: none; }
+
+h2 { font-size: clamp(24px, 3.2vw, 30px); letter-spacing: -.01em; }
+h3 { font-size: 18px; margin: 40px 0 0; letter-spacing: -.005em; }
+p { margin: 18px 0 0; max-width: 66ch; }
+p.lead { color: var(--ink-2); }
+ul, ol.body { margin: 18px 0 0; padding-left: 20px; max-width: 66ch; }
+li { margin: 7px 0; }
+li::marker { color: var(--ink-3); }
+strong { font-weight: 600; }
+
+.inline-code { font-family: "JetBrains Mono", monospace; font-size: .875em; background: var(--surface-2); border: 1px solid var(--rule); border-radius: 4px; padding: 1px 5px; white-space: nowrap; }
+
+/* the line of reach_env.py each chapter explains */
+.pin {
+  margin: 0 0 4px;
+  padding: 12px 16px;
+  background: var(--z-soft);
+  border-left: 3px solid var(--z);
+  border-radius: 0 5px 5px 0;
+  max-width: 66ch;
+  overflow-x: auto;
+}
+
+.pin .pin-label { display: block; font-family: "JetBrains Mono", monospace; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--z); font-weight: 700; margin-bottom: 5px; }
+.pin code { font-size: 13px; color: var(--ink); white-space: pre; display: block; line-height: 1.7; }
+
+.formula { display: flex; flex-direction: column; margin: 28px 0 0; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; background: var(--surface); max-width: 66ch; }
+.formula-row { display: grid; grid-template-columns: minmax(0, auto) minmax(0, 1fr); gap: 8px 28px; align-items: baseline; padding: 18px 22px; }
+.formula-row + .formula-row { border-top: 1px solid var(--rule); }
+.formula-row.is-z { background: var(--z-soft); }
+.formula-math { font-family: "JetBrains Mono", monospace; font-size: 16px; font-weight: 700; white-space: nowrap; color: var(--ink); }
+.formula-math .zed { color: var(--z); }
+.formula-note { font-size: 14.5px; line-height: 1.6; color: var(--ink-2); }
+
+@media (max-width: 560px) { .formula-row { grid-template-columns: 1fr; } }
+
+.code { margin: 26px 0 0; border-radius: 7px; overflow: hidden; background: var(--code-bg); border: 1px solid var(--code-rule); box-shadow: var(--shadow); }
+@media (min-width: 1060px) { .code { margin-right: -60px; } }
+
+.code-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 12px 9px 16px; background: var(--code-chrome); border-bottom: 1px solid var(--code-rule); }
+.code-name { font-family: "JetBrains Mono", monospace; font-size: 12.5px; color: #9AA6B8; }
+.code-name .dot { color: var(--tok-key); margin-right: 8px; }
+
+.copy { font-family: "JetBrains Mono", monospace; font-size: 11.5px; letter-spacing: .04em; color: #9AA6B8; background: transparent; border: 1px solid #313947; border-radius: 4px; padding: 4px 10px; cursor: pointer; transition: color .15s, border-color .15s, background .15s; white-space: nowrap; }
+.copy:hover { color: #E6EBF3; border-color: #4A5567; background: #1A1F29; }
+.copy[data-done="1"] { color: var(--tok-str); border-color: var(--tok-str); }
+
+.code pre { margin: 0; padding: 18px 20px 20px; overflow-x: auto; font-family: "JetBrains Mono", monospace; font-size: 13px; line-height: 1.72; color: var(--code-ink); tab-size: 4; }
+.code pre code { font-family: inherit; background: none; padding: 0; }
+
+.code.is-shell pre { font-size: 13.5px; }
+
+.code.is-out { background: var(--surface); border-color: var(--rule); }
+.code.is-out .code-bar { background: var(--surface-2); border-bottom-color: var(--rule); }
+.code.is-out .code-name, .code.is-out .code-name .dot { color: var(--ink-3); }
+.code.is-out pre { color: var(--ink-2); font-size: 12.5px; }
+.code.is-out .copy { color: var(--ink-3); border-color: var(--rule-strong); }
+.code.is-out .copy:hover { color: var(--ink); border-color: var(--ink-3); background: var(--surface-2); }
+
+.hljs-keyword, .hljs-built_in, .hljs-literal { color: var(--tok-key); }
+.hljs-string, .hljs-meta .hljs-string { color: var(--tok-str); }
+.hljs-number { color: var(--tok-num); }
+.hljs-comment, .hljs-quote { color: var(--tok-com); font-style: italic; }
+.hljs-title, .hljs-title.function_ { color: var(--tok-fn); }
+.hljs-title.class_, .hljs-type { color: var(--tok-cls); }
+.hljs-params, .hljs-attr, .hljs-variable, .hljs-subst { color: var(--code-ink); }
+.hljs-meta { color: var(--tok-com); }
+
+details.fold { margin: 26px 0 0; max-width: 66ch; }
+details.fold > summary { cursor: pointer; font-family: "JetBrains Mono", monospace; font-size: 12.5px; color: var(--z); padding: 10px 14px; border: 1px dashed var(--rule-strong); border-radius: 6px; list-style: none; }
+details.fold > summary::-webkit-details-marker { display: none; }
+details.fold > summary::before { content: "\25B8  "; }
+details.fold[open] > summary::before { content: "\25BE  "; }
+details.fold > summary:hover { border-color: var(--z); }
+details.fold .code { margin-top: 14px; }
+
+.note { margin: 26px 0 0; padding: 18px 22px; background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--z); border-radius: 0 6px 6px 0; max-width: 66ch; }
+.note p { margin: 0; max-width: none; }
+.note p + p { margin-top: 12px; }
+.note-label { display: block; font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: .13em; text-transform: uppercase; color: var(--z); margin-bottom: 8px; font-weight: 700; }
+
+.tbl { margin: 28px 0 0; border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); overflow-x: auto; max-width: 66ch; }
+.tbl.wide { max-width: none; }
+@media (min-width: 1060px) { .tbl.wide { margin-right: -60px; } }
+
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+th, td { padding: 11px 18px; text-align: left; border-bottom: 1px solid var(--rule); vertical-align: top; }
+tbody tr:last-child td { border-bottom: 0; }
+thead th { font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); font-weight: 700; white-space: nowrap; }
+td.mono { font-family: "JetBrains Mono", monospace; font-size: 12.5px; white-space: nowrap; color: var(--ink); }
+td.ch { font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--z); white-space: nowrap; }
+
+.takeaway { margin-top: 28px; padding: 30px 32px; background: var(--surface); border: 1px solid var(--rule-strong); border-radius: 8px; box-shadow: var(--shadow); }
+.takeaway h3 { margin-top: 0; }
+.takeaway ol { margin: 18px 0 0; padding-left: 22px; max-width: 62ch; }
+.takeaway ol li { margin: 9px 0; }
+.takeaway ol li::marker { font-family: "JetBrains Mono", monospace; font-size: 13px; color: var(--z); }
+
+footer { margin-top: 72px; padding-top: 24px; border-top: 1px solid var(--rule); font-size: 13.5px; color: var(--ink-3); max-width: 66ch; }
+footer p { max-width: none; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="shell">
+
+<nav class="rail" aria-label="目次">
+  <div class="rail-title">Contents</div>
+  <ol>
+    <li><a href="#intro"><span class="n">序</span><span>何を作るのか</span></a></li>
+    <li><a href="#setup"><span class="n">&#167;</span><span>準備</span></a></li>
+    <li><a href="#ch1"><span class="n">01</span><span>ニューロン1本</span></a></li>
+    <li><a href="#ch2"><span class="n">02</span><span>層は行列積</span></a></li>
+    <li><a href="#ch3"><span class="n">03</span><span>活性化関数</span></a></li>
+    <li><a href="#ch4"><span class="n">04</span><span>順伝播</span></a></li>
+    <li><a href="#ch5"><span class="n">05</span><span>損失と勾配</span></a></li>
+    <li><a href="#ch6"><span class="n">06</span><span>逆伝播</span></a></li>
+    <li><a href="#ch7"><span class="n">07</span><span>学習させる</span></a></li>
+    <li><a href="#reread"><span class="n">終</span><span>もう一度読む</span></a></li>
+    <li><a href="#glossary"><span class="n">&#167;</span><span>用語の対応表</span></a></li>
+  </ol>
+</nav>
+
+<main>
+
+<header class="masthead">
+  <div class="eyebrow">Neural Network / 写経</div>
+  <h1>写経で作るニューラルネットワーク</h1>
+  <p class="thesis">ライブラリを使わず、<strong>numpy だけで</strong>ニューラルネットワークを1つ作ります。層・重み・逆伝播・学習——全部自分の手で書いて、最後に動かします。</p>
+  <div class="chips">
+    <span class="chip">全7章</span>
+    <span class="chip">写経コード 7本</span>
+    <span class="chip">numpy だけ</span>
+    <span class="chip">GPU 不要</span>
+    <span class="chip">学習は1秒</span>
+  </div>
+</header>
+
+<section id="intro">
+  <div class="ch-head"><span class="ch-num">序</span></div>
+  <h2>何を作るのか</h2>
+
+  <p class="lead">ニューラルネットワークは、<strong>数の並びを別の数の並びに変える箱</strong>です。中でやっているのは掛け算と足し算がほとんどで、魔法は入っていません。この本では、その箱を<strong>ライブラリなしで1つ作りきります</strong>。</p>
+
+  <figure class="diagram">
+    <svg viewBox="0 0 700 250" role="img" aria-label="観測5個が64個の中間表現を2回通って行動2個になる流れ。層ごとのパラメータ数つき。">
+      <defs>
+        <marker id="nnah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"></path>
+        </marker>
+      </defs>
+
+      <rect x="20" y="86" width="124" height="62" rx="6" fill="none" stroke="var(--z)" stroke-width="2"></rect>
+      <text x="82" y="112" text-anchor="middle" font-size="13" fill="var(--z)">観測</text>
+      <text x="82" y="133" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="15" fill="var(--z)">5 個</text>
+
+      <rect x="216" y="86" width="112" height="62" rx="6" fill="none" stroke="currentColor" stroke-width="1.5"></rect>
+      <text x="272" y="112" text-anchor="middle" font-size="13" fill="currentColor">中間表現</text>
+      <text x="272" y="133" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="15" fill="currentColor">64 個</text>
+
+      <rect x="392" y="86" width="112" height="62" rx="6" fill="none" stroke="currentColor" stroke-width="1.5"></rect>
+      <text x="448" y="112" text-anchor="middle" font-size="13" fill="currentColor">中間表現</text>
+      <text x="448" y="133" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="15" fill="currentColor">64 個</text>
+
+      <rect x="568" y="86" width="112" height="62" rx="6" fill="none" stroke="var(--z)" stroke-width="2"></rect>
+      <text x="624" y="112" text-anchor="middle" font-size="13" fill="var(--z)">行動</text>
+      <text x="624" y="133" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="15" fill="var(--z)">2 個</text>
+
+      <line x1="148" y1="117" x2="211" y2="117" stroke="currentColor" stroke-width="1.5" marker-end="url(#nnah)"></line>
+      <line x1="332" y1="117" x2="387" y2="117" stroke="currentColor" stroke-width="1.5" marker-end="url(#nnah)"></line>
+      <line x1="508" y1="117" x2="563" y2="117" stroke="currentColor" stroke-width="1.5" marker-end="url(#nnah)"></line>
+
+      <text x="180" y="72" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="currentColor" opacity="0.8">W1 + tanh</text>
+      <text x="360" y="72" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="currentColor" opacity="0.8">W2 + tanh</text>
+      <text x="536" y="72" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="currentColor" opacity="0.8">W3</text>
+
+      <text x="180" y="172" text-anchor="middle" font-size="11.5" fill="currentColor" opacity="0.65">384 個</text>
+      <text x="360" y="172" text-anchor="middle" font-size="11.5" fill="currentColor" opacity="0.65">4,160 個</text>
+      <text x="536" y="172" text-anchor="middle" font-size="11.5" fill="currentColor" opacity="0.65">130 個</text>
+
+      <line x1="20" y1="200" x2="680" y2="200" stroke="currentColor" stroke-width="1" opacity="0.2"></line>
+      <text x="20" y="224" font-size="12.5" fill="currentColor" opacity="0.75">重みとバイアスは全部で 4,674 個。この本は、この箱を numpy だけで最初から作る。</text>
+    </svg>
+    <figcaption>作るネットワークの全体。観測5個を受け取り、64個の中間表現を2回通って、行動2個になる。矢印1本ぶんが「層」で、下の数がその層のパラメータ数。</figcaption>
+  </figure>
+
+  <p>作るのは、<strong>観測5個を受け取って行動2個を返す</strong>ネットワークです。この「5」と「2」には意味があります。このシリーズの環境（次の本で書きます）で、平面上の点を3つの的のどれかに向かわせる問題です。</p>
+
+  <div class="tbl">
+    <table>
+      <thead>
+        <tr><th>入力5個の内訳</th><th>意味</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="mono">x, y</td><td>いまの位置</td></tr>
+        <tr><td class="mono">z0, z1, z2</td><td>3つの的のどれを狙うか（1つだけ 1、残りは 0）</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>最後の第7章で、このネットワークは<strong>後ろの3つを読んで行き先を変える</strong>ようになります。重みは1組だけ。的ごとに学習し直すのではありません。</p>
+
+  <div class="note">
+    <span class="note-label">この本の位置づけ</span>
+    <p>3冊のうちの1冊目です。この本で<strong>ニューラルネットワークそのもの</strong>を作り、次の『<a href="rl-from-env.html">環境から入る強化学習</a>』で<strong>環境の書き方</strong>を、3冊目の『<a href="goal-vector.html">写経で覚える目標ベクトル</a>』で<strong>報酬だけから同じことを学ばせる方法</strong>を扱います。</p>
+    <p>この本は正解を教えて学ばせる（教師あり学習）だけなので、強化学習の知識は要りません。<strong>numpy 以外は何も入れずに読み通せます</strong>。</p>
+  </div>
+
+  <div class="note">
+    <span class="note-label">この本の読み方</span>
+    <p>第1〜3章は部品を1つずつ確かめる回で、ファイルは残しません。<strong>第4章から <span class="inline-code">mlp.py</span> という1つのファイルを作り始め</strong>、第6章・第7章で足していきます。最後にはそれが完成品になります。</p>
+    <p>各章の頭に「この章で書き足す行」を置いてあります。写経コードはすべて数秒で終わります（いちばん重い第7章の学習でも1秒未満）。</p>
+  </div>
+</section>
+
+<section id="setup">
+  <div class="ch-head"><span class="ch-num">&#167;</span></div>
+  <h2>準備</h2>
+
+  <p class="lead">要るのは <span class="inline-code">numpy</span> だけです。数十MBで済みます。</p>
+
+  <div class="code is-shell">
+    <div class="code-bar"><span class="code-name"><span class="dot">$</span>bash</span><button class="copy" type="button">コピー</button></div>
+<pre><code class="language-bash">mkdir rl-study &amp;&amp; cd rl-study
+python3 -m venv .venv &amp;&amp; source .venv/bin/activate
+pip install numpy
+
+# 動作確認
+python -c "import numpy; print(numpy.__version__)"</code></pre>
+  </div>
+
+  <p><span class="inline-code">2.4.0</span> のような表示が出れば足ります。以降、書いたファイルはすべてこの <span class="inline-code">rl-study/</span> に置き、この中で実行します。<strong>次の本、その次の本も同じディレクトリを使います。</strong></p>
+</section>
+
+<section id="ch1">
+  <div class="ch-head"><span class="ch-num">第 1 章</span></div>
+  <h2>ニューロン1本 ── 掛けて、足すだけ</h2>
+
+  <div class="pin">
+    <span class="pin-label">この章でやること</span>
+    <code>np.dot(w, x) + b</code>
+  </div>
+
+  <p class="lead">ニューラルネットワークの部品は「ニューロン」です。1本のニューロンがやることは1つだけ、<strong>入力に重みを掛けて全部足し、最後にバイアスを足す</strong>。それだけです。</p>
+
+  <h3>写経 ── 1本を手で計算する</h3>
+
+  <div class="code">
+    <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>nn1_neuron.py</span><button class="copy" type="button">コピー</button></div>
+<pre><code class="language-python">"""第1章: ニューロン1本を手で計算する。
+
+入力に重みを掛けて全部足し、バイアスを足す。ニューロンはそれだけ。
+"""
+
+import numpy as np
+
+# 観測（原点にいて、今回の目標は「左」）。強化学習の本と同じ形。
+x = np.array([0.0, 0.0, 1.0, 0.0, 0.0])
+
+# ニューロン1本ぶんの重みとバイアス。値はいまは適当でよい。
+w = np.array([0.5, -0.2, 1.3, 0.1, -0.7])
+b = 0.4
+
+print("入力     x =", x)
+print("重み     w =", w)
+print("バイアス b =", b)
+print()
+
+print("1項ずつ書き下すと:")
+total = 0.0
+for i in range(len(x)):
+    term = w[i] * x[i]
+    total += term
+    print(f"  w[{i}] * x[{i}] = {w[i]:+.1f} * {x[i]:+.1f} = {term:+.2f}")
+print(f"  バイアス                    = {b:+.2f}")
+total += b
+print(f"  合計                        = {total:+.2f}")
+print()
+
+print("numpy なら1行:")
+print("  np.dot(w, x) + b =", np.dot(w, x) + b)
+print()
+print("重みは入力と同じ数だけ要る。バイアスはニューロン1本につき1つ。")</code></pre>
+  </div>
+
+  <div class="code is-out">
+    <div class="code-bar"><span class="code-name"><span class="dot">&gt;</span>出力</span><button class="copy" type="button">コピー</button></div>
+<pre><code>入力     x = [0. 0. 1. 0. 0.]
+重み     w = [ 0.5 -0.2  1.3  0.1 -0.7]
+バイアス b = 0.4
+
+1項ずつ書き下すと:
+  w[0] * x[0] = +0.5 * +0.0 = +0.00
+  w[1] * x[1] = -0.2 * +0.0 = -0.00
+  w[2] * x[2] = +1.3 * +1.0 = +1.30
+  w[3] * x[3] = +0.1 * +0.0 = +0.00
+  w[4] * x[4] = -0.7 * +0.0 = -0.00
+  バイアス                    = +0.40
+  合計                        = +1.70
+
+numpy なら1行:
+  np.dot(w, x) + b = 1.7000000000000002
+
+重みは入力と同じ数だけ要る。バイアスはニューロン1本につき1つ。</code></pre>
+  </div>
+
+  <p>入力が5個なので、<strong>重みも5個</strong>要ります。バイアスは<strong>ニューロン1本につき1つ</strong>です。ここが後でパラメータの数を数えるときの基本になります。</p>
+
+  <p>今回の入力は <span class="inline-code">[0, 0, 1, 0, 0]</span> なので、3番目の項だけが残って <span class="inline-code">1.3 + 0.4 = 1.7</span>。0 が掛かった項は消えます。<strong>1つだけ 1 で残りが 0 という入力は、「重みの中から1つを選び出す」働きをする</strong>——この性質は3冊目でもう一度出てきます。</p>
+
+  <div class="note">
+    <span class="note-label">重みとバイアスは何者か</span>
+    <p>この2つが<strong>学習で変わる数</strong>です。ネットワークが「覚える」とは、この数を少しずつ書き換えることを指します。入力と出力は毎回変わりますが、重みとバイアスは<strong>使い回されます</strong>。</p>
+    <p>いまは適当な値を入れていますが、第7章でこれを自動的に決めます。</p>
+  </div>
+</section>
+
+<section id="ch2">
+  <div class="ch-head"><span class="ch-num">第 2 章</span></div>
+  <h2>層 ── ニューロンを並べると行列積になる</h2>
+
+  <div class="pin">
+    <span class="pin-label">この章でやること</span>
+    <code>W @ x + b</code>
+  </div>
+
+  <p class="lead">ニューロン1本では何もできません。<strong>同じ入力を見るニューロンを何本も並べる</strong>と、それが1つの「層」になります。並べた結果は、行列の掛け算そのものです。</p>
+
+  <h3>写経 ── ループと行列積が一致することを見る</h3>
+
+  <div class="code">
+    <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>nn2_layer.py</span><button class="copy" type="button">コピー</button></div>
+<pre><code class="language-python">"""第2章: ニューロンを64本並べると、行列の掛け算になる。
+
+1本ずつループで計算しても、行列積で一度に計算しても、答えは同じ。
+"""
+
+import numpy as np
+
+rng = np.random.default_rng(0)
+
+x = np.array([0.0, 0.0, 1.0, 0.0, 0.0])
+W = rng.normal(0.0, 0.5, size=(64, 5))   # 64本 × 入力5個
+b = rng.normal(0.0, 0.1, size=64)        # 64本ぶんのバイアス
+
+# 1本ずつ計算する
+out_loop = np.zeros(64)
+for j in range(64):
+    out_loop[j] = np.dot(W[j], x) + b[j]
+
+# 64本まとめて計算する
+out_matrix = W @ x + b
+
+print("W の形   :", W.shape, " ← (ニューロンの本数, 入力の数)")
+print("x の形   :", x.shape)
+print("出力の形 :", out_matrix.shape, " ← ニューロンの本数だけ数が出てくる")
+print()
+print("ループ版 先頭3個:", np.round(out_loop[:3], 4))
+print("行列版   先頭3個:", np.round(out_matrix[:3], 4))
+print("完全に一致するか:", np.allclose(out_loop, out_matrix))
+print()
+print(f"この層のパラメータ数 = 重み {W.size} (= 64 x 5) + バイアス {b.size} = {W.size + b.size}")</code></pre>
+  </div>
+
+  <div class="code is-out">
+    <div class="code-bar"><span class="code-name"><span class="dot">&gt;</span>出力</span><button class="copy" type="button">コピー</button></div>
+<pre><code>W の形   : (64, 5)  ← (ニューロンの本数, 入力の数)
+x の形   : (5,)
+出力の形 : (64,)  ← ニューロンの本数だけ数が出てくる
+
+ループ版 先頭3個: [ 0.355   0.4179 -1.2727]
+行列版   先頭3個: [ 0.355   0.4179 -1.2727]
+完全に一致するか: True
+
+この層のパラメータ数 = 重み 320 (= 64 x 5) + バイアス 64 = 384</code></pre>
+  </div>
+
+  <p>64本のニューロンがそれぞれ5個の入力を見るので、重みは <span class="inline-code">64 &#215; 5 = 320</span> 個。バイアスは1本につき1つで64個。合わせて <strong>384個</strong>がこの層のパラメータです。</p>
+
+  <p>行列 <span class="inline-code">W</span> の形が <span class="inline-code">(64, 5)</span> なのは、<strong>「64本ぶん × 入力5個」を縦横に並べたから</strong>です。行が1本のニューロン、列が入力に対応します。ライブラリで <span class="inline-code">Linear(in_features=5, out_features=64)</span> と書いたときに内部で作られるのも、この形の行列です。</p>
+
+  <div class="note">
+    <span class="note-label">なぜ行列積で書くのか</span>
+    <p>結果はループと同じですが、速度が全く違います。行列積は numpy の内部で最適化された処理に落ちるので、64本を1本ずつ回すより桁違いに速い。GPU が効くのもここです。</p>
+    <p><strong>「層 = 行列を1つ掛けること」</strong>と覚えてしまって構いません。この本のネットワークは、行列を3つ掛けるだけのものです。</p>
+  </div>
+</section>
+
+<section id="ch3">
+  <div class="ch-head"><span class="ch-num">第 3 章</span></div>
+  <h2>活性化関数 ── これが無いと層を重ねる意味が消える</h2>
+
+  <div class="pin">
+    <span class="pin-label">この章でやること</span>
+    <code>np.tanh(W @ x + b)</code>
+  </div>
+
+  <p class="lead">層を2つ重ねたとします。<span class="inline-code">W2 @ (W1 @ x)</span>。ところがこれは <span class="inline-code">(W2 @ W1) @ x</span> と書き直せます。<strong>行列を先に掛けてしまえば1つの行列</strong>——つまり<strong>2層が1層に潰れます</strong>。</p>
+
+  <h3>写経 ── 潰れる様子と、潰れなくなる様子</h3>
+
+  <div class="code">
+    <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>nn3_activation.py</span><button class="copy" type="button">コピー</button></div>
+<pre><code class="language-python">"""第3章: 活性化関数を挟まないと、層を重ねる意味が消える。
+
+線形な層をいくつ重ねても、1つの行列で書けてしまう。
+"""
+
+import numpy as np
+
+rng = np.random.default_rng(0)
+
+x = rng.normal(size=5)
+W1 = rng.normal(0.0, 0.5, size=(8, 5))
+W2 = rng.normal(0.0, 0.5, size=(4, 8))
+
+two_layers = W2 @ (W1 @ x)   # 2層ぶん計算する
+one_layer = (W2 @ W1) @ x    # 重みを先に掛けて1層にまとめる
+
+print("--- 活性化なし ---")
+print("  2層で計算 :", np.round(two_layers, 4))
+print("  1層にまとめ:", np.round(one_layer, 4))
+print("  一致するか :", np.allclose(two_layers, one_layer))
+print("  → 何層重ねても1層で書ける。深くした意味がない。")
+print()
+
+with_tanh = W2 @ np.tanh(W1 @ x)   # 途中に tanh を挟む
+
+print("--- tanh あり ---")
+print("  2層で計算 :", np.round(with_tanh, 4))
+print("  1層で書けるか:", np.allclose(with_tanh, one_layer))
+print("  → 書けない。非線形が入って初めて、層を増やす意味が出る。")
+print()
+
+print("tanh は値を -1〜1 に押し込む関数:")
+for v in (-3.0, -1.0, 0.0, 1.0, 3.0):
+    print(f"  tanh({v:+.1f}) = {np.tanh(v):+.4f}")</code></pre>
+  </div>
+
+  <div class="code is-out">
+    <div class="code-bar"><span class="code-name"><span class="dot">&gt;</span>出力</span><button class="copy" type="button">コピー</button></div>
+<pre><code>--- 活性化なし ---
+  2層で計算 : [-1.3008  0.3158 -0.9289 -0.8745]
+  1層にまとめ: [-1.3008  0.3158 -0.9289 -0.8745]
+  一致するか : True
+  → 何層重ねても1層で書ける。深くした意味がない。
+
+--- tanh あり ---
+  2層で計算 : [-1.2142  0.2935 -0.8649 -0.8024]
+  1層で書けるか: False
+  → 書けない。非線形が入って初めて、層を増やす意味が出る。
+
+tanh は値を -1〜1 に押し込む関数:
+  tanh(-3.0) = -0.9951
+  tanh(-1.0) = -0.7616
+  tanh(+0.0) = +0.0000
+  tanh(+1.0) = +0.7616
+  tanh(+3.0) = +0.9951</code></pre>
+  </div>
+
+  <p>前半では2層ぶん計算した結果と、行列をまとめた1層の結果が<strong>完全に一致</strong>します。何層積んでも同じで、これでは深くする意味がありません。</p>
+
+  <p>途中に <span class="inline-code">tanh</span> を1つ挟むだけで一致しなくなります。<strong>層と層のあいだに非線形な処理を入れることで、初めて「重ねた」ことになる</strong>。この挟むものを<strong>活性化関数</strong>と呼びます。</p>
+
+  <p><span class="inline-code">tanh</span> は値を <span class="inline-code">-1</span> 〜 <span class="inline-code">1</span> に押し込む関数です。大きい値ほど 1 に、小さい値ほど -1 に近づき、0 のあたりはほぼそのまま通します。よく使われる活性化関数には他に <span class="inline-code">ReLU</span>（負を 0 にする）などがありますが、この本では <span class="inline-code">tanh</span> を使います。第6章で微分するときに形が綺麗だからです。</p>
+</section>
+
+<section id="ch4">
+  <div class="ch-head"><span class="ch-num">第 4 章</span></div>
+  <h2>順伝播 ── 観測を入れて行動が出るまで</h2>
+
+  <div class="pin">
+    <span class="pin-label">この章で書き始めるファイル</span>
+    <code>mlp.py の init_params() と forward()</code>
+  </div>
+
+  <p class="lead">部品が揃ったので、ここから<strong>この本の主役ファイル <span class="inline-code">mlp.py</span></strong> を作り始めます。まず、観測を入れて行動を出すところまで。この向きの計算を<strong>順伝播</strong>と呼びます。</p>
+
+  <div class="code">
+    <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>mlp.py（ここまで書く）</span><button class="copy" type="button">コピー</button></div>
+<pre><code class="language-python">"""numpy だけで書いた2層の多層パーセプトロン（MLP）。
+
+観測5個を受け取り、行動2個を返す。5 → 64 → 64 → 2。
+学習に要る3つ（順伝播・逆伝播・更新）をこの1ファイルに入れてある。
+"""
+
+import numpy as np
+
+N_IN, N_HIDDEN, N_OUT = 5, 64, 2
+
+
+def init_params(seed: int = 0) -> dict:
+    """重みを乱数で、バイアスをゼロで初期化する。"""
+    rng = np.random.default_rng(seed)
+
+    def w(n_in, n_out):
+        # 入力が多いほど小さく振る（He / Xavier 初期化の考え方）
+        return rng.normal(0.0, np.sqrt(1.0 / n_in), size=(n_out, n_in))
+
+    return {
+        "W1": w(N_IN, N_HIDDEN), "b1": np.zeros(N_HIDDEN),
+        "W2": w(N_HIDDEN, N_HIDDEN), "b2": np.zeros(N_HIDDEN),
+        "W3": w(N_HIDDEN, N_OUT), "b3": np.zeros(N_OUT),
+    }
+
+
+def forward(p: dict, x: np.ndarray):
+    """x: (N, 5) を入れて行動 (N, 2) を返す。逆伝播で使う途中の値も返す。"""
+    h1 = np.tanh(x @ p["W1"].T + p["b1"])
+    h2 = np.tanh(h1 @ p["W2"].T + p["b2"])
+    y = h2 @ p["W3"].T + p["b3"]
+    return y, (x, h1, h2)</code></pre>
+  </div>
+
+  <p><span class="inline-code">forward()</span> が途中の値 <span class="inline-code">(x, h1, h2)</span> も返しているのは、第6章の逆伝播で使うからです。いまは気にしなくて構いません。</p>
+
+  <p>初期化で重みを乱数にしているのは、<strong>全部同じ値から始めると全ニューロンが同じ計算をしてしまい、何本並べても1本と変わらなくなる</strong>からです。バイアスは 0 で構いません。</p>
+
+  <h3>写経 ── 形が変わっていく様子を見る</h3>
+
+  <div class="code">
+    <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>nn4_forward.py</span><button class="copy" type="button">コピー</button></div>
+<pre><code class="language-python">"""第4章: 順伝播 ── 観測を入れてから行動が出るまで。
+
+学習はまだしない。数の並びが層を通って形を変える様子だけを見る。
+"""
+
+import numpy as np
+
+import mlp
+
+p = mlp.init_params(seed=0)
+
+print("パラメータの形と数:")
+for k, v in p.items():
+    print(f"  {k:3} {str(v.shape):10} {v.size:>5} 個")
+print(f"  {'合計':3} {'':10} {sum(v.size for v in p.values()):>5} 個")
+print()
+
+# 3つの観測を一度に流す。位置は原点、目標だけが違う。
+x = np.zeros((3, 5))
+x[0, 2] = x[1, 3] = x[2, 4] = 1.0   # one-hot の z
+
+y, (_, h1, h2) = mlp.forward(p, x)
+
+print("数の並びが形を変えていく:")
+print(f"  入力（観測）  {x.shape}   ← 位置2 + 目標3")
+print(f"  第1層の後     {h1.shape}   ← ニューロン64本ぶん")
+print(f"  第2層の後     {h2.shape}")
+print(f"  出力（行動）  {y.shape}   ← 速度指令2つ")
+print()
+
+print("まだ学習していないので、出てくる行動はでたらめ:")
+for name, row in zip(["left", "right", "up"], y):
+    print(f"  z = {name:5} → 行動 {np.round(row, 4)}")</code></pre>
+  </div>
+
+  <div class="code is-out">
+    <div class="code-bar"><span class="code-name"><span class="dot">&gt;</span>出力</span><button class="copy" type="button">コピー</button></div>
+<pre><code>パラメータの形と数:
+  W1  (64, 5)      320 個
+  b1  (64,)         64 個
+  W2  (64, 64)    4096 個
+  b2  (64,)         64 個
+  W3  (2, 64)      128 個
+  b3  (2,)           2 個
+  合計              4674 個
+
+数の並びが形を変えていく:
+  入力（観測）  (3, 5)   ← 位置2 + 目標3
+  第1層の後     (3, 64)   ← ニューロン64本ぶん
+  第2層の後     (3, 64)
+  出力（行動）  (3, 2)   ← 速度指令2つ
+
+まだ学習していないので、出てくる行動はでたらめ:
+  z = left  → 行動 [0.827  0.5054]
+  z = right → 行動 [0.2783 0.0918]
+  z = up    → 行動 [-0.4919 -0.1574]</code></pre>
+  </div>
+
+  <p>数の並びが <strong>5 → 64 → 64 → 2</strong> と形を変えて出てきます。序章の図がそのまま出力になっています。</p>
+
+  <p>パラメータの合計は <strong>4,674個</strong>。第2章で数えた384個（第1層）に、4,160個（第2層）と130個（出口）を足した数です。<strong>「入力数 × 出力数 + 出力数」を層ごとに足すだけ</strong>で、どんなネットワークでもパラメータ数は数えられます。</p>
+
+  <p>まだ学習していないので、出てくる行動はでたらめです。3つの目標で値が違うのは、単に <span class="inline-code">z</span> の位置が違うから。<strong>意味のある違いではありません</strong>——それを意味のある違いにするのが、残りの3章です。</p>
+</section>
+
+<section id="ch5">
+  <div class="ch-head"><span class="ch-num">第 5 章</span></div>
+  <h2>損失と勾配 ── どちらに動かせば良くなるか</h2>
+
+  <div class="pin">
+    <span class="pin-label">この章でやること</span>
+    <code>loss = np.mean((pred - y) ** 2)</code>
+  </div>
+
+  <p class="lead">学習するには、まず<strong>「いまどれくらい下手か」を1つの数にする</strong>必要があります。それが<strong>損失</strong>です。この本では正解の行動が分かるので、出力と正解のズレをそのまま損失にします。</p>
+
+  <p>正解の行動は式で書けます。<strong>目標へ向かって、行き過ぎない分だけ動く</strong>——それだけです。</p>
+
+  <div class="pin">
+    <span class="pin-label">正解の行動</span>
+    <code>y = np.clip((TARGETS[gid] - pos) / STEP, -1.0, 1.0)</code>
+  </div>
+
+  <h3>写経 ── 重みを1つ動かして、損失の変化を見る</h3>
+
+  <div class="code">
+    <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>nn5_loss.py</span><button class="copy" type="button">コピー</button></div>
+<pre><code class="language-python">"""第5章: 損失と勾配 ── 「どちらに動かせば良くなるか」を数で出す。
+
+正解の行動が分かる問題にして、出力とのズレを損失にする。
+重みを少しだけ動かして損失の変化を見れば、それが勾配（数値微分）。
+"""
+
+import numpy as np
+
+import mlp
+
+TARGETS = np.array([[-0.7, 0.0], [0.7, 0.0], [0.0, 0.7]])
+STEP = 0.05   # 1ステップで進める距離
+
+
+def make_batch(n, rng):
+    """観測と、そのときの正解の行動を作る。"""
+    pos = rng.uniform(-1.0, 1.0, size=(n, 2))
+    gid = rng.integers(3, size=n)
+    z = np.eye(3)[gid]                                  # one-hot
+    x = np.concatenate([pos, z], axis=1)
+    y = np.clip((TARGETS[gid] - pos) / STEP, -1.0, 1.0)  # 目標へ、行き過ぎない分だけ
+    return x, y
+
+
+def loss_of(p, x, y):
+    """平均二乗誤差。出力と正解のズレを1つの数にまとめる。"""
+    pred, _ = mlp.forward(p, x)
+    return float(np.mean((pred - y) ** 2))
+
+
+rng = np.random.default_rng(0)
+x, y = make_batch(256, rng)
+p = mlp.init_params(seed=0)
+
+print("観測の例  :", np.round(x[0], 3))
+print("正解の行動:", np.round(y[0], 3))
+print()
+
+base = loss_of(p, x, y)
+print(f"いまの損失: {base:.6f}")
+print()
+
+# W1 の左上の重みを1つだけ、少しだけ動かしてみる
+eps = 1e-4
+p["W1"][0, 0] += eps
+plus = loss_of(p, x, y)
+p["W1"][0, 0] -= 2 * eps
+minus = loss_of(p, x, y)
+p["W1"][0, 0] += eps   # 元に戻す
+
+print(f"W1[0,0] を +{eps} 動かすと 損失 {plus:.6f}")
+print(f"W1[0,0] を -{eps} 動かすと 損失 {minus:.6f}")
+print()
+print(f"  傾き = (増えたぶん - 減ったぶん) / (2 * {eps}) = {(plus - minus) / (2 * eps):+.6f}")
+print()
+print("これが「この重みについての勾配」。符号の逆向きに動かせば損失は減る。")
+print("全部の重みについてこれをやれば学習できるが、数が多すぎて現実的でない。")
+print(f"（このネットの重みは {sum(v.size for v in p.values())} 個。1回の更新に {sum(v.size for v in p.values()) * 2} 回の順伝播が要る）")</code></pre>
+  </div>
+
+  <div class="code is-out">
+    <div class="code-bar"><span class="code-name"><span class="dot">&gt;</span>出力</span><button class="copy" type="button">コピー</button></div>
+<pre><code>観測の例  : [ 0.274 -0.46   0.     0.     1.   ]
+正解の行動: [-1.  1.]
+
+いまの損失: 1.234658
+
+W1[0,0] を +0.0001 動かすと 損失 1.234659
+W1[0,0] を -0.0001 動かすと 損失 1.234657
+
+  傾き = (増えたぶん - 減ったぶん) / (2 * 0.0001) = +0.009138
+
+これが「この重みについての勾配」。符号の逆向きに動かせば損失は減る。
+全部の重みについてこれをやれば学習できるが、数が多すぎて現実的でない。
+（このネットの重みは 4674 個。1回の更新に 9348 回の順伝播が要る）</code></pre>
+  </div>
+
+  <p>やっているのは<strong>坂の傾きを測る</strong>ことです。重みを少し増やして損失がどう動いたか、少し減らしてどう動いたか。その差を取れば、この重みについての<strong>勾配</strong>が出ます。</p>
+
+  <p>勾配が <span class="inline-code">+0.009</span> なら、「この重みを増やすと損失が増える」。だから<strong>逆向きに、少しだけ動かせばいい</strong>。これが学習の全てです。</p>
+
+  <div class="note">
+    <span class="note-label">この方法では現実的でない</span>
+    <p>この測り方（数値微分）は正しいのですが、<strong>重み1つにつき順伝播が2回</strong>必要です。このネットワークは4,674個あるので、1回更新するのに<strong>9,348回</strong>の順伝播が要ります。</p>
+    <p>実際のネットワークは数百万〜数十億のパラメータを持つので、この方法はまったく使えません。だから次の章の<strong>逆伝播</strong>が要ります。</p>
+  </div>
+</section>
+
+<section id="ch6">
+  <div class="ch-head"><span class="ch-num">第 6 章</span></div>
+  <h2>逆伝播 ── 全部の勾配を1回で出す</h2>
+
+  <div class="pin">
+    <span class="pin-label">この章で書き足す行</span>
+    <code>mlp.py に backward() を足す</code>
+  </div>
+
+  <p class="lead">逆伝播は、<strong>出力側から入力側へ向かって勾配を配っていく</strong>手続きです。順伝播1回ぶんとほぼ同じ手間で、全パラメータの勾配が一度に出ます。数値微分の9,348回が1回になります。</p>
+
+  <p>種明かしをすると、やっているのは<strong>合成関数の微分（連鎖律）</strong>です。「出力の勾配」が分かれば、その1つ手前の層の勾配が計算でき、それを繰り返して入口まで戻ります。</p>
+
+  <div class="code">
+    <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>mlp.py（backward を足す）</span><button class="copy" type="button">コピー</button></div>
+<pre><code class="language-python">def backward(p: dict, cache, dy: np.ndarray) -> dict:
+    """出力側の勾配 dy から、各パラメータの勾配を求める（連鎖律）。"""
+    x, h1, h2 = cache
+    g = {"W3": dy.T @ h2, "b3": dy.sum(axis=0)}
+
+    d2 = (dy @ p["W3"]) * (1.0 - h2 ** 2)      # tanh の微分は 1 - tanh^2
+    g["W2"], g["b2"] = d2.T @ h1, d2.sum(axis=0)
+
+    d1 = (d2 @ p["W2"]) * (1.0 - h1 ** 2)
+    g["W1"], g["b1"] = d1.T @ x, d1.sum(axis=0)
+    return g</code></pre>
+  </div>
+
+  <p><span class="inline-code">tanh</span> を選んだ理由がここで効きます。<span class="inline-code">tanh</span> の微分は <span class="inline-code">1 - tanh(x)&#178;</span> なので、<strong>順伝播で計算した値 <span class="inline-code">h</span> をそのまま使って <span class="inline-code">1 - h**2</span> と書けます</strong>。だから <span class="inline-code">forward()</span> が途中の値を返していました。</p>
+
+  <h3>写経 ── 数値微分と一致するか確かめる（勾配チェック）</h3>
+
+  <p>逆伝播は書き間違えても<strong>エラーにならずに動いてしまいます</strong>。学習が進まないという形でしか異常が出ないので、原因を突き止めるのが難しい。だから<strong>第5章の数値微分と突き合わせて確かめます</strong>。これを勾配チェックと呼びます。</p>
+
+  <div class="code">
+    <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>nn6_backprop.py</span><button class="copy" type="button">コピー</button></div>
+<pre><code class="language-python">"""第6章: 逆伝播 ── 全部の勾配を、順伝播1回ぶんの手間で出す。
+
+答え合わせは数値微分。第5章のやり方で出した傾きと、
+mlp.backward() が返す傾きが一致すれば、逆伝播が正しく書けている。
+"""
+
+import numpy as np
+
+import mlp
+
+
+def loss_and_grad(p, x, y):
+    """損失と、全パラメータの勾配を返す。"""
+    pred, cache = mlp.forward(p, x)
+    n = x.shape[0] * mlp.N_OUT
+    loss = float(np.mean((pred - y) ** 2))
+    dy = 2.0 * (pred - y) / n          # 損失を出力で微分したもの
+    return loss, mlp.backward(p, cache, dy)
+
+
+def numeric_grad(p, x, y, key, idx, eps=1e-5):
+    """パラメータを1つだけ動かして、損失の傾きを測る（第5章と同じ手口）。"""
+
+    def loss_at(delta):
+        p[key][idx] += delta
+        pred, _ = mlp.forward(p, x)
+        p[key][idx] -= delta
+        return float(np.mean((pred - y) ** 2))
+
+    return (loss_at(eps) - loss_at(-eps)) / (2 * eps)
+
+
+rng = np.random.default_rng(0)
+x = rng.normal(size=(16, mlp.N_IN))
+y = rng.normal(size=(16, mlp.N_OUT))
+p = mlp.init_params(seed=0)
+
+loss, grads = loss_and_grad(p, x, y)
+print(f"損失: {loss:.6f}")
+print()
+print(f"{'パラメータ':10} {'逆伝播':>14} {'数値微分':>14} {'差':>12}")
+print("-" * 54)
+
+worst = 0.0
+for key in ["W1", "b1", "W2", "b2", "W3", "b3"]:
+    # 各パラメータから2箇所ずつ、重複しないように抜き出して調べる
+    for flat in rng.choice(p[key].size, size=2, replace=False):
+        idx = np.unravel_index(flat, p[key].shape)
+        a = grads[key][idx]
+        n = numeric_grad(p, x, y, key, idx)
+        worst = max(worst, abs(a - n))
+        label = f"{key}[{','.join(map(str, idx))}]"
+        print(f"{label:10} {a:>14.9f} {n:>14.9f} {abs(a - n):>12.2e}")
+
+print("-" * 54)
+print(f"いちばん大きい差: {worst:.2e}")
+print("→ 1e-6 より小さければ、逆伝播は正しく書けている。")
+print()
+print("数値微分は重み1つにつき順伝播2回。逆伝播は全部まとめて1回。")
+print(f"このネットなら {sum(v.size for v in p.values()) * 2} 回 → 1 回。これが逆伝播の値打ち。")</code></pre>
+  </div>
+
+  <div class="code is-out">
+    <div class="code-bar"><span class="code-name"><span class="dot">&gt;</span>出力</span><button class="copy" type="button">コピー</button></div>
+<pre><code>損失: 1.203607
+
+パラメータ                 逆伝播           数値微分            差
+------------------------------------------------------
+W1[48,2]     -0.071072421   -0.071072421     6.01e-12
+W1[5,4]      -0.029221445   -0.029221445     1.07e-11
+b1[32]       -0.009037286   -0.009037286     9.89e-12
+b1[57]       -0.030318238   -0.030318238     2.05e-11
+W2[4,14]      0.007406589    0.007406589     1.13e-12
+W2[17,9]     -0.009965660   -0.009965660     3.45e-12
+b2[39]        0.017620299    0.017620299     7.75e-12
+b2[53]        0.004415795    0.004415795     2.75e-12
+W3[0,44]     -0.008348612   -0.008348612     9.76e-12
+W3[1,18]      0.256283107    0.256283107     6.57e-12
+b3[0]         0.467237904    0.467237904     9.96e-12
+b3[1]        -0.009279652   -0.009279652     1.27e-11
+------------------------------------------------------
+いちばん大きい差: 2.05e-11
+→ 1e-6 より小さければ、逆伝播は正しく書けている。
+
+数値微分は重み1つにつき順伝播2回。逆伝播は全部まとめて1回。
+このネットなら 9348 回 → 1 回。これが逆伝播の値打ち。</code></pre>
+  </div>
+
+  <p>差は <span class="inline-code">2e-11</span> 程度。これは浮動小数点の誤差の範囲で、<strong>実質的に完全一致</strong>です。逆伝播が正しく書けています。</p>
+
+  <div class="note">
+    <span class="note-label">この確認は毎回やる価値がある</span>
+    <p>自分で逆伝播を書いたら、必ず勾配チェックを通してください。<strong>差が 1e-6 より大きければどこかが間違っています</strong>。符号の取り違え、転置のし忘れ、活性化関数の微分の間違いが典型です。</p>
+    <p>ライブラリを使う場合はライブラリ側が保証してくれるので不要ですが、「勾配が合っているか確かめる方法がある」と知っていること自体が、あとで効きます。</p>
+  </div>
+</section>
+
+<section id="ch7">
+  <div class="ch-head"><span class="ch-num">第 7 章</span></div>
+  <h2>学習させる ── そして動かす</h2>
+
+  <div class="pin">
+    <span class="pin-label">この章で書き足す行</span>
+    <code>mlp.py に sgd_step() を足す</code>
+  </div>
+
+  <p class="lead">道具が揃いました。<strong>損失を測り、勾配を出し、逆向きに少し動かす</strong>。これを繰り返すだけです。</p>
+
+  <div class="code">
+    <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>mlp.py（sgd_step を足す。これで完成）</span><button class="copy" type="button">コピー</button></div>
+<pre><code class="language-python">def sgd_step(p: dict, g: dict, lr: float) -> None:
+    """勾配の逆向きにパラメータを少しだけ動かす。"""
+    for k in p:
+        p[k] -= lr * g[k]</code></pre>
+  </div>
+
+  <p>3行です。<strong>勾配の逆向きに、学習率 <span class="inline-code">lr</span> の分だけ動かす</strong>。これを<strong>勾配降下法</strong>と呼び、毎回ランダムな一部のデータで行うので<strong>確率的</strong>勾配降下法（SGD）と言います。</p>
+
+  <h3>写経 ── 学習して、走らせる</h3>
+
+  <div class="code">
+    <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>nn7_train.py</span><button class="copy" type="button">コピー</button></div>
+<pre><code class="language-python">"""第7章: 学習させて、動かす。
+
+正解の行動を教師データにして自作 MLP を訓練し、
+そのあと自分で60ステップ動かして、3つの的に届くか確かめる。
+"""
+
+import numpy as np
+
+import mlp
+
+TARGETS = np.array([[-0.7, 0.0], [0.7, 0.0], [0.0, 0.7]])
+NAMES = ["left", "right", "up"]
+STEP = 0.05
+EPOCHS = 300
+BATCH = 256
+LR = 0.5
+
+
+def make_batch(n, rng):
+    pos = rng.uniform(-1.0, 1.0, size=(n, 2))
+    gid = rng.integers(3, size=n)
+    x = np.concatenate([pos, np.eye(3)[gid]], axis=1)
+    y = np.clip((TARGETS[gid] - pos) / STEP, -1.0, 1.0)
+    return x, y
+
+
+def loss_and_grad(p, x, y):
+    pred, cache = mlp.forward(p, x)
+    n = x.shape[0] * mlp.N_OUT
+    return float(np.mean((pred - y) ** 2)), mlp.backward(p, cache, 2.0 * (pred - y) / n)
+
+
+rng = np.random.default_rng(0)
+p = mlp.init_params(seed=0)
+x_test, y_test = make_batch(2000, np.random.default_rng(999))
+
+print(f"学習 {EPOCHS} 回  バッチ {BATCH}  学習率 {LR}")
+print()
+for epoch in range(EPOCHS + 1):
+    x, y = make_batch(BATCH, rng)
+    loss, grads = loss_and_grad(p, x, y)
+    if epoch % 50 == 0:
+        test_loss, _ = loss_and_grad(p, x_test, y_test)
+        print(f"  epoch {epoch:>4}   学習データの損失 {loss:.5f}   別データでの損失 {test_loss:.5f}")
+    mlp.sgd_step(p, grads, LR)
+
+print()
+print("学習した方策を60ステップ動かす（原点から出発）:")
+for gid, name in enumerate(NAMES):
+    pos = np.zeros(2)
+    z = np.eye(3)[gid]
+    for _ in range(60):
+        obs = np.concatenate([pos, z])[None]          # (1, 5)
+        action, _ = mlp.forward(p, obs)
+        pos = np.clip(pos + STEP * np.clip(action[0], -1.0, 1.0), -1.0, 1.0)
+    dist = float(np.linalg.norm(pos - TARGETS[gid]))
+    print(f"  z = {name:5} 目標 {TARGETS[gid]} → 到達 [{pos[0]:+.3f} {pos[1]:+.3f}]  距離 {dist:.4f}")
+
+print()
+print("1つのネットワークが、z を読んで3つの的を撃ち分けている。")
+print("重みは1組だけ。的ごとに学習し直したわけではない。")</code></pre>
+  </div>
+
+  <div class="code is-out">
+    <div class="code-bar"><span class="code-name"><span class="dot">&gt;</span>出力</span><button class="copy" type="button">コピー</button></div>
+<pre><code>学習 300 回  バッチ 256  学習率 0.5
+
+  epoch    0   学習データの損失 1.23466   別データでの損失 1.26833
+  epoch   50   学習データの損失 0.15668   別データでの損失 0.15896
+  epoch  100   学習データの損失 0.05996   別データでの損失 0.05742
+  epoch  150   学習データの損失 0.04307   別データでの損失 0.03611
+  epoch  200   学習データの損失 0.03019   別データでの損失 0.02754
+  epoch  250   学習データの損失 0.01953   別データでの損失 0.02046
+  epoch  300   学習データの損失 0.01610   別データでの損失 0.01759
+
+学習した方策を60ステップ動かす（原点から出発）:
+  z = left  目標 [-0.7  0. ] → 到達 [-0.700 +0.003]  距離 0.0028
+  z = right 目標 [0.7 0. ] → 到達 [+0.686 +0.012]  距離 0.0182
+  z = up    目標 [0.  0.7] → 到達 [+0.003 +0.694]  距離 0.0068
+
+1つのネットワークが、z を読んで3つの的を撃ち分けている。
+重みは1組だけ。的ごとに学習し直したわけではない。</code></pre>
+  </div>
+
+  <p>損失が <strong>1.23 から 0.016 まで</strong>下がりました。学習に使っていない別のデータでも同じくらい下がっているので、<strong>データを丸暗記したのではなく、規則を掴んでいます</strong>。</p>
+
+  <p>そして最後の3行が、この本の結論です。<strong>1つのネットワークが、入力の後ろ3つを読んで行き先を変えています。</strong>重みは1組だけ。的ごとに学習し直したのではありません。</p>
+
+  <div class="note">
+    <span class="note-label">環境の正体は4行</span>
+    <p>最後に動かしている部分をよく見てください。<span class="inline-code">pos = np.clip(pos + STEP * action, -1, 1)</span> の1行が「世界が1つ進む」ところです。</p>
+    <p>次の本『<a href="rl-from-env.html">環境から入る強化学習</a>』は、<strong>この数行をちゃんとした環境として書くところから始まります</strong>。いま手で書いた60ステップのループが、<span class="inline-code">reset()</span> と <span class="inline-code">step()</span> という決まった形に整理されていきます。</p>
+  </div>
+</section>
+
+<section id="reread">
+  <div class="ch-head"><span class="ch-num">終章</span></div>
+  <h2>もう一度 mlp.py を読む</h2>
+
+  <p class="lead">7章かけて書いたものは、これで全部です。ニューラルネットワークの中身は、<strong>この長さに収まります</strong>。</p>
+
+  <div class="tbl wide">
+    <table>
+      <thead>
+        <tr><th>コード</th><th>何の話か</th><th>章</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="mono">np.dot(w, x) + b</td><td>ニューロン1本。掛けて足すだけ</td><td class="ch">1</td></tr>
+        <tr><td class="mono">W @ x + b</td><td>ニューロンを並べる = 層。形は (出力数, 入力数)</td><td class="ch">2</td></tr>
+        <tr><td class="mono">np.tanh(...)</td><td>非線形。これが無いと層が潰れる</td><td class="ch">3</td></tr>
+        <tr><td class="mono">forward()</td><td>順伝播。途中の値を残すのは逆伝播のため</td><td class="ch">4</td></tr>
+        <tr><td class="mono">np.mean((pred - y) ** 2)</td><td>損失。下手さを1つの数にする</td><td class="ch">5</td></tr>
+        <tr><td class="mono">(1 - h ** 2)</td><td>tanh の微分。順伝播の値を使い回せる</td><td class="ch">6</td></tr>
+        <tr><td class="mono">backward()</td><td>逆伝播。全部の勾配を1回で。数値微分と突き合わせて確かめる</td><td class="ch">6</td></tr>
+        <tr><td class="mono">p[k] -= lr * g[k]</td><td>更新。勾配の逆向きに少し動かす</td><td class="ch">7</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="takeaway">
+    <h3>ここまでで手に入ったもの</h3>
+    <ol>
+      <li><strong>層とは何か。</strong>行列を1つ掛けて、非線形を1つ通すこと。それ以上でも以下でもない。</li>
+      <li><strong>パラメータ数の数え方。</strong>層ごとに「入力数 × 出力数 + 出力数」を足す。</li>
+      <li><strong>学習とは何をしているか。</strong>損失を測り、勾配を出し、逆向きに動かす。その繰り返し。</li>
+      <li><strong>逆伝播が正しいか確かめる方法。</strong>数値微分と突き合わせる。</li>
+    </ol>
+  </div>
+
+  <p>ここから先、PyTorch や stable-baselines3 を使うようになっても、中で起きているのはこれと同じことです。<span class="inline-code">Linear(5, 64)</span> と書いたときに <span class="inline-code">(64, 5)</span> の行列ができること、<span class="inline-code">loss.backward()</span> が第6章の計算をしていること、<span class="inline-code">optimizer.step()</span> が <span class="inline-code">sgd_step()</span> に当たること——それが見えていれば、ライブラリはただの省力化です。</p>
+
+  <div class="note">
+    <span class="note-label">次の本へ</span>
+    <p>この本では<strong>正解を教えて</strong>学ばせました。ですが現実には、正解が書けない問題のほうが多い。「どう動けば良いか」は分からないが「結果が良かったかどうか」は分かる——そういう問題を扱うのが強化学習です。</p>
+    <p>次の『<a href="rl-from-env.html">環境から入る強化学習</a>』で環境の書き方を、3冊目の『<a href="goal-vector.html">写経で覚える目標ベクトル</a>』で<strong>正解を一度も教えずに、この章と同じ結果に辿り着く</strong>ところを見ます。同じ3つの的、同じ打ち分けです。</p>
+  </div>
+</section>
+
+<section id="glossary">
+  <div class="ch-head"><span class="ch-num">付録</span></div>
+  <h2>用語の対応表</h2>
+
+  <div class="tbl wide">
+    <table>
+      <thead>
+        <tr><th>用語</th><th>英語</th><th>この本のコード</th><th>意味</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>ニューロン</td><td class="mono">neuron / unit</td><td class="mono">W の1行</td><td>入力に重みを掛けて足す1本</td></tr>
+        <tr><td>層</td><td class="mono">layer</td><td class="mono">W @ x + b</td><td>ニューロンを並べたもの。行列1つ</td></tr>
+        <tr><td>全結合層</td><td class="mono">linear / dense</td><td class="mono">同上</td><td>入力を全部使う層。この本はこれだけ</td></tr>
+        <tr><td>重み / バイアス</td><td class="mono">weight / bias</td><td class="mono">W, b</td><td>学習で変わる数</td></tr>
+        <tr><td>パラメータ</td><td class="mono">parameter</td><td class="mono">p の中身</td><td>重みとバイアスをまとめた呼び方</td></tr>
+        <tr><td>活性化関数</td><td class="mono">activation</td><td class="mono">np.tanh</td><td>層と層のあいだの非線形</td></tr>
+        <tr><td>順伝播</td><td class="mono">forward</td><td class="mono">forward()</td><td>入力から出力へ計算する向き</td></tr>
+        <tr><td>損失</td><td class="mono">loss</td><td class="mono">np.mean((pred - y) ** 2)</td><td>いまの下手さを表す1つの数</td></tr>
+        <tr><td>勾配</td><td class="mono">gradient</td><td class="mono">grads</td><td>各パラメータを動かすと損失がどう変わるか</td></tr>
+        <tr><td>逆伝播</td><td class="mono">backpropagation</td><td class="mono">backward()</td><td>勾配を出力側から配る手続き</td></tr>
+        <tr><td>学習率</td><td class="mono">learning rate</td><td class="mono">LR</td><td>1回でどれだけ動かすか</td></tr>
+        <tr><td>勾配降下法</td><td class="mono">SGD</td><td class="mono">sgd_step()</td><td>勾配の逆向きに動かす更新</td></tr>
+        <tr><td>エポック / バッチ</td><td class="mono">epoch / batch</td><td class="mono">EPOCHS, BATCH</td><td>何回・何件ずつ学習するか</td></tr>
+        <tr><td>教師あり学習</td><td class="mono">supervised learning</td><td class="mono">make_batch()</td><td>正解を教えて学ばせる方式</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>右の列を PyTorch の書き方と並べると、そのまま対応が付きます。<span class="inline-code">nn.Linear</span> が第2章、<span class="inline-code">nn.Tanh</span> が第3章、<span class="inline-code">loss.backward()</span> が第6章、<span class="inline-code">optimizer.step()</span> が第7章です。</p>
+</section>
+
+<footer>
+  <p>掲載した出力はすべて実行して確認したものです（Python 3.11 / numpy 2.5、CPUのみ）。乱数は種を固定してあるので、同じ数字が出るはずです。</p>
+  <p>この本は3冊のうちの1冊目です。次は『<a href="rl-from-env.html">環境から入る強化学習</a>』、その次が『<a href="goal-vector.html">写経で覚える目標ベクトル</a>』。3冊とも同じ3つの的を題材にしています。</p>
+</footer>
+
+</main>
+</div>
+
+<script>
+(function () {
+  if (window.hljs) {
+    document.querySelectorAll('pre code[class^="language-"]').forEach(function (el) {
+      try { window.hljs.highlightElement(el); } catch (e) {}
+    });
+  }
+
+  document.querySelectorAll('.copy').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var block = btn.closest('.code');
+      var code = block ? block.querySelector('pre code') : null;
+      if (!code) return;
+      var text = code.textContent;
+
+      var done = function () {
+        btn.textContent = 'コピーしました';
+        btn.setAttribute('data-done', '1');
+        setTimeout(function () {
+          btn.textContent = 'コピー';
+          btn.removeAttribute('data-done');
+        }, 1600);
+      };
+      var fallback = function () {
+        try {
+          var ta = document.createElement('textarea');
+          ta.value = text;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          done();
+        } catch (e) {
+          btn.textContent = '選択してコピー';
+          setTimeout(function () { btn.textContent = 'コピー'; }, 2200);
+        }
+      };
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(fallback);
+      } else {
+        fallback();
+      }
+    });
+  });
+})();
+</script>

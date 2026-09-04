@@ -1,12 +1,12 @@
 import numpy as np
 import gymnasium as gym
-import gymnasium import spaces
+from gymnasium import spaces
 
 TARGETS = np.array(
     [
         [-0.7, 0.0], # 0: 左
         [0.7, 0.0],  # 1: 右
-        [0,0, 0.7],  # 2: 上
+        [0.0, 0.7],  # 2: 上
     ],
     dtype=np.float32,
 )
@@ -23,5 +23,3 @@ class ReachEnv(gym.Env):
         self.observation_space = spaces.Box(
             -np.inf, np.inf, shape=(obs_dim,), dtype=np.float32
         )
-
-    

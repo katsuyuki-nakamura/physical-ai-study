@@ -1,4 +1,5 @@
 # 本文の出力を確認した版を右に添えている
+numpy>=2.0              # 2.5.2 （本01 はこれだけで足りる）
 gymnasium>=1.0          # 1.3.0
 stable-baselines3>=2.4  # 2.9.0 （torch が付いてくる。CPU版で足りる）
-matplotlib>=3.8         # 3.10.9 （本01の plot.py だけで使う）
+matplotlib>=3.8         # 3.10.9 （本03の plot.py だけで使う）
