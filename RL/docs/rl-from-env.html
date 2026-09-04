@@ -195,6 +195,8 @@ strong { font-weight: 600; }
 .code pre { margin: 0; padding: 18px 20px 20px; overflow-x: auto; font-family: "JetBrains Mono", monospace; font-size: 13px; line-height: 1.72; color: var(--code-ink); tab-size: 4; }
 .code pre code { font-family: inherit; background: none; padding: 0; }
 
+.code.is-shell pre { font-size: 13.5px; }
+
 .code.is-out { background: var(--surface); border-color: var(--rule); }
 .code.is-out .code-bar { background: var(--surface-2); border-bottom-color: var(--rule); }
 .code.is-out .code-name, .code.is-out .code-name .dot { color: var(--ink-3); }
@@ -245,6 +247,7 @@ footer p { max-width: none; }
   <div class="rail-title">Contents</div>
   <ol>
     <li><a href="#intro"><span class="n">序</span><span>書くのは環境のほう</span></a></li>
+    <li><a href="#setup"><span class="n">&#167;</span><span>準備</span></a></li>
     <li><a href="#transcribe"><span class="n">写</span><span>reach_env.py</span></a></li>
     <li><a href="#ch1"><span class="n">01</span><span>ループ</span></a></li>
     <li><a href="#notation"><span class="n">&#167;</span><span>式の読み方</span></a></li>
@@ -321,7 +324,32 @@ footer p { max-width: none; }
     <span class="note-label">この本の読み方</span>
     <p>まず次の節で <span class="inline-code">reach_env.py</span> を丸ごと書き写します。意味が分からないまま写して構いません。そのあとの各章が、いま書いた行を1つずつ回収していきます。</p>
     <p>各章の頭には、その章が説明する <span class="inline-code">reach_env.py</span> の行を置いてあります。まずその行を見て、「なぜこう書くのか」が言えるか自分に聞いてみてください。言えなければ、その章が埋める場所です。</p>
-    <p>写経コードは <span class="inline-code">reach_env.py</span> と同じディレクトリに置いて実行します。<strong>学習は一度も回しません</strong>ので、どれも数秒で終わります（第6章だけ、学習済みモデルがあれば読み込みます）。</p>
+    <p>写経コードは <span class="inline-code">reach_env.py</span> と同じディレクトリに置いて実行します。<strong>学習は一度も回しません</strong>ので、どれも数秒で終わります（第6章だけ、次の本で作る学習済みモデルがあれば読み込みますが、無くても動きます）。</p>
+  </div>
+</section>
+
+<section id="setup">
+  <div class="ch-head"><span class="ch-num">&#167;</span></div>
+  <h2>準備</h2>
+
+  <p class="lead">この本の写経は<strong>学習を一度も回しません</strong>。必要なのは <span class="inline-code">gymnasium</span> と、それが連れてくる <span class="inline-code">numpy</span> だけです。数十MBで済みます。</p>
+
+  <div class="code is-shell">
+    <div class="code-bar"><span class="code-name"><span class="dot">$</span>bash</span><button class="copy" type="button">コピー</button></div>
+<pre><code class="language-bash">mkdir rl-study &amp;&amp; cd rl-study
+python3 -m venv .venv &amp;&amp; source .venv/bin/activate
+pip install "gymnasium>=1.0"
+
+# 動作確認
+python -c "import gymnasium; print(gymnasium.__version__)"</code></pre>
+  </div>
+
+  <p><span class="inline-code">1.3.0</span> のような表示が出れば足ります。以降、書き写したファイルはすべてこの <span class="inline-code">rl-study/</span> に置き、この中で実行します。</p>
+
+  <div class="note">
+    <span class="note-label">stable-baselines3 は後回しでよい</span>
+    <p>第6章の写経だけ、<strong>学習済みの方策があると2列で比べられます</strong>。ですがその方策を作るのは次の本『<a href="goal-vector.html">写経で覚える目標ベクトル</a>』の Step 2 です。<strong>この本を読み進めるだけなら要りません</strong>——第6章は学習済みモデルが無くても動き、その場合は片方の列だけが出ます。</p>
+    <p>先に入れておきたい場合は <span class="inline-code">pip install "stable-baselines3&gt;=2.4"</span>。<span class="inline-code">torch</span> が付いてくるので数百MBになります。CPU版で足ります。</p>
   </div>
 </section>
 
@@ -983,7 +1011,7 @@ for goal_conditioned in (False, True):
       <tbody>
         <tr>
           <td><span class="inline-code">goal_conditioned</span> は学習アルゴリズムのオプション</td>
-          <td>環境が<strong>観測に何を入れるか</strong>のスイッチ。PPO 側のコードは <span class="inline-code">step1_plain.py</span> と <span class="inline-code">step2_goal.py</span> でまったく同じ</td>
+          <td>環境が<strong>観測に何を入れるか</strong>のスイッチ。実際に学習を回して確かめるのは次の本で、PPO 側のコードは <span class="inline-code">step1_plain.py</span> と <span class="inline-code">step2_goal.py</span> でまったく同じ</td>
         </tr>
         <tr>
           <td><span class="inline-code">z</span> を渡すのは答えを教えるズル</td>
@@ -1372,6 +1400,12 @@ z = up          -32.4 ± 0.3       -4.5 ± 0.0</code></pre>
   <p>3つの z でほぼ同じ値になっているのは、3つの的が原点から等距離だからです。的の位置を非対称にすれば、z ごとに価値が割れます。</p>
 
   <div class="note">
+    <span class="note-label">右の列がまだ出ない場合</span>
+    <p>この写経は <span class="inline-code">ppo_goal.zip</span>（学習済みの方策）があれば2列、無ければ左の1列だけを出します。<strong>この本の順に読んでいれば、まだ無いのが正常です</strong>——右の列は <span class="inline-code">(no ppo_goal.zip)</span> と表示されます。</p>
+    <p>その方策を作るのは次の本『<a href="goal-vector.html">写経で覚える目標ベクトル</a>』の Step 2 です。あちらを終えてからこの写経に戻ると、上の出力と同じ2列が並びます。<strong>左の列だけでも第6章の話は完結します</strong>ので、いまは先に進んで構いません。</p>
+  </div>
+
+  <div class="note">
     <span class="note-label">PPO が実際にやっていること</span>
     <p>PPO はこの価値を毎回300回走って測ったりはしません。<strong>ニューラルネットにこの値を予測させます</strong>（value function、critic）。そして「実際に貰ったリターン」と「予測した価値」の差を使って、方策を押す向きを決めます。この差が<strong>アドバンテージ</strong>です。</p>
     <p>つまりアドバンテージとは「<strong>予想より良かったか、悪かったか</strong>」。予想より良かった行動の確率を上げ、悪かった行動の確率を下げる。それが方策の更新です。</p>
@@ -1517,7 +1551,7 @@ That is why step() returns the two as separate values.</code></pre>
 
 <footer>
   <p>掲載した出力はすべて実行して確認したものです（Python 3.11 / gymnasium 1.3.0 / numpy 2.4、第6章のみ stable-baselines3 2.9.0）。乱数は種を固定してあるので、同じ数字が出るはずです。</p>
-  <p>この本は <span class="inline-code">reach_env.py</span> を前提にしています。次に読む『写経で覚える目標ベクトル』も同じファイルを使い、そちらでは実際に学習を回して、第2章の <span class="inline-code">z</span> があると解けるようになるところを見ます。</p>
+  <p>この本は <span class="inline-code">reach_env.py</span> を前提にしています。次に読む『<a href="goal-vector.html">写経で覚える目標ベクトル</a>』も同じファイルを使い、そちらでは実際に学習を回して、第2章の <span class="inline-code">z</span> があると解けるようになるところを見ます。</p>
 </footer>
 
 </main>
