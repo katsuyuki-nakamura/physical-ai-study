@@ -60,15 +60,18 @@ physical-ai-study/
     ├── docs/                     本文（単体で開けるHTML）
     │   ├── rl-from-env.html     『環境から入る強化学習』
     │   └── goal-vector.html     『写経で覚える目標ベクトル』
-    ├── code/                     写経コード。ここで実行する
+    ├── code/                     写経コードの正本。ここで実行する
     │   ├── reach_env.py          2冊が共有する環境
     │   ├── ch1_loop.py 〜 ch7_bootstrap.py  本01
     │   └── step1_plain.py 〜 plot.py 本02
+    ├── copying/                  手で書き写す用の作業場所
     └── assets/
         └── trajectories.png
 ```
 
 `docs/` の HTML はビルド成果物ではなく手書きのページです。編集するときはこのファイルを直接直します。
+
+`copying/` は本文のコードを自分で打ち直すための場所です。`code/` の正本とは分けてあるので、写経が動かなくなっても元は壊れません。ただし `reach_env.py` を隣から import する都合上、実行するときは `code/` の中で走らせるか、`copying/` に `reach_env.py` を置いてください。
 
 ---
 
