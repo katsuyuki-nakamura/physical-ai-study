@@ -213,6 +213,14 @@ strong { font-weight: 600; }
 .hljs-params, .hljs-attr, .hljs-variable, .hljs-subst { color: var(--code-ink); }
 .hljs-meta { color: var(--tok-com); }
 
+details.fold { margin: 26px 0 0; max-width: 66ch; }
+details.fold > summary { cursor: pointer; font-family: "JetBrains Mono", monospace; font-size: 12.5px; color: var(--z); padding: 10px 14px; border: 1px dashed var(--rule-strong); border-radius: 6px; list-style: none; }
+details.fold > summary::-webkit-details-marker { display: none; }
+details.fold > summary::before { content: "\25B8  "; }
+details.fold[open] > summary::before { content: "\25BE  "; }
+details.fold > summary:hover { border-color: var(--z); }
+details.fold .code { margin-top: 14px; }
+
 .note { margin: 26px 0 0; padding: 18px 22px; background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--z); border-radius: 0 6px 6px 0; max-width: 66ch; }
 .note p { margin: 0; max-width: none; }
 .note p + p { margin-top: 12px; }
@@ -357,29 +365,234 @@ python -c "import gymnasium; print(gymnasium.__version__)"</code></pre>
   <div class="ch-head"><span class="ch-num">写</span></div>
   <h2>reach_env.py を書き写す</h2>
 
-  <p class="lead">この本の主役はこの1ファイルだけです。全部で67行。冒頭の説明文とコメント、空行を除けば45行です。<strong>まず何も考えずに全部書き写してください。</strong>「なぜそう書くのか」は、次の章から1行ずつ埋めていきます。</p>
+  <p class="lead">この本の主役はこの1ファイルだけです。全部で67行。ただし<strong>一気に写す必要はありません</strong>。5つのかたまりに分けて、<strong>1つ書き写しては解説を読む</strong>順に並べてあります。上から順に足していけば、最後に1つのファイルになります。</p>
 
-  <h3>1. 全体の地図</h3>
+  <h3>全体の地図</h3>
 
-  <p>書き写す前に、5つのかたまりでできていることだけ頭に入れておきます。上から順に、だんだん具体的になります。</p>
+  <p>これから書く5つのかたまりです。上から順に、だんだん具体的になります。</p>
 
   <div class="tbl wide">
     <table>
       <thead>
-        <tr><th>かたまり</th><th>役割</th><th>目安</th><th>詳しくは</th></tr>
+        <tr><th>順</th><th>かたまり</th><th>役割</th><th>目安</th><th>詳しくは</th></tr>
       </thead>
       <tbody>
-        <tr><td class="mono">TARGETS / N_GOALS</td><td>的の座標。この環境の「世界」の定義はこれだけ</td><td>10行</td><td class="ch">—</td></tr>
-        <tr><td class="mono">__init__</td><td>行動空間と観測空間の宣言。外部への型の約束</td><td>12行</td><td class="ch">第3章</td></tr>
-        <tr><td class="mono">_get_obs</td><td><strong>何を見せるか。</strong>この本でいちばん設計判断が要る場所</td><td>6行</td><td class="ch">第2章</td></tr>
-        <tr><td class="mono">reset</td><td>エピソードの開始。最初の観測を出し、今回の目標を引く</td><td>10行</td><td class="ch">第1章</td></tr>
-        <tr><td class="mono">step</td><td>行動を受けて世界を1つ進め、5つ組を返す</td><td>12行</td><td class="ch">第1・4・7章</td></tr>
+        <tr><td class="ch">&#9312;</td><td class="mono">import / TARGETS</td><td>使う道具と、的の座標。この環境の「世界」の定義はこれだけ</td><td>21行</td><td class="ch">—</td></tr>
+        <tr><td class="ch">&#9313;</td><td class="mono">__init__</td><td>行動空間と観測空間の宣言。外部への型の約束</td><td>13行</td><td class="ch">第3章</td></tr>
+        <tr><td class="ch">&#9314;</td><td class="mono">_get_obs</td><td><strong>何を見せるか。</strong>この本でいちばん設計判断が要る場所</td><td>6行</td><td class="ch">第2章</td></tr>
+        <tr><td class="ch">&#9315;</td><td class="mono">reset</td><td>エピソードの開始。最初の観測を出し、今回の目標を引く</td><td>10行</td><td class="ch">第1章</td></tr>
+        <tr><td class="ch">&#9316;</td><td class="mono">step</td><td>行動を受けて世界を1つ進め、5つ組を返す</td><td>12行</td><td class="ch">第1・4・7章</td></tr>
       </tbody>
     </table>
   </div>
 
+  <h3>&#9312; 冒頭 ── 使う道具と、世界の定義</h3>
+
   <div class="code">
-    <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>reach_env.py</span><button class="copy" type="button">コピー</button></div>
+    <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>① import と的の座標</span><button class="copy" type="button">コピー</button></div>
+<pre><code class="language-python">"""2次元リーチング環境。
+
+エージェントは平面上の点。毎エピソード、3つの的のどれか1つが「今回の目標」になる。
+goal_conditioned=False なら、観測は自分の位置だけ（＝目標が見えない）。
+goal_conditioned=True なら、観測に目標ベクトル z（one-hot）が付く。
+"""
+
+import numpy as np
+import gymnasium as gym
+from gymnasium import spaces
+
+# 3つの的。左・右・上。
+TARGETS = np.array(
+    [
+        [-0.7, 0.0],  # 0: 左
+        [0.7, 0.0],   # 1: 右
+        [0.0, 0.7],   # 2: 上
+    ],
+    dtype=np.float32,
+)
+N_GOALS = len(TARGETS)</code></pre>
+  </div>
+
+  <p>最初の6行は説明文（docstring）です。動作には関係しないので飛ばしても構いませんが、<span class="inline-code">goal_conditioned</span> の2行はこの環境の全体像そのものなので、写しておくと後で効きます。</p>
+
+  <p><span class="inline-code">import</span> は3つだけ。<span class="inline-code">numpy</span> が数値配列、<span class="inline-code">gymnasium</span> が環境の規格、<span class="inline-code">spaces</span> は次のかたまりで空間を宣言するのに使います。</p>
+
+  <p><span class="inline-code">TARGETS</span> が<strong>この環境の「世界」の全部</strong>です。物理エンジンも地形も摩擦もなく、平面上の3点の座標だけ。的を増やしたければ、ここに1行足します。</p>
+
+  <p>個数を <span class="inline-code">3</span> と直接書かずに <span class="inline-code">N_GOALS = len(TARGETS)</span> としているのは、<strong>この数が観測の次元にも <span class="inline-code">z</span> の長さにも効く</strong>からです。1箇所で決まるようにしておけば、的を4つにしたときに他を直す必要がありません。</p>
+
+  <p><span class="inline-code">dtype=np.float32</span> を明示しているのは、観測も行動も float32 で流れるためです。既定の float64 のままにすると、あとで <span class="inline-code">np.concatenate</span> したときに観測全体が float64 になり、次のかたまりで宣言する <span class="inline-code">observation_space</span> とずれます。</p>
+
+  <h3>&#9313; __init__ ── 2つの空間を宣言する</h3>
+
+  <div class="code">
+    <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>② class と __init__</span><button class="copy" type="button">コピー</button></div>
+<pre><code class="language-python">class ReachEnv(gym.Env):
+    def __init__(self, goal_conditioned: bool, max_steps: int = 60):
+        self.goal_conditioned = goal_conditioned
+        self.max_steps = max_steps
+
+        # 行動は2次元の速度指令。[-1, 1] に収める。
+        self.action_space = spaces.Box(-1.0, 1.0, shape=(2,), dtype=np.float32)
+
+        # ここが今回の主役。z を足すと観測が 2 次元から 2 + 3 次元になる。
+        obs_dim = 2 + (N_GOALS if goal_conditioned else 0)
+        self.observation_space = spaces.Box(
+            -np.inf, np.inf, shape=(obs_dim,), dtype=np.float32
+        )</code></pre>
+  </div>
+
+  <p><span class="inline-code">gym.Env</span> を継承します。規格として求められるのは <span class="inline-code">reset</span> と <span class="inline-code">step</span> の2つだけです（第1章）。</p>
+
+  <p><span class="inline-code">goal_conditioned</span> をコンストラクタの引数にしてあるので、<strong>同じクラスから2種類の環境が作れます</strong>。この本と次の本は、ずっとこのフラグを切り替えて比べていきます。</p>
+
+  <p><span class="inline-code">action_space</span> は2次元の速度指令で、範囲は <span class="inline-code">[-1, 1]</span>。これは外部に対する<strong>型の宣言</strong>で、学習アルゴリズムはこれを読んでネットワークの出力層のかたちを決めます（第3章）。</p>
+
+  <p>そして <span class="inline-code">obs_dim</span> の行。ここが今回の主役です。</p>
+
+  <div class="pin">
+    <span class="pin-label">この1行が観測の長さを決める</span>
+    <code>obs_dim = 2 + (N_GOALS if goal_conditioned else 0)   # → 2 か 5</code>
+  </div>
+
+  <p><span class="inline-code">2</span> は位置 <span class="inline-code">(x, y)</span>、<span class="inline-code">N_GOALS</span> は的の数 3 です。<strong>分岐しているのは足す個数が 0 か 3 かだけ</strong>で、<span class="inline-code">2 +</span> の部分は常に同じ。出来上がる観測ベクトルの、どの位置に何が入るかは固定です。</p>
+
+  <div class="tbl wide">
+    <table>
+      <thead>
+        <tr><th>index</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>中身</td><td class="mono">x</td><td class="mono">y</td><td>左が目標か</td><td>右が目標か</td><td>上が目標か</td></tr>
+        <tr><td>目標 = 左</td><td class="mono">0.0</td><td class="mono">0.0</td><td class="mono"><strong>1.0</strong></td><td class="mono">0.0</td><td class="mono">0.0</td></tr>
+        <tr><td>目標 = 右</td><td class="mono">0.0</td><td class="mono">0.0</td><td class="mono">0.0</td><td class="mono"><strong>1.0</strong></td><td class="mono">0.0</td></tr>
+        <tr><td>目標 = 上</td><td class="mono">0.0</td><td class="mono">0.0</td><td class="mono">0.0</td><td class="mono">0.0</td><td class="mono"><strong>1.0</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>次のかたまりで書く <span class="inline-code">np.concatenate([self.pos, z])</span> の並び順と、この式の <span class="inline-code">2 + N_GOALS</span> が対応しています。<strong>順番は学習中と推論中で必ず同じでなければいけません。</strong>入れ替わったら、ネットワークにとっては完全に別の入力です。</p>
+
+  <p>そしてこの <span class="inline-code">obs_dim</span> がそのまま <span class="inline-code">observation_space</span> の <span class="inline-code">shape</span> になり、学習アルゴリズムはそれを読んで<strong>入力層の幅</strong>を決めます。</p>
+
+  <div class="note">
+    <span class="note-label">学習側では何が増えるのか</span>
+    <p>観測が 2 から 5 になると、方策ネットワークの第1層の重みが <span class="inline-code">(64, 2)</span> から <span class="inline-code">(64, 5)</span> になります。増えるのは <span class="inline-code">3 &#215; 64 = 192</span> 個。PPO は方策と価値の2本を持つので、合計 384 個です。</p>
+    <p>実際に数えると、全パラメータは <strong>8,901 → 9,285</strong>。増分は全体の約4%です。<strong>アルゴリズムも学習量も報酬も同じで、増えたのはこれだけ</strong>——それで3つの打ち分けができるようになる、というのが次の本で見る結果です。（数値は stable-baselines3 の既定 <span class="inline-code">net_arch=[64, 64]</span> の場合）</p>
+  </div>
+
+  <p>観測の範囲を <span class="inline-code">-inf</span> 〜 <span class="inline-code">inf</span> と宣言しているのは手抜きではありません。位置は実際には ±1 に収まりますが、範囲を厳密に申告する義務はなく、<strong>広めに宣言しておくほうが後で困りません</strong>。狭く宣言して実際の観測がはみ出すほうが事故になります。</p>
+
+  <h3>&#9314; _get_obs ── 何を見せるか</h3>
+
+  <div class="code">
+    <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>③ _get_obs</span><button class="copy" type="button">コピー</button></div>
+<pre><code class="language-python">    def _get_obs(self) -> np.ndarray:
+        if not self.goal_conditioned:
+            return self.pos.copy()
+        z = np.zeros(N_GOALS, dtype=np.float32)
+        z[self.goal_id] = 1.0  # ← 目標ベクトル
+        return np.concatenate([self.pos, z]).astype(np.float32)</code></pre>
+  </div>
+
+  <p>環境は <span class="inline-code">self.goal_id</span> として目標を知っています。それを<strong>方策にも見せるかどうか</strong>を、この6行が決めます。第2章で丸ごと扱う、この本の中心です。</p>
+
+  <p>後半3行が <span class="inline-code">z</span> を作る部分です。ここで出てくる <strong>one-hot</strong> という言い方を、先に片付けておきます。</p>
+
+  <p><strong>one-hot とは「1つだけ 1、残りは全部 0」のベクトル</strong>のことです。名前のとおり、1本だけが「立って(hot)」いて、他は寝ている。それだけの表現です。</p>
+
+  <div class="tbl">
+    <table>
+      <thead>
+        <tr><th>今回の目標</th><th><span class="inline-code">goal_id</span></th><th>one-hot の <span class="inline-code">z</span></th></tr>
+      </thead>
+      <tbody>
+        <tr><td>左</td><td class="mono">0</td><td class="mono">[1, 0, 0]</td></tr>
+        <tr><td>右</td><td class="mono">1</td><td class="mono">[0, 1, 0]</td></tr>
+        <tr><td>上</td><td class="mono">2</td><td class="mono">[0, 0, 1]</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>「何番目か」を、<strong>「何番目の箱に旗を立てるか」</strong>に置き換えていると思ってください。コードの2行は、この定義をそのまま書いたものです。</p>
+
+  <div class="pin">
+    <span class="pin-label">one-hot を作る2行</span>
+    <code>z = np.zeros(N_GOALS, dtype=np.float32)   # まず全部 0 → [0., 0., 0.]
+z[self.goal_id] = 1.0                     # goal_id 番目だけ 1 → [0., 1., 0.]</code>
+  </div>
+
+  <p><strong>なぜ <span class="inline-code">goal_id</span> を数字1つで渡さないのか。</strong><span class="inline-code">obs_dim = 2 + 1</span> にして <span class="inline-code">0, 1, 2</span> をそのまま入れることもできます。動きはしますが、うまく学習しません。<strong>数値の大小に意味が生まれてしまう</strong>からです。</p>
+
+  <p>ネットワークから見ると <span class="inline-code">1</span>（右）は <span class="inline-code">0</span>（左）と <span class="inline-code">2</span>（上）の中間の値です。ところが実際の的の配置で、<strong>右は左と上の中間ではありません</strong>。「近い数字なら近い振る舞い」という、この問題には存在しない構造を押し付けることになります。one-hot なら3つの目標は互いに独立で対等になり、順序も距離も持ち込みません。<strong>3次元使うのは、3つを対等に扱うための代金</strong>です。</p>
+
+  <p>one-hot は強化学習に限った話ではなく、分類の正解ラベルや単語・カテゴリのIDなど、どこでも出てきます。弱点は<strong>選択肢の数だけ次元が要る</strong>こと。10,000語なら10,000次元で、しかもほぼ全部が 0 という無駄の多いベクトルになります。実務ではそこを <strong>embedding（埋め込み）</strong> に置き換えます。この環境は的が3つなので、one-hot のままで何も困りません。</p>
+
+  <p>最後に <span class="inline-code">.copy()</span> について。いまの <span class="inline-code">step()</span> は <span class="inline-code">self.pos = np.clip(...)</span> と<strong>新しい配列で置き換えている</strong>ので、実は <span class="inline-code">copy()</span> が無くても実害は出ません。ただし <span class="inline-code">self.pos += ...</span> のような書き換え方に直した瞬間、方策が受け取ったはずの過去の観測まで書き変わります。<strong>返す観測は値で渡す</strong>と決めておくほうが安全です。</p>
+
+  <div class="note">
+    <span class="note-label">もう一段深く ── z はネットワークの中で何をしているか</span>
+    <p>MLP の第1層は <span class="inline-code">W @ obs + b</span> を計算します。<span class="inline-code">W</span> を位置ぶんと目標ぶんに割ると <span class="inline-code">W_pos @ pos + W_z @ z + b</span>。<strong><span class="inline-code">z</span> が one-hot なので、<span class="inline-code">W_z @ z</span> は <span class="inline-code">W_z</span> の g 列目をそのまま取り出すだけ</strong>になります。</p>
+    <p>つまり第1層は「位置から決まる部分 + <strong>目標ごとに決まった固定ベクトル</strong> + バイアス」です。<span class="inline-code">z</span> は<strong>目標ごとの専用オフセットを選ぶスイッチ</strong>として働いている。次の本の Step 3 で「重みを触らず z を差し替えると進路が変わる」のは、この列を選び直しているだけ、というのが実装上の正体です。</p>
+    <p>ついでに言うと、embedding 層はこの「one-hot をかけると1列を取り出すだけ」という性質を、掛け算を省いて直接引くようにしたものです。やっていることは同じです。</p>
+  </div>
+
+  <h3>&#9315; reset ── エピソードの開始</h3>
+
+  <div class="code">
+    <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>④ reset</span><button class="copy" type="button">コピー</button></div>
+<pre><code class="language-python">    def reset(self, *, seed=None, options=None):
+        super().reset(seed=seed)
+        self.pos = np.zeros(2, dtype=np.float32)  # 毎回原点から始める
+        self.t = 0
+        # options で目標を指定できる。指定がなければランダム。
+        if options is not None and "goal_id" in options:
+            self.goal_id = int(options["goal_id"])
+        else:
+            self.goal_id = int(self.np_random.integers(N_GOALS))
+        return self._get_obs(), {}</code></pre>
+  </div>
+
+  <p>1行目の <span class="inline-code">super().reset(seed=seed)</span> は<strong>省略できません</strong>。これを呼ぶことで <span class="inline-code">self.np_random</span> が種つきで用意されます。忘れると <span class="inline-code">seed=0</span> を渡しても効かず、この本に載せた出力と数字が合わなくなります。</p>
+
+  <p><span class="inline-code">self.goal_id</span> を<strong>毎エピソード引き直している</strong>のが、第2章の「同じ観測なのに報酬が違う」の発生源です。<span class="inline-code">options</span> で目標を指定できるようにしてあるのは、写経スクリプトが「左・右・上を順に試す」ために使うからです。</p>
+
+  <p>最後に返すのは <span class="inline-code">(観測, info)</span> の<strong>2つ組</strong>。次の <span class="inline-code">step()</span> は5つ組で、個数が違います（第1章）。</p>
+
+  <h3>&#9316; step ── 世界を1つ進める</h3>
+
+  <div class="code">
+    <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>⑤ step</span><button class="copy" type="button">コピー</button></div>
+<pre><code class="language-python">    def step(self, action):
+        a = np.clip(action, -1.0, 1.0).astype(np.float32)
+        self.pos = np.clip(self.pos + 0.05 * a, -1.0, 1.0)
+        self.t += 1
+
+        dist = float(np.linalg.norm(self.pos - TARGETS[self.goal_id]))
+        reward = -dist  # 目標に近いほど高い
+
+        terminated = False
+        truncated = self.t >= self.max_steps
+        info = {"dist": dist, "goal_id": self.goal_id}
+        return self._get_obs(), reward, terminated, truncated, info</code></pre>
+  </div>
+
+  <p>順番が決まっています。<strong>行動を丸める → 状態を進める → 報酬を計算する → 終了を判定する → 5つ組を返す</strong>。どの環境を書くときも、だいたいこの並びになります。</p>
+
+  <p><span class="inline-code">np.clip</span> が2回出てくることに注意してください。1回目は<strong>受け取った行動</strong>を宣言した範囲に収めるため（第3章。宣言は約束であって強制ではないので、守らせるのは環境の責任です）。2回目は<strong>位置</strong>を盤外に出さないためで、役割が別です。</p>
+
+  <p><span class="inline-code">0.05</span> は1ステップの移動量です。<span class="inline-code">max_steps=60</span> なので最大 3.0 動けます。的までの距離は 0.7 なので、時間は十分足りている——このバランスが取れているかは、環境を書いたら必ず確かめる点です。</p>
+
+  <p><span class="inline-code">terminated</span> が<strong>常に False</strong> なのは書き忘れではありません。的に着いても終わらせず、留まり続けられるかまで評価しています（第7章）。</p>
+
+  <h3>答え合わせ</h3>
+
+  <p>5つ全部つなげると、これで1ファイルです。</p>
+
+  <details class="fold">
+    <summary>reach_env.py の全文を開く</summary>
+  <div class="code">
+    <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>reach_env.py（全文）</span><button class="copy" type="button">コピー</button></div>
 <pre><code class="language-python">"""2次元リーチング環境。
 
 エージェントは平面上の点。毎エピソード、3つの的のどれか1つが「今回の目標」になる。
@@ -448,92 +661,9 @@ class ReachEnv(gym.Env):
         info = {"dist": dist, "goal_id": self.goal_id}
         return self._get_obs(), reward, terminated, truncated, info</code></pre>
   </div>
+  </details>
 
-  <h3>2. かたまりごとの解説</h3>
-
-  <div class="pin">
-    <span class="pin-label">TARGETS / N_GOALS</span>
-    <code>TARGETS = np.array(
-    [
-        [-0.7, 0.0],
-        [0.7, 0.0],
-        [0.0, 0.7],
-    ],
-    dtype=np.float32,
-)
-N_GOALS = len(TARGETS)</code>
-  </div>
-
-  <p>的の座標を定数に置くだけです。的を増やしたければここに1行足すだけで、他は何も直りません。個数を <span class="inline-code">3</span> と直接書かずに <span class="inline-code">len()</span> で取っているのは、この数が<strong>観測の次元にも one-hot の長さにも効く</strong>からです。1箇所で決まるようにしておきます。</p>
-
-  <p><span class="inline-code">dtype=np.float32</span> を明示しているのは、観測も行動も float32 で流れるためです。ここを既定の float64 のままにすると、あとで <span class="inline-code">np.concatenate</span> したときに観測全体が float64 になり、<span class="inline-code">observation_space</span> の宣言とずれます。</p>
-
-  <div class="pin">
-    <span class="pin-label">__init__ ── 2つの空間を宣言する</span>
-    <code>self.action_space = spaces.Box(-1.0, 1.0, shape=(2,), dtype=np.float32)
-obs_dim = 2 + (N_GOALS if goal_conditioned else 0)
-self.observation_space = spaces.Box(-np.inf, np.inf, shape=(obs_dim,), dtype=np.float32)</code>
-  </div>
-
-  <p>外部に対する<strong>型の宣言</strong>です。学習アルゴリズムはこれを読んで、ネットワークの入力層と出力層のかたちを決めます（第3章）。</p>
-
-  <p>注目すべきは <span class="inline-code">obs_dim</span> の行です。<span class="inline-code">goal_conditioned</span> ひとつで観測が 2 次元にも 5 次元にもなります。<strong>引数1つで観測の設計が切り替わる</strong>——この本の第2章はまるごとこの行の話です。</p>
-
-  <p>観測の範囲を <span class="inline-code">-inf</span> 〜 <span class="inline-code">inf</span> と宣言しているのは手抜きではありません。位置は実際には ±1 に収まりますが、範囲を厳密に申告する義務はなく、<strong>広めに宣言しておくほうが後で困りません</strong>。狭く宣言して実際の観測がはみ出すほうが事故になります。</p>
-
-  <div class="pin">
-    <span class="pin-label">_get_obs ── 何を見せるか</span>
-    <code>if not self.goal_conditioned:
-    return self.pos.copy()
-z = np.zeros(N_GOALS, dtype=np.float32)
-z[self.goal_id] = 1.0
-return np.concatenate([self.pos, z]).astype(np.float32)</code>
-  </div>
-
-  <p>環境は <span class="inline-code">self.goal_id</span> として目標を知っています。それを方策にも見せるかどうかを、この6行が決めます。第2章で丸ごと扱う、この本の中心です。</p>
-
-  <p><span class="inline-code">.copy()</span> を付けている理由も書いておきます。いまの <span class="inline-code">step()</span> は <span class="inline-code">self.pos = np.clip(...)</span> と<strong>新しい配列で置き換えている</strong>ので、実は <span class="inline-code">copy()</span> が無くても実害は出ません。ただし <span class="inline-code">self.pos += ...</span> のような書き換え方に直した瞬間、方策が受け取ったはずの過去の観測まで書き変わります。<strong>返す観測は値で渡す</strong>と決めておくほうが安全です。</p>
-
-  <div class="pin">
-    <span class="pin-label">reset ── エピソードの開始</span>
-    <code>super().reset(seed=seed)
-self.pos = np.zeros(2, dtype=np.float32)
-self.t = 0
-if options is not None and "goal_id" in options:
-    self.goal_id = int(options["goal_id"])
-else:
-    self.goal_id = int(self.np_random.integers(N_GOALS))
-return self._get_obs(), {}</code>
-  </div>
-
-  <p>1行目の <span class="inline-code">super().reset(seed=seed)</span> は<strong>省略できません</strong>。これを呼ぶことで <span class="inline-code">self.np_random</span> が種つきで用意されます。忘れると <span class="inline-code">seed=0</span> を渡しても効かず、この本に載せた出力と数字が合わなくなります。</p>
-
-  <p><span class="inline-code">self.goal_id</span> を<strong>毎エピソード引き直している</strong>のが、第2章の「同じ観測なのに報酬が違う」の発生源です。<span class="inline-code">options</span> で目標を指定できるようにしてあるのは、写経スクリプトが「左・右・上を順に試す」ために使うからです。</p>
-
-  <p>最後に返すのは <span class="inline-code">(観測, info)</span> の<strong>2つ組</strong>。次の <span class="inline-code">step()</span> は5つ組で、個数が違います（第1章）。</p>
-
-  <div class="pin">
-    <span class="pin-label">step ── 世界を1つ進める</span>
-    <code>a = np.clip(action, -1.0, 1.0).astype(np.float32)
-self.pos = np.clip(self.pos + 0.05 * a, -1.0, 1.0)
-self.t += 1
-dist = float(np.linalg.norm(self.pos - TARGETS[self.goal_id]))
-reward = -dist
-terminated = False
-truncated = self.t &gt;= self.max_steps
-info = {"dist": dist, "goal_id": self.goal_id}
-return self._get_obs(), reward, terminated, truncated, info</code>
-  </div>
-
-  <p>順番が決まっています。<strong>行動を丸める → 状態を進める → 報酬を計算する → 終了を判定する → 5つ組を返す</strong>。どの環境を書くときも、だいたいこの並びになります。</p>
-
-  <p><span class="inline-code">np.clip</span> が2回出てくることに注意してください。1回目は<strong>受け取った行動</strong>を宣言した範囲に収めるため（第3章。宣言は約束であって強制ではないので、守らせるのは環境の責任です）。2回目は<strong>位置</strong>を盤外に出さないためで、役割が別です。</p>
-
-  <p><span class="inline-code">0.05</span> は1ステップの移動量です。<span class="inline-code">max_steps=60</span> なので最大 3.0 動けます。的までの距離は 0.7 なので、時間は十分足りている——このバランスが取れているかは、環境を書いたら必ず確かめる点です。</p>
-
-  <p><span class="inline-code">terminated</span> が<strong>常に False</strong> なのは書き忘れではありません。的に着いても終わらせず、留まり続けられるかまで評価しています（第7章）。</p>
-
-  <h3>3. 書き写すときに引っかかる5箇所</h3>
+  <h3>書き写すときに引っかかる5箇所</h3>
 
   <div class="takeaway">
     <ol>
@@ -545,7 +675,7 @@ return self._get_obs(), reward, terminated, truncated, info</code>
     </ol>
   </div>
 
-  <h3>4. 写せたか確かめる</h3>
+  <h3>写せたか確かめる</h3>
 
   <p>このファイルはクラスの定義だけなので、単体で走らせても何も起きません。読み込めるかどうかだけ、その場で確かめます。</p>
 
@@ -570,7 +700,7 @@ Box(-1.0, 1.0, (2,), float32)
 
   <div class="note">
     <span class="note-label">ここが合っていれば先へ進める</span>
-    <p>観測空間が <span class="inline-code">(5,)</span> と出れば、<span class="inline-code">goal_conditioned=True</span> のときに位置2 + 目標ベクトル3 の5次元になっている、つまり <span class="inline-code">__init__</span> と <span class="inline-code">_get_obs</span> が噛み合っています。</p>
+    <p>観測空間が <span class="inline-code">(5,)</span> と出れば、<span class="inline-code">goal_conditioned=True</span> のときに位置2 + 目標ベクトル3 の5次元になっている、つまり <span class="inline-code">&#9313;</span> と <span class="inline-code">&#9314;</span> が噛み合っています。</p>
     <p><span class="inline-code">(2,)</span> と出たら <span class="inline-code">obs_dim</span> の行を、<span class="inline-code">ModuleNotFoundError</span> が出たら<strong>実行しているディレクトリ</strong>を見直してください（写経スクリプトは <span class="inline-code">reach_env.py</span> を隣から import します）。</p>
   </div>
 

@@ -606,7 +606,9 @@ footer {
 
   <p>縦棒の読み方（右が「与えられているもの」、左が「知りたいこと」）は、本01の <a href="rl-from-env.html#notation">§ 式の読み方</a> にまとめてあります。</p>
 
-  <p>この <span class="inline-code">z</span> が目標ベクトルです。実装上は本当にただの追加入力で、<strong>観測ベクトルの後ろに数値を何個か繋ぐだけ</strong>。今回は的が3つなので <span class="inline-code">[1,0,0]</span> <span class="inline-code">[0,1,0]</span> <span class="inline-code">[0,0,1]</span> という one-hot を使います。</p>
+  <p>この <span class="inline-code">z</span> が目標ベクトルです。実装上は本当にただの追加入力で、<strong>観測ベクトルの後ろに数値を何個か繋ぐだけ</strong>。今回は的が3つなので <span class="inline-code">[1,0,0]</span> <span class="inline-code">[0,1,0]</span> <span class="inline-code">[0,0,1]</span> という <strong>one-hot</strong>（1つだけ 1、残りは全部 0 のベクトル）を使います。</p>
+
+  <p>one-hot にする理由——<span class="inline-code">goal_id</span> を <span class="inline-code">0, 1, 2</span> という数字1つで渡すと、「1 は 0 と 2 の中間」という、この問題には存在しない関係を持ち込んでしまうからです。詳しくは本01の <a href="rl-from-env.html#transcribe">reach_env.py を書き写す</a> の &#9314; で扱っています。</p>
   <p>なぜベクトルかというと、ニューラルネットの入力層に入る形が数値の並びしかないからです。それ以上の意味はありません。</p>
 
   <div class="note">
