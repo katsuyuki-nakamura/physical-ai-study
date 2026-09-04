@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>写経で学ぶ強化学習</title>
+<meta name="description" content="ノートPC1台、GPU不要、MuJoCo不要で読み進められる強化学習の写経本2冊。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600&family=IBM+Plex+Sans:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+:root {
+  --ground: #F4F6F8;
+  --surface: #FFFFFF;
+  --surface-2: #ECEFF3;
+  --ink: #171A21;
+  --ink-2: #4E5765;
+  --ink-3: #7B8493;
+  --rule: #DDE2E8;
+  --rule-strong: #C4CBD4;
+  --z: #A8621B;
+  --shadow: 0 1px 2px rgba(16, 22, 32, .05), 0 8px 24px -12px rgba(16, 22, 32, .18);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ground: #101319;
+    --surface: #171B22;
+    --surface-2: #1E232C;
+    --ink: #E7EBF1;
+    --ink-2: #A8B2C0;
+    --ink-3: #798393;
+    --rule: #272D37;
+    --rule-strong: #39414E;
+    --z: #E0A45C;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -12px rgba(0, 0, 0, .7);
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+  font-size: 15.5px;
+  line-height: 1.85;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3 { font-family: "Zilla Slab", Georgia, serif; font-weight: 600; line-height: 1.35; margin: 0; }
+a { color: var(--z); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+code { font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; font-size: .875em; background: var(--surface-2); border: 1px solid var(--rule); border-radius: 4px; padding: 1px 5px; }
+.wrap { max-width: 860px; margin: 0 auto; padding: 0 20px 88px; }
+.masthead { padding: 76px 0 0; }
+.eyebrow { font-family: "JetBrains Mono", monospace; font-size: 11.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--z); margin-bottom: 18px; }
+h1 { font-size: clamp(32px, 5vw, 46px); letter-spacing: -.015em; }
+.thesis { font-size: clamp(17px, 2.2vw, 20px); line-height: 1.7; color: var(--ink-2); max-width: 34em; margin: 20px 0 0; }
+.thesis strong { color: var(--ink); font-weight: 600; }
+.cards { display: grid; grid-template-columns: 1fr; gap: 18px; margin: 44px 0 0; }
+@media (min-width: 720px) { .cards { grid-template-columns: 1fr 1fr; } }
+.card {
+  display: block; padding: 26px 26px 24px; background: var(--surface);
+  border: 1px solid var(--rule); border-radius: 8px; box-shadow: var(--shadow);
+  text-decoration: none; color: inherit; transition: border-color .15s, transform .15s;
+}
+.card:hover { border-color: var(--z); transform: translateY(-2px); }
+.card .num { font-family: "JetBrains Mono", monospace; font-size: 12px; font-weight: 700; letter-spacing: .08em; color: var(--z); border: 1px solid var(--z); border-radius: 4px; padding: 2px 8px; }
+.card h2 { font-size: 21px; margin: 14px 0 0; color: var(--ink); }
+.card p { margin: 10px 0 0; font-size: 14.5px; line-height: 1.75; color: var(--ink-2); }
+.card .meta { margin-top: 16px; font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--ink-3); }
+.order { margin: 30px 0 0; padding: 18px 22px; background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--z); border-radius: 0 6px 6px 0; }
+.order p { margin: 0; font-size: 14.5px; line-height: 1.8; color: var(--ink-2); }
+.order p + p { margin-top: 10px; }
+figure { margin: 44px 0 0; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 22px; box-shadow: var(--shadow); }
+figure img { display: block; width: 100%; height: auto; border-radius: 4px; }
+figcaption { font-size: 13.5px; line-height: 1.7; color: var(--ink-2); margin-top: 14px; }
+h3 { font-size: 17px; margin: 48px 0 0; }
+pre { margin: 16px 0 0; padding: 16px 18px; background: var(--surface); border: 1px solid var(--rule); border-radius: 7px; overflow-x: auto; font-family: "JetBrains Mono", monospace; font-size: 12.5px; line-height: 1.7; color: var(--ink-2); }
+pre code { background: none; border: 0; padding: 0; font-size: inherit; }
+p { max-width: 66ch; }
+footer { margin-top: 64px; padding-top: 22px; border-top: 1px solid var(--rule); font-size: 13.5px; color: var(--ink-3); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="masthead">
+  <div class="eyebrow">Reinforcement Learning / 写経</div>
+  <h1>写経で学ぶ強化学習</h1>
+  <p class="thesis">ノートPC1台、<strong>GPU不要・MuJoCo不要</strong>で読み進められる写経本2冊。2冊とも同じ環境（<code>reach_env.py</code>、約70行）を題材にしています。</p>
+</header>
+
+<div class="cards">
+  <a class="card" href="RL/docs/rl-from-env.html">
+    <span class="num">01</span>
+    <h2>環境から入る強化学習</h2>
+    <p><code>reach_env.py</code> の各行を出発点に、観測・報酬・リターン・価値・終了条件を1つずつ埋めていきます。式の読み方も1節を割いて扱います。</p>
+    <div class="meta">全7章 ／ 写経コード 7本 ／ 学習は回さない</div>
+  </a>
+  <a class="card" href="RL/docs/goal-vector.html">
+    <span class="num">02</span>
+    <h2>写経で覚える目標ベクトル</h2>
+    <p>1つの方策で3つの的を撃ち分ける。観測に目標ベクトル z を足すと解けるようになるところを、実際に学習を回して見ます。</p>
+    <div class="meta">40〜60分 ／ 写経コード 4本 ／ 学習 1〜3分 ×2</div>
+  </a>
+</div>
+
+<div class="order">
+  <p><strong>01 → 02 の順</strong>を想定しています。01 で環境の書き方と用語（観測・報酬・価値）を固めてから、02 で実際に学習を回します。</p>
+  <p>動くものを先に見たい場合は 02 から読んでも構いません。</p>
+</div>
+
+<figure>
+  <img src="RL/assets/trajectories.png" alt="目標ベクトルなしの方策は3つの的の中間で止まり、目標ベクトルありの方策は的ごとに軌跡が分かれる比較図">
+  <figcaption>左: 目標を見せない方策。3つの的の平均あたりで止まり、どれにも届かない。右: 観測に目標ベクトル z を足した方策。同じ重みのまま3つを撃ち分ける。</figcaption>
+</figure>
+
+<h3>コードを動かす</h3>
+<p>写経コードはすべて <a href="https://github.com/katsuyuki-nakamura/physical-ai-study">GitHub リポジトリ</a> の <code>RL/code/</code> にあります。</p>
+<pre><code>git clone https://github.com/katsuyuki-nakamura/physical-ai-study.git
+cd physical-ai-study/RL
+python3 -m venv .venv &amp;&amp; source .venv/bin/activate
+pip install -r requirements.txt
+cd code &amp;&amp; python ch1_loop.py</code></pre>
+
+<footer>
+  <p>掲載した出力はすべて実行して確認したものです（Python 3.11 / gymnasium 1.3.0 / stable-baselines3 2.9.0 / numpy 2.4）。乱数は種を固定してあります。</p>
+</footer>
+
+</div>
+</body>
+</html>

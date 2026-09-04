@@ -5,12 +5,13 @@
 
 | # | 本 | 内容 | 所要 |
 |---|---|---|---|
-| 01 | [環境から入る強化学習](docs/rl-from-env.html) | `reach_env.py` の各行を出発点に、観測・報酬・リターン・価値・終了条件を埋める | 全7章 |
-| 02 | [写経で覚える目標ベクトル](docs/goal-vector.html) | 1つの方策で3つの的を撃ち分ける。目標条件付け（goal-conditioned RL）の入口 | 40〜60分 |
+| 01 | [環境から入る強化学習](https://katsuyuki-nakamura.github.io/physical-ai-study/RL/docs/rl-from-env.html) | `reach_env.py` の各行を出発点に、観測・報酬・リターン・価値・終了条件を埋める | 全7章 |
+| 02 | [写経で覚える目標ベクトル](https://katsuyuki-nakamura.github.io/physical-ai-study/RL/docs/goal-vector.html) | 1つの方策で3つの的を撃ち分ける。目標条件付け（goal-conditioned RL）の入口 | 40〜60分 |
 
 **01 → 02 の順**を想定しています。01 で環境の書き方と用語（観測・報酬・価値）を固めてから、02 で実際に学習を回して「目標ベクトルを足すと解けるようになる」ところを見ます。動くものを先に見たい場合は 02 から読んでも構いません。
 
-本文は `docs/` の HTML です。ローカルならブラウザでそのまま開けますし、GitHub Pages で公開すればそのまま読めます。
+本文は GitHub Pages で公開しています → **<https://katsuyuki-nakamura.github.io/physical-ai-study/>**
+実体は `docs/` 以下の HTML で、クローンすればローカルのブラウザでもそのまま開けます（ビルド不要）。
 
 ![2つの方策の軌跡](assets/trajectories.png)
 
@@ -53,16 +54,18 @@ python plot.py             # 冒頭の図を書き出す
 ## 構成
 
 ```
-.
-├── docs/                         本文（単体で開けるHTML）
-│   ├── rl-from-env.html         『環境から入る強化学習』
-│   └── goal-vector.html         『写経で覚える目標ベクトル』
-├── code/                         写経コード。ここで実行する
-│   ├── reach_env.py              2冊が共有する環境
-│   ├── ch1_loop.py 〜 ch7_bootstrap.py  本01
-│   └── step1_plain.py 〜 plot.py 本02
-└── assets/
-    └── trajectories.png
+physical-ai-study/
+├── index.html                    GitHub Pages の入口（2冊へのリンク）
+└── RL/
+    ├── docs/                     本文（単体で開けるHTML）
+    │   ├── rl-from-env.html     『環境から入る強化学習』
+    │   └── goal-vector.html     『写経で覚える目標ベクトル』
+    ├── code/                     写経コード。ここで実行する
+    │   ├── reach_env.py          2冊が共有する環境
+    │   ├── ch1_loop.py 〜 ch7_bootstrap.py  本01
+    │   └── step1_plain.py 〜 plot.py 本02
+    └── assets/
+        └── trajectories.png
 ```
 
 `docs/` の HTML はビルド成果物ではなく手書きのページです。編集するときはこのファイルを直接直します。
