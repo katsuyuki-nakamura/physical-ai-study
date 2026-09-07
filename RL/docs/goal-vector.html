@@ -382,9 +382,10 @@ hr.rule { border: 0; border-top: 1px solid var(--rule); margin: 0; }
   line-height: 1.72;
   color: var(--code-ink);
   tab-size: 4;
+  background: transparent !important;
 }
 
-.code pre code { font-family: inherit; background: none; padding: 0; }
+.code pre code { font-family: inherit; background: none !important; padding: 0 !important; color: inherit !important; text-shadow: none !important; }
 
 .code.is-shell pre { font-size: 13.5px; }
 .code.is-out .code-bar { background: var(--surface-2); border-bottom-color: var(--rule); }
@@ -395,17 +396,34 @@ hr.rule { border: 0; border-top: 1px solid var(--rule); margin: 0; }
 .code.is-out .copy { color: var(--ink-3); border-color: var(--rule-strong); }
 .code.is-out .copy:hover { color: var(--ink); border-color: var(--ink-3); background: var(--surface-2); }
 
-/* highlight.js tokens, hand-written (CDN stylesheets are blocked) */
-.hljs-keyword, .hljs-built_in, .hljs-literal { color: var(--tok-key); }
-.hljs-string, .hljs-meta .hljs-string { color: var(--tok-str); }
-.hljs-number { color: var(--tok-num); }
-.hljs-comment, .hljs-quote { color: var(--tok-com); font-style: italic; }
-.hljs-title, .hljs-title.function_ { color: var(--tok-fn); }
-.hljs-title.class_, .hljs-type { color: var(--tok-cls); }
-.hljs-params { color: var(--code-ink); }
-.hljs-attr, .hljs-variable { color: var(--code-ink); }
-.hljs-meta { color: var(--tok-com); }
-.hljs-subst { color: var(--code-ink); }
+/* トークンの色。閲覧環境によっては（VS Code の HTML プレビューなど）
+   highlight.js の既定テーマが後から差し込まれ、暗い背景の上に暗赤や濃灰の
+   文字が乗って読めなくなる。.code の中だけは必ずこの配色が勝つように、
+   セレクタの詳細度を上げたうえで !important で固定する。 */
+.code pre code span { background: transparent !important; color: inherit !important; font-weight: inherit !important; }
+
+.code pre .hljs-keyword, .code pre .hljs-built_in, .code pre .hljs-literal,
+.code pre .hljs-selector-tag, .code pre .hljs-name,
+.code pre .token.keyword, .code pre .token.builtin, .code pre .token.boolean { color: var(--tok-key) !important; }
+
+.code pre .hljs-string, .code pre .hljs-meta .hljs-string, .code pre .hljs-regexp,
+.code pre .token.string, .code pre .token.char, .code pre .token.regex { color: var(--tok-str) !important; }
+
+.code pre .hljs-number, .code pre .token.number { color: var(--tok-num) !important; }
+
+.code pre .hljs-comment, .code pre .hljs-quote,
+.code pre .token.comment, .code pre .token.prolog { color: var(--tok-com) !important; font-style: italic !important; }
+
+.code pre .hljs-title, .code pre .hljs-title.function_, .code pre .hljs-section,
+.code pre .token.function { color: var(--tok-fn) !important; }
+
+.code pre .hljs-title.class_, .code pre .hljs-type,
+.code pre .token.class-name { color: var(--tok-cls) !important; }
+
+.code pre .hljs-params, .code pre .hljs-attr, .code pre .hljs-variable, .code pre .hljs-subst,
+.code pre .token.punctuation, .code pre .token.operator, .code pre .token.property { color: var(--code-ink) !important; }
+
+.code pre .hljs-meta { color: var(--tok-com) !important; }
 
 /* ---------- callout ---------- */
 
