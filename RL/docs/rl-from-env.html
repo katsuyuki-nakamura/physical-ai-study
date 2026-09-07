@@ -329,6 +329,12 @@ footer p { max-width: none; }
   <p>この図に出てくるものが、そのまま <span class="inline-code">reach_env.py</span> の各パーツに対応します。以降の7章は、それぞれ<strong>ファイルの特定の行を出発点にして</strong>、その行がなぜそう書かれているのかを埋めていきます。</p>
 
   <div class="note">
+    <span class="note-label">この本の位置づけ</span>
+    <p>3冊のうちの2冊目です。前の『<a href="neural-net.html">写経で作るニューラルネットワーク</a>』では、上の図の<strong>左側</strong>——観測を受け取って行動を返すネットワークそのもの——を numpy だけで作りました。この本が扱うのは<strong>右側</strong>、環境のほうです。3冊目の『<a href="goal-vector.html">写経で覚える目標ベクトル</a>』は、ここで書く <span class="inline-code">reach_env.py</span> をそのまま使って、実際に学習を回します。</p>
+    <p>前の本を読んでいなくても構いません。この本はネットワークの中身には立ち入らないので、<span class="inline-code">gymnasium</span> だけあれば読み通せます。</p>
+  </div>
+
+  <div class="note">
     <span class="note-label">この本の読み方</span>
     <p>まず次の節で <span class="inline-code">reach_env.py</span> を丸ごと書き写します。意味が分からないまま写して構いません。そのあとの各章が、いま書いた行を1つずつ回収していきます。</p>
     <p>各章の頭には、その章が説明する <span class="inline-code">reach_env.py</span> の行を置いてあります。まずその行を見て、「なぜこう書くのか」が言えるか自分に聞いてみてください。言えなければ、その章が埋める場所です。</p>
