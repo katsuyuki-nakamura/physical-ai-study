@@ -255,6 +255,7 @@ footer p { max-width: none; }
   <div class="rail-title">Contents</div>
   <ol>
     <li><a href="#intro"><span class="n">序</span><span>何を作るのか</span></a></li>
+    <li><a href="#problem"><span class="n">&#167;</span><span>解く問題</span></a></li>
     <li><a href="#setup"><span class="n">&#167;</span><span>準備</span></a></li>
     <li><a href="#ch1"><span class="n">01</span><span>ニューロン1本</span></a></li>
     <li><a href="#ch2"><span class="n">02</span><span>層は行列積</span></a></li>
@@ -331,21 +332,11 @@ footer p { max-width: none; }
     <figcaption>作るネットワークの全体。観測5個を受け取り、64個の中間表現を2回通って、行動2個になる。矢印1本ぶんが「層」で、下の数がその層のパラメータ数。</figcaption>
   </figure>
 
-  <p>作るのは、<strong>観測5個を受け取って行動2個を返す</strong>ネットワークです。この「5」と「2」には意味があります。このシリーズの環境（次の本で書きます）で、平面上の点を3つの的のどれかに向かわせる問題です。</p>
+  <p>作るのは、<strong>観測5個を受け取って行動2個を返す</strong>ネットワークです。この「5」と「2」は適当に決めた数ではありません。<strong>平面上の点を、3つの的のどれかに向かわせる</strong>——たった1つの問題から決まっています。</p>
 
-  <div class="tbl">
-    <table>
-      <thead>
-        <tr><th>入力5個の内訳</th><th>意味</th></tr>
-      </thead>
-      <tbody>
-        <tr><td class="mono">x, y</td><td>いまの位置</td></tr>
-        <tr><td class="mono">z0, z1, z2</td><td>3つの的のどれを狙うか（1つだけ 1、残りは 0）</td></tr>
-      </tbody>
-    </table>
-  </div>
+  <p>この問題はこの本の大前提で、写経コードの入力はすべてこの形をしています。3冊とも同じ問題を使うので、<strong>次の節で先に、世界のほうを説明します</strong>。</p>
 
-  <p>最後の第7章で、このネットワークは<strong>後ろの3つを読んで行き先を変える</strong>ようになります。重みは1組だけ。的ごとに学習し直すのではありません。</p>
+  <p>そして最後の第7章で、このネットワークは<strong>入力の後ろ3つを読んで行き先を変える</strong>ようになります。重みは1組だけ。的ごとに学習し直すのではありません。</p>
 
   <div class="note">
     <span class="note-label">この本の位置づけ</span>
@@ -357,6 +348,133 @@ footer p { max-width: none; }
     <span class="note-label">この本の読み方</span>
     <p>第1〜3章は部品を1つずつ確かめる回で、ファイルは残しません。<strong>第4章から <span class="inline-code">mlp.py</span> という1つのファイルを作り始め</strong>、第6章・第7章で足していきます。最後にはそれが完成品になります。</p>
     <p>各章の頭に「この章で書き足す行」を置いてあります。写経コードはすべて数秒で終わります（いちばん重い第7章の学習でも1秒未満）。</p>
+  </div>
+</section>
+
+<section id="problem">
+  <div class="ch-head"><span class="ch-num">&#167;</span></div>
+  <h2>解く問題 ── 平面の上の点と、3つの的</h2>
+
+  <p class="lead">この本のネットワークは、最初から最後まで同じ1つの問題を相手にします。<strong>入力の5個も出力の2個も、すべてこの問題から出てきます</strong>。コードを書く前に、世界のほうを見ておきます。</p>
+
+  <h3>世界のきまり</h3>
+
+  <ul>
+    <li><strong>平面がある。</strong>ふつうの2次元平面です。縦も横も <span class="inline-code">-1.0</span> から <span class="inline-code">+1.0</span> までの正方形で、この外には出られません。</li>
+    <li><strong>自分は点である。</strong>大きさも向きもない1個の点です。<strong>毎回かならず原点 (0, 0) から始まります。</strong></li>
+    <li><strong>的が3つ、固定で置いてある。</strong>左 <span class="inline-code">(-0.7, 0)</span>、右 <span class="inline-code">(0.7, 0)</span>、上 <span class="inline-code">(0, 0.7)</span>。この3つの位置は最初から最後まで一度も動きません。</li>
+    <li><strong>毎回、3つのうち1つが「今回の目標」になる。</strong>ここだけが毎回変わります。平面をいくら眺めても、どれが今回の目標かは分かりません。<strong>世界の状態ではなく、外から与えられる指示</strong>だからです。</li>
+  </ul>
+
+  <p>やることは1つだけ。<strong>今回の目標に指定された的まで動く。</strong>これだけの世界です。</p>
+
+  <figure class="diagram">
+    <svg viewBox="0 0 700 320" role="img" aria-label="-1から+1の正方形の平面。左(-0.7,0)、右(0.7,0)、上(0,0.7)に的が3つ固定で置かれ、自分は原点から始まる。3つの的に向かう矢印が出ている。">
+      <defs>
+        <marker id="pa0" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--g0)"></path>
+        </marker>
+        <marker id="pa1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--g1)"></path>
+        </marker>
+        <marker id="pa2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--g2)"></path>
+        </marker>
+      </defs>
+
+      <rect x="230" y="30" width="240" height="240" rx="4" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.55"></rect>
+      <line x1="230" y1="150" x2="470" y2="150" stroke="currentColor" stroke-width="1" opacity="0.22" stroke-dasharray="4 4"></line>
+      <line x1="350" y1="30" x2="350" y2="286" stroke="currentColor" stroke-width="1" opacity="0.22" stroke-dasharray="4 4"></line>
+
+      <text x="474" y="26" font-family="JetBrains Mono, monospace" font-size="11" fill="currentColor" opacity="0.6">(+1, +1)</text>
+      <text x="226" y="284" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="11" fill="currentColor" opacity="0.6">(-1, -1)</text>
+
+      <line x1="338" y1="150" x2="283" y2="150" stroke="var(--g0)" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.7" marker-end="url(#pa0)"></line>
+      <line x1="362" y1="150" x2="417" y2="150" stroke="var(--g1)" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.7" marker-end="url(#pa1)"></line>
+      <line x1="350" y1="138" x2="350" y2="83" stroke="var(--g2)" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.7" marker-end="url(#pa2)"></line>
+
+      <circle cx="266" cy="150" r="9" fill="none" stroke="var(--g0)" stroke-width="2.5"></circle>
+      <circle cx="434" cy="150" r="9" fill="none" stroke="var(--g1)" stroke-width="2.5"></circle>
+      <circle cx="350" cy="66" r="9" fill="none" stroke="var(--g2)" stroke-width="2.5"></circle>
+
+      <text x="266" y="184" text-anchor="middle" font-size="12.5" fill="var(--g0)">0 ： 左</text>
+      <text x="266" y="201" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="var(--g0)" opacity="0.85">(-0.7, 0.0)</text>
+      <text x="434" y="184" text-anchor="middle" font-size="12.5" fill="var(--g1)">1 ： 右</text>
+      <text x="434" y="201" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="var(--g1)" opacity="0.85">(+0.7, 0.0)</text>
+      <text x="368" y="62" font-size="12.5" fill="var(--g2)">2 ： 上</text>
+      <text x="368" y="79" font-family="JetBrains Mono, monospace" font-size="11" fill="var(--g2)" opacity="0.85">(0.0, +0.7)</text>
+
+      <circle cx="350" cy="150" r="5" fill="var(--z)"></circle>
+      <text x="362" y="170" font-family="JetBrains Mono, monospace" font-size="11" fill="var(--z)">(0, 0)</text>
+      <text x="350" y="304" text-anchor="middle" font-size="12.5" fill="currentColor">自分は毎回ここ（原点）から始まる</text>
+    </svg>
+    <figcaption>世界の全体像。的3つは固定で動かない。変わるのは「今回どれを狙うか」だけで、それは平面を見ても分からない。</figcaption>
+  </figure>
+
+  <h3>ネットワークが見るもの ── 入力5個</h3>
+
+  <p>世界のすべてを見せるわけではありません。ネットワークに渡すのは、次の2つだけです。</p>
+
+  <div class="tbl">
+    <table>
+      <thead>
+        <tr><th>入力</th><th>中身</th><th>意味</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="ch">1, 2</td><td class="mono">x, y</td><td>いまの自分の位置。<span class="inline-code">-1.0</span> 〜 <span class="inline-code">+1.0</span> の実数</td></tr>
+        <tr><td class="ch">3, 4, 5</td><td class="mono">z0, z1, z2</td><td>今回の目標が左・右・上のどれか。1つだけ <span class="inline-code">1</span>、残りは <span class="inline-code">0</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>ここで大事なのは、<strong>的の座標（<span class="inline-code">-0.7</span> など）は教えていない</strong>ことです。伝えるのは「3つのうち何番目か」だけ。的は動かないので、番号さえ分かれば、その番号がどこを指すのかは重みのほうが覚えてくれます。</p>
+
+  <h3>3択を3個の数で表す ── one-hot</h3>
+
+  <p>目標は3択なのだから、<span class="inline-code">左=0, 右=1, 上=2</span> と1個の数で渡せばよさそうに見えます。しかしそれをすると、<strong>「上は左の2倍」「右は左と上のちょうど中間」という、ありもしない大小関係</strong>をネットワークに教えることになります。3つは順番のない、対等な選択肢です。</p>
+
+  <p>そこで<strong>選択肢の数だけ入力を用意して、当たっている1つだけを 1、残りを 0 にする</strong>。これを one-hot（1つだけ熱い）と呼びます。原点にいるときの観測5個は、目標ごとにこうなります。</p>
+
+  <div class="tbl">
+    <table>
+      <thead>
+        <tr><th>今回の目標</th><th>位置</th><th>目標 z</th><th>観測（この5個を入力する）</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>左</td><td class="mono">0.0, 0.0</td><td class="mono">1, 0, 0</td><td class="mono">[0.0, 0.0, 1.0, 0.0, 0.0]</td></tr>
+        <tr><td>右</td><td class="mono">0.0, 0.0</td><td class="mono">0, 1, 0</td><td class="mono">[0.0, 0.0, 0.0, 1.0, 0.0]</td></tr>
+        <tr><td>上</td><td class="mono">0.0, 0.0</td><td class="mono">0, 0, 1</td><td class="mono">[0.0, 0.0, 0.0, 0.0, 1.0]</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>この並びが、これから写経するコードに何度も出てきます。<strong>先頭2個が「いまどこにいるか」、後ろ3個が「今回どこを目指すか」</strong>——この読み方さえ覚えておけば、どの章のコードもそのまま読めます。</p>
+
+  <div class="note">
+    <span class="note-label">0 と 1 に分けると何が起きるか</span>
+    <p>one-hot にはもう1つ利点があります。<strong>0 を掛けた項は消えるので、1 が立っている場所の重みだけが計算に残る</strong>のです。つまり one-hot は「重みの中から、今回使うぶんを選び出すスイッチ」として働きます。</p>
+    <p>これは説明ではなく、第1章で実際に手を動かして目で見ます。そして第7章で、1組の重みが3つの的を撃ち分けるところまで行きます。</p>
+  </div>
+
+  <h3>ネットワークが返すもの ── 出力2個</h3>
+
+  <p>返すのは<strong>どちらへ、どれだけ動くか</strong>です。横方向と縦方向の2個の数で、それぞれ <span class="inline-code">-1.0</span> 〜 <span class="inline-code">+1.0</span> に収めます。1ステップで進むのはその <span class="inline-code">0.05</span> 倍。<strong>60ステップ動いて的に届けば成功</strong>です。原点から的までは 0.7 なので、まっすぐ全速力なら14ステップで着く計算になります。</p>
+
+  <div class="tbl">
+    <table>
+      <thead>
+        <tr><th>出力</th><th>中身</th><th>意味</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="ch">1, 2</td><td class="mono">vx, vy</td><td>横・縦にどれだけ動くか。<span class="inline-code">-1.0</span> 〜 <span class="inline-code">+1.0</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note">
+    <span class="note-label">この本での学習のさせ方</span>
+    <p>この本は<strong>正解を教えて学ばせます</strong>（教師あり学習）。正解は「今回の的に向かってまっすぐ進む向き」で、こちらが計算して与えます。試行錯誤も報酬もここでは出てきません。</p>
+    <p>その正解を取り上げて、<strong>報酬だけから同じ動きにたどり着かせる</strong>のが3冊目の『<a href="goal-vector.html">写経で覚える目標ベクトル</a>』です。同じ問題を、違うやり方で解き直すことになります。</p>
   </div>
 </section>
 
@@ -389,6 +507,8 @@ python -c "import numpy; print(numpy.__version__)"</code></pre>
   </div>
 
   <p class="lead">ニューラルネットワークの部品は「ニューロン」です。1本のニューロンがやることは1つだけ、<strong>入力に重みを掛けて全部足し、最後にバイアスを足す</strong>。それだけです。</p>
+
+  <p>写経コードの入力には、<a href="#problem">解く問題</a>で決めた観測5個をそのまま使います。<span class="inline-code">[0.0, 0.0, 1.0, 0.0, 0.0]</span> は<strong>「原点にいて、今回の目標は左」</strong>という状況です。</p>
 
   <h3>写経 ── 1本を手で計算する</h3>
 
