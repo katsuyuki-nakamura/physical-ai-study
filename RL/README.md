@@ -1,6 +1,6 @@
 # 写経で学ぶ強化学習
 
-ノートPC1台、GPU不要、MuJoCo不要で読み進められる強化学習の写経本2冊と、そのコード。
+ノートPC1台、GPU不要、MuJoCo不要で読み進められる写経本3冊と、そのコード。
 3冊とも同じ「平面上の3つの的」を題材にしていて、02 と 03 は同じ環境（`code/reach_env.py`）を共有します。
 
 | # | 本 | 内容 | 所要 |
@@ -65,7 +65,7 @@ python plot.py             # 冒頭の図を書き出す
 
 ```
 physical-ai-study/
-├── index.html                    GitHub Pages の入口（2冊へのリンク）
+├── index.html                    GitHub Pages の入口（3冊へのリンク）
 └── RL/
     ├── docs/                     本文（単体で開けるHTML）
     │   ├── neural-net.html      『写経で作るニューラルネットワーク』
