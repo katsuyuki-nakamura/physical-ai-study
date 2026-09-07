@@ -36,9 +36,9 @@ y = rng.normal(size=(16, mlp.N_OUT))
 p = mlp.init_params(seed=0)
 
 loss, grads = loss_and_grad(p, x, y)
-print(f"損失: {loss:.6f}")
+print(f"loss: {loss:.6f}")
 print()
-print(f"{'パラメータ':10} {'逆伝播':>14} {'数値微分':>14} {'差':>12}")
+print(f"{'parameter':10} {'backprop':>14} {'numeric':>14} {'diff':>12}")
 print("-" * 54)
 
 worst = 0.0
@@ -53,8 +53,8 @@ for key in ["W1", "b1", "W2", "b2", "W3", "b3"]:
         print(f"{label:10} {a:>14.9f} {n:>14.9f} {abs(a - n):>12.2e}")
 
 print("-" * 54)
-print(f"いちばん大きい差: {worst:.2e}")
-print("→ 1e-6 より小さければ、逆伝播は正しく書けている。")
+print(f"largest gap: {worst:.2e}")
+print("-> under 1e-6 means backward() is written correctly.")
 print()
-print("数値微分は重み1つにつき順伝播2回。逆伝播は全部まとめて1回。")
-print(f"このネットなら {sum(v.size for v in p.values()) * 2} 回 → 1 回。これが逆伝播の値打ち。")
+print("Numeric differentiation costs 2 forward passes per weight. Backprop does the whole lot in 1.")
+print(f"For this net: {sum(v.size for v in p.values()) * 2} passes -> 1. That is what backprop is worth.")

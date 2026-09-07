@@ -32,12 +32,12 @@ rng = np.random.default_rng(0)
 x, y = make_batch(256, rng)
 p = mlp.init_params(seed=0)
 
-print("観測の例  :", np.round(x[0], 3))
-print("正解の行動:", np.round(y[0], 3))
+print("observation  :", np.round(x[0], 3))
+print("right action :", np.round(y[0], 3))
 print()
 
 base = loss_of(p, x, y)
-print(f"いまの損失: {base:.6f}")
+print(f"loss right now: {base:.6f}")
 print()
 
 # W1 の左上の重みを1つだけ、少しだけ動かしてみる
@@ -48,11 +48,11 @@ p["W1"][0, 0] -= 2 * eps
 minus = loss_of(p, x, y)
 p["W1"][0, 0] += eps   # 元に戻す
 
-print(f"W1[0,0] を +{eps} 動かすと 損失 {plus:.6f}")
-print(f"W1[0,0] を -{eps} 動かすと 損失 {minus:.6f}")
+print(f"move W1[0,0] by +{eps}: loss {plus:.6f}")
+print(f"move W1[0,0] by -{eps}: loss {minus:.6f}")
 print()
-print(f"  傾き = (増えたぶん - 減ったぶん) / (2 * {eps}) = {(plus - minus) / (2 * eps):+.6f}")
+print(f"  slope = (up - down) / (2 * {eps}) = {(plus - minus) / (2 * eps):+.6f}")
 print()
-print("これが「この重みについての勾配」。符号の逆向きに動かせば損失は減る。")
-print("全部の重みについてこれをやれば学習できるが、数が多すぎて現実的でない。")
-print(f"（このネットの重みは {sum(v.size for v in p.values())} 個。1回の更新に {sum(v.size for v in p.values()) * 2} 回の順伝播が要る）")
+print("That is the gradient for this one weight. Move it against the sign and the loss drops.")
+print("Doing this for every weight would train the net, but there are far too many.")
+print(f"(this net has {sum(v.size for v in p.values())} weights. One update would need {sum(v.size for v in p.values()) * 2} forward passes)")

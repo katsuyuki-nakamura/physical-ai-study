@@ -528,47 +528,47 @@ x = np.array([0.0, 0.0, 1.0, 0.0, 0.0])
 w = np.array([0.5, -0.2, 1.3, 0.1, -0.7])
 b = 0.4
 
-print("入力     x =", x)
-print("重み     w =", w)
-print("バイアス b =", b)
+print("input   x =", x)
+print("weight  w =", w)
+print("bias    b =", b)
 print()
 
-print("1項ずつ書き下すと:")
+print("term by term:")
 total = 0.0
 for i in range(len(x)):
     term = w[i] * x[i]
     total += term
     print(f"  w[{i}] * x[{i}] = {w[i]:+.1f} * {x[i]:+.1f} = {term:+.2f}")
-print(f"  バイアス                    = {b:+.2f}")
+print(f"  bias                      = {b:+.2f}")
 total += b
-print(f"  合計                        = {total:+.2f}")
+print(f"  total                     = {total:+.2f}")
 print()
 
-print("numpy なら1行:")
+print("one line with numpy:")
 print("  np.dot(w, x) + b =", np.dot(w, x) + b)
 print()
-print("重みは入力と同じ数だけ要る。バイアスはニューロン1本につき1つ。")</code></pre>
+print("One weight per input. One bias per neuron.")</code></pre>
   </div>
 
   <div class="code is-out">
     <div class="code-bar"><span class="code-name"><span class="dot">&gt;</span>出力</span><button class="copy" type="button">コピー</button></div>
-<pre><code>入力     x = [0. 0. 1. 0. 0.]
-重み     w = [ 0.5 -0.2  1.3  0.1 -0.7]
-バイアス b = 0.4
+<pre><code>input   x = [0. 0. 1. 0. 0.]
+weight  w = [ 0.5 -0.2  1.3  0.1 -0.7]
+bias    b = 0.4
 
-1項ずつ書き下すと:
+term by term:
   w[0] * x[0] = +0.5 * +0.0 = +0.00
   w[1] * x[1] = -0.2 * +0.0 = -0.00
   w[2] * x[2] = +1.3 * +1.0 = +1.30
   w[3] * x[3] = +0.1 * +0.0 = +0.00
   w[4] * x[4] = -0.7 * +0.0 = -0.00
-  バイアス                    = +0.40
-  合計                        = +1.70
+  bias                      = +0.40
+  total                     = +1.70
 
-numpy なら1行:
+one line with numpy:
   np.dot(w, x) + b = 1.7000000000000002
 
-重みは入力と同じ数だけ要る。バイアスはニューロン1本につき1つ。</code></pre>
+One weight per input. One bias per neuron.</code></pre>
   </div>
 
   <p>入力が5個なので、<strong>重みも5個</strong>要ります。バイアスは<strong>ニューロン1本につき1つ</strong>です。ここが後でパラメータの数を数えるときの基本になります。</p>
@@ -618,28 +618,28 @@ for j in range(64):
 # 64本まとめて計算する
 out_matrix = W @ x + b
 
-print("W の形   :", W.shape, " ← (ニューロンの本数, 入力の数)")
-print("x の形   :", x.shape)
-print("出力の形 :", out_matrix.shape, " ← ニューロンの本数だけ数が出てくる")
+print("W shape   :", W.shape, " &lt;- (number of neurons, number of inputs)")
+print("x shape   :", x.shape)
+print("out shape :", out_matrix.shape, " &lt;- one number per neuron")
 print()
-print("ループ版 先頭3個:", np.round(out_loop[:3], 4))
-print("行列版   先頭3個:", np.round(out_matrix[:3], 4))
-print("完全に一致するか:", np.allclose(out_loop, out_matrix))
+print("loop   first 3:", np.round(out_loop[:3], 4))
+print("matrix first 3:", np.round(out_matrix[:3], 4))
+print("exactly equal :", np.allclose(out_loop, out_matrix))
 print()
-print(f"この層のパラメータ数 = 重み {W.size} (= 64 x 5) + バイアス {b.size} = {W.size + b.size}")</code></pre>
+print(f"parameters in this layer = weights {W.size} (= 64 x 5) + biases {b.size} = {W.size + b.size}")</code></pre>
   </div>
 
   <div class="code is-out">
     <div class="code-bar"><span class="code-name"><span class="dot">&gt;</span>出力</span><button class="copy" type="button">コピー</button></div>
-<pre><code>W の形   : (64, 5)  ← (ニューロンの本数, 入力の数)
-x の形   : (5,)
-出力の形 : (64,)  ← ニューロンの本数だけ数が出てくる
+<pre><code>W shape   : (64, 5)  &lt;- (number of neurons, number of inputs)
+x shape   : (5,)
+out shape : (64,)  &lt;- one number per neuron
 
-ループ版 先頭3個: [ 0.355   0.4179 -1.2727]
-行列版   先頭3個: [ 0.355   0.4179 -1.2727]
-完全に一致するか: True
+loop   first 3: [ 0.355   0.4179 -1.2727]
+matrix first 3: [ 0.355   0.4179 -1.2727]
+exactly equal : True
 
-この層のパラメータ数 = 重み 320 (= 64 x 5) + バイアス 64 = 384</code></pre>
+parameters in this layer = weights 320 (= 64 x 5) + biases 64 = 384</code></pre>
   </div>
 
   <p>64本のニューロンがそれぞれ5個の入力を見るので、重みは <span class="inline-code">64 &#215; 5 = 320</span> 個。バイアスは1本につき1つで64個。合わせて <strong>384個</strong>がこの層のパラメータです。</p>
@@ -684,40 +684,40 @@ W2 = rng.normal(0.0, 0.5, size=(4, 8))
 two_layers = W2 @ (W1 @ x)   # 2層ぶん計算する
 one_layer = (W2 @ W1) @ x    # 重みを先に掛けて1層にまとめる
 
-print("--- 活性化なし ---")
-print("  2層で計算 :", np.round(two_layers, 4))
-print("  1層にまとめ:", np.round(one_layer, 4))
-print("  一致するか :", np.allclose(two_layers, one_layer))
-print("  → 何層重ねても1層で書ける。深くした意味がない。")
+print("--- without activation ---")
+print("  two layers    :", np.round(two_layers, 4))
+print("  folded to one :", np.round(one_layer, 4))
+print("  equal         :", np.allclose(two_layers, one_layer))
+print("  -&gt; any number of layers collapses into one. Depth buys nothing.")
 print()
 
 with_tanh = W2 @ np.tanh(W1 @ x)   # 途中に tanh を挟む
 
-print("--- tanh あり ---")
-print("  2層で計算 :", np.round(with_tanh, 4))
-print("  1層で書けるか:", np.allclose(with_tanh, one_layer))
-print("  → 書けない。非線形が入って初めて、層を増やす意味が出る。")
+print("--- with tanh ---")
+print("  two layers    :", np.round(with_tanh, 4))
+print("  same as one   :", np.allclose(with_tanh, one_layer))
+print("  -&gt; no. Depth starts to mean something only once a nonlinearity sits in between.")
 print()
 
-print("tanh は値を -1〜1 に押し込む関数:")
+print("tanh squeezes any value into -1..1:")
 for v in (-3.0, -1.0, 0.0, 1.0, 3.0):
     print(f"  tanh({v:+.1f}) = {np.tanh(v):+.4f}")</code></pre>
   </div>
 
   <div class="code is-out">
     <div class="code-bar"><span class="code-name"><span class="dot">&gt;</span>出力</span><button class="copy" type="button">コピー</button></div>
-<pre><code>--- 活性化なし ---
-  2層で計算 : [-1.3008  0.3158 -0.9289 -0.8745]
-  1層にまとめ: [-1.3008  0.3158 -0.9289 -0.8745]
-  一致するか : True
-  → 何層重ねても1層で書ける。深くした意味がない。
+<pre><code>--- without activation ---
+  two layers    : [-1.3008  0.3158 -0.9289 -0.8745]
+  folded to one : [-1.3008  0.3158 -0.9289 -0.8745]
+  equal         : True
+  -&gt; any number of layers collapses into one. Depth buys nothing.
 
---- tanh あり ---
-  2層で計算 : [-1.2142  0.2935 -0.8649 -0.8024]
-  1層で書けるか: False
-  → 書けない。非線形が入って初めて、層を増やす意味が出る。
+--- with tanh ---
+  two layers    : [-1.2142  0.2935 -0.8649 -0.8024]
+  same as one   : False
+  -&gt; no. Depth starts to mean something only once a nonlinearity sits in between.
 
-tanh は値を -1〜1 に押し込む関数:
+tanh squeezes any value into -1..1:
   tanh(-3.0) = -0.9951
   tanh(-1.0) = -0.7616
   tanh(+0.0) = +0.0000
@@ -798,10 +798,10 @@ import mlp
 
 p = mlp.init_params(seed=0)
 
-print("パラメータの形と数:")
+print("parameter shapes and counts:")
 for k, v in p.items():
-    print(f"  {k:3} {str(v.shape):10} {v.size:>5} 個")
-print(f"  {'合計':3} {'':10} {sum(v.size for v in p.values()):>5} 個")
+    print(f"  {k:5} {str(v.shape):10} {v.size:&gt;5}")
+print(f"  {'total':5} {'':10} {sum(v.size for v in p.values()):&gt;5}")
 print()
 
 # 3つの観測を一度に流す。位置は原点、目標だけが違う。
@@ -810,39 +810,39 @@ x[0, 2] = x[1, 3] = x[2, 4] = 1.0   # one-hot の z
 
 y, (_, h1, h2) = mlp.forward(p, x)
 
-print("数の並びが形を変えていく:")
-print(f"  入力（観測）  {x.shape}   ← 位置2 + 目標3")
-print(f"  第1層の後     {h1.shape}   ← ニューロン64本ぶん")
-print(f"  第2層の後     {h2.shape}")
-print(f"  出力（行動）  {y.shape}   ← 速度指令2つ")
+print("the numbers change shape on the way through:")
+print(f"  input (obs)     {x.shape}   &lt;- position 2 + goal 3")
+print(f"  after layer 1   {h1.shape}   &lt;- 64 neurons")
+print(f"  after layer 2   {h2.shape}")
+print(f"  output (action) {y.shape}   &lt;- 2 velocity commands")
 print()
 
-print("まだ学習していないので、出てくる行動はでたらめ:")
+print("not trained yet, so the actions are nonsense:")
 for name, row in zip(["left", "right", "up"], y):
-    print(f"  z = {name:5} → 行動 {np.round(row, 4)}")</code></pre>
+    print(f"  z = {name:5} -&gt; action {np.round(row, 4)}")</code></pre>
   </div>
 
   <div class="code is-out">
     <div class="code-bar"><span class="code-name"><span class="dot">&gt;</span>出力</span><button class="copy" type="button">コピー</button></div>
-<pre><code>パラメータの形と数:
-  W1  (64, 5)      320 個
-  b1  (64,)         64 個
-  W2  (64, 64)    4096 個
-  b2  (64,)         64 個
-  W3  (2, 64)      128 個
-  b3  (2,)           2 個
-  合計              4674 個
+<pre><code>parameter shapes and counts:
+  W1    (64, 5)      320
+  b1    (64,)         64
+  W2    (64, 64)    4096
+  b2    (64,)         64
+  W3    (2, 64)      128
+  b3    (2,)           2
+  total             4674
 
-数の並びが形を変えていく:
-  入力（観測）  (3, 5)   ← 位置2 + 目標3
-  第1層の後     (3, 64)   ← ニューロン64本ぶん
-  第2層の後     (3, 64)
-  出力（行動）  (3, 2)   ← 速度指令2つ
+the numbers change shape on the way through:
+  input (obs)     (3, 5)   &lt;- position 2 + goal 3
+  after layer 1   (3, 64)   &lt;- 64 neurons
+  after layer 2   (3, 64)
+  output (action) (3, 2)   &lt;- 2 velocity commands
 
-まだ学習していないので、出てくる行動はでたらめ:
-  z = left  → 行動 [0.827  0.5054]
-  z = right → 行動 [0.2783 0.0918]
-  z = up    → 行動 [-0.4919 -0.1574]</code></pre>
+not trained yet, so the actions are nonsense:
+  z = left  -&gt; action [0.827  0.5054]
+  z = right -&gt; action [0.2783 0.0918]
+  z = up    -&gt; action [-0.4919 -0.1574]</code></pre>
   </div>
 
   <p>数の並びが <strong>5 → 64 → 64 → 2</strong> と形を変えて出てきます。序章の図がそのまま出力になっています。</p>
@@ -908,12 +908,12 @@ rng = np.random.default_rng(0)
 x, y = make_batch(256, rng)
 p = mlp.init_params(seed=0)
 
-print("観測の例  :", np.round(x[0], 3))
-print("正解の行動:", np.round(y[0], 3))
+print("observation  :", np.round(x[0], 3))
+print("right action :", np.round(y[0], 3))
 print()
 
 base = loss_of(p, x, y)
-print(f"いまの損失: {base:.6f}")
+print(f"loss right now: {base:.6f}")
 print()
 
 # W1 の左上の重みを1つだけ、少しだけ動かしてみる
@@ -924,31 +924,31 @@ p["W1"][0, 0] -= 2 * eps
 minus = loss_of(p, x, y)
 p["W1"][0, 0] += eps   # 元に戻す
 
-print(f"W1[0,0] を +{eps} 動かすと 損失 {plus:.6f}")
-print(f"W1[0,0] を -{eps} 動かすと 損失 {minus:.6f}")
+print(f"move W1[0,0] by +{eps}: loss {plus:.6f}")
+print(f"move W1[0,0] by -{eps}: loss {minus:.6f}")
 print()
-print(f"  傾き = (増えたぶん - 減ったぶん) / (2 * {eps}) = {(plus - minus) / (2 * eps):+.6f}")
+print(f"  slope = (up - down) / (2 * {eps}) = {(plus - minus) / (2 * eps):+.6f}")
 print()
-print("これが「この重みについての勾配」。符号の逆向きに動かせば損失は減る。")
-print("全部の重みについてこれをやれば学習できるが、数が多すぎて現実的でない。")
-print(f"（このネットの重みは {sum(v.size for v in p.values())} 個。1回の更新に {sum(v.size for v in p.values()) * 2} 回の順伝播が要る）")</code></pre>
+print("That is the gradient for this one weight. Move it against the sign and the loss drops.")
+print("Doing this for every weight would train the net, but there are far too many.")
+print(f"(this net has {sum(v.size for v in p.values())} weights. One update would need {sum(v.size for v in p.values()) * 2} forward passes)")</code></pre>
   </div>
 
   <div class="code is-out">
     <div class="code-bar"><span class="code-name"><span class="dot">&gt;</span>出力</span><button class="copy" type="button">コピー</button></div>
-<pre><code>観測の例  : [ 0.274 -0.46   0.     0.     1.   ]
-正解の行動: [-1.  1.]
+<pre><code>observation  : [ 0.274 -0.46   0.     0.     1.   ]
+right action : [-1.  1.]
 
-いまの損失: 1.234658
+loss right now: 1.234658
 
-W1[0,0] を +0.0001 動かすと 損失 1.234659
-W1[0,0] を -0.0001 動かすと 損失 1.234657
+move W1[0,0] by +0.0001: loss 1.234659
+move W1[0,0] by -0.0001: loss 1.234657
 
-  傾き = (増えたぶん - 減ったぶん) / (2 * 0.0001) = +0.009138
+  slope = (up - down) / (2 * 0.0001) = +0.009138
 
-これが「この重みについての勾配」。符号の逆向きに動かせば損失は減る。
-全部の重みについてこれをやれば学習できるが、数が多すぎて現実的でない。
-（このネットの重みは 4674 個。1回の更新に 9348 回の順伝播が要る）</code></pre>
+That is the gradient for this one weight. Move it against the sign and the loss drops.
+Doing this for every weight would train the net, but there are far too many.
+(this net has 4674 weights. One update would need 9348 forward passes)</code></pre>
   </div>
 
   <p>やっているのは<strong>坂の傾きを測る</strong>ことです。重みを少し増やして損失がどう動いたか、少し減らしてどう動いたか。その差を取れば、この重みについての<strong>勾配</strong>が出ます。</p>
@@ -1036,9 +1036,9 @@ y = rng.normal(size=(16, mlp.N_OUT))
 p = mlp.init_params(seed=0)
 
 loss, grads = loss_and_grad(p, x, y)
-print(f"損失: {loss:.6f}")
+print(f"loss: {loss:.6f}")
 print()
-print(f"{'パラメータ':10} {'逆伝播':>14} {'数値微分':>14} {'差':>12}")
+print(f"{'parameter':10} {'backprop':&gt;14} {'numeric':&gt;14} {'diff':&gt;12}")
 print("-" * 54)
 
 worst = 0.0
@@ -1050,21 +1050,21 @@ for key in ["W1", "b1", "W2", "b2", "W3", "b3"]:
         n = numeric_grad(p, x, y, key, idx)
         worst = max(worst, abs(a - n))
         label = f"{key}[{','.join(map(str, idx))}]"
-        print(f"{label:10} {a:>14.9f} {n:>14.9f} {abs(a - n):>12.2e}")
+        print(f"{label:10} {a:&gt;14.9f} {n:&gt;14.9f} {abs(a - n):&gt;12.2e}")
 
 print("-" * 54)
-print(f"いちばん大きい差: {worst:.2e}")
-print("→ 1e-6 より小さければ、逆伝播は正しく書けている。")
+print(f"largest gap: {worst:.2e}")
+print("-&gt; under 1e-6 means backward() is written correctly.")
 print()
-print("数値微分は重み1つにつき順伝播2回。逆伝播は全部まとめて1回。")
-print(f"このネットなら {sum(v.size for v in p.values()) * 2} 回 → 1 回。これが逆伝播の値打ち。")</code></pre>
+print("Numeric differentiation costs 2 forward passes per weight. Backprop does the whole lot in 1.")
+print(f"For this net: {sum(v.size for v in p.values()) * 2} passes -&gt; 1. That is what backprop is worth.")</code></pre>
   </div>
 
   <div class="code is-out">
     <div class="code-bar"><span class="code-name"><span class="dot">&gt;</span>出力</span><button class="copy" type="button">コピー</button></div>
-<pre><code>損失: 1.203607
+<pre><code>loss: 1.203607
 
-パラメータ                 逆伝播           数値微分            差
+parameter        backprop        numeric         diff
 ------------------------------------------------------
 W1[48,2]     -0.071072421   -0.071072421     6.01e-12
 W1[5,4]      -0.029221445   -0.029221445     1.07e-11
@@ -1079,11 +1079,11 @@ W3[1,18]      0.256283107    0.256283107     6.57e-12
 b3[0]         0.467237904    0.467237904     9.96e-12
 b3[1]        -0.009279652   -0.009279652     1.27e-11
 ------------------------------------------------------
-いちばん大きい差: 2.05e-11
-→ 1e-6 より小さければ、逆伝播は正しく書けている。
+largest gap: 2.05e-11
+-&gt; under 1e-6 means backward() is written correctly.
 
-数値微分は重み1つにつき順伝播2回。逆伝播は全部まとめて1回。
-このネットなら 9348 回 → 1 回。これが逆伝播の値打ち。</code></pre>
+Numeric differentiation costs 2 forward passes per weight. Backprop does the whole lot in 1.
+For this net: 9348 passes -&gt; 1. That is what backprop is worth.</code></pre>
   </div>
 
   <p>差は <span class="inline-code">2e-11</span> 程度。これは浮動小数点の誤差の範囲で、<strong>実質的に完全一致</strong>です。逆伝播が正しく書けています。</p>
@@ -1156,18 +1156,18 @@ rng = np.random.default_rng(0)
 p = mlp.init_params(seed=0)
 x_test, y_test = make_batch(2000, np.random.default_rng(999))
 
-print(f"学習 {EPOCHS} 回  バッチ {BATCH}  学習率 {LR}")
+print(f"epochs {EPOCHS}  batch {BATCH}  learning rate {LR}")
 print()
 for epoch in range(EPOCHS + 1):
     x, y = make_batch(BATCH, rng)
     loss, grads = loss_and_grad(p, x, y)
     if epoch % 50 == 0:
         test_loss, _ = loss_and_grad(p, x_test, y_test)
-        print(f"  epoch {epoch:>4}   学習データの損失 {loss:.5f}   別データでの損失 {test_loss:.5f}")
+        print(f"  epoch {epoch:&gt;4}   training loss {loss:.5f}   held-out loss {test_loss:.5f}")
     mlp.sgd_step(p, grads, LR)
 
 print()
-print("学習した方策を60ステップ動かす（原点から出発）:")
+print("running the trained policy for 60 steps (starting at the origin):")
 for gid, name in enumerate(NAMES):
     pos = np.zeros(2)
     z = np.eye(3)[gid]
@@ -1176,32 +1176,32 @@ for gid, name in enumerate(NAMES):
         action, _ = mlp.forward(p, obs)
         pos = np.clip(pos + STEP * np.clip(action[0], -1.0, 1.0), -1.0, 1.0)
     dist = float(np.linalg.norm(pos - TARGETS[gid]))
-    print(f"  z = {name:5} 目標 {TARGETS[gid]} → 到達 [{pos[0]:+.3f} {pos[1]:+.3f}]  距離 {dist:.4f}")
+    print(f"  z = {name:5} target {TARGETS[gid]} -&gt; reached [{pos[0]:+.3f} {pos[1]:+.3f}]  dist {dist:.4f}")
 
 print()
-print("1つのネットワークが、z を読んで3つの的を撃ち分けている。")
-print("重みは1組だけ。的ごとに学習し直したわけではない。")</code></pre>
+print("One network reads z and picks out a different target each time.")
+print("There is a single set of weights; it was not retrained per target.")</code></pre>
   </div>
 
   <div class="code is-out">
     <div class="code-bar"><span class="code-name"><span class="dot">&gt;</span>出力</span><button class="copy" type="button">コピー</button></div>
-<pre><code>学習 300 回  バッチ 256  学習率 0.5
+<pre><code>epochs 300  batch 256  learning rate 0.5
 
-  epoch    0   学習データの損失 1.23466   別データでの損失 1.26833
-  epoch   50   学習データの損失 0.15668   別データでの損失 0.15896
-  epoch  100   学習データの損失 0.05996   別データでの損失 0.05742
-  epoch  150   学習データの損失 0.04307   別データでの損失 0.03611
-  epoch  200   学習データの損失 0.03019   別データでの損失 0.02754
-  epoch  250   学習データの損失 0.01953   別データでの損失 0.02046
-  epoch  300   学習データの損失 0.01610   別データでの損失 0.01759
+  epoch    0   training loss 1.23466   held-out loss 1.26833
+  epoch   50   training loss 0.15668   held-out loss 0.15896
+  epoch  100   training loss 0.05996   held-out loss 0.05742
+  epoch  150   training loss 0.04307   held-out loss 0.03611
+  epoch  200   training loss 0.03019   held-out loss 0.02754
+  epoch  250   training loss 0.01953   held-out loss 0.02046
+  epoch  300   training loss 0.01610   held-out loss 0.01759
 
-学習した方策を60ステップ動かす（原点から出発）:
-  z = left  目標 [-0.7  0. ] → 到達 [-0.700 +0.003]  距離 0.0028
-  z = right 目標 [0.7 0. ] → 到達 [+0.686 +0.012]  距離 0.0182
-  z = up    目標 [0.  0.7] → 到達 [+0.003 +0.694]  距離 0.0068
+running the trained policy for 60 steps (starting at the origin):
+  z = left  target [-0.7  0. ] -&gt; reached [-0.700 +0.003]  dist 0.0028
+  z = right target [0.7 0. ] -&gt; reached [+0.686 +0.012]  dist 0.0182
+  z = up    target [0.  0.7] -&gt; reached [+0.003 +0.694]  dist 0.0068
 
-1つのネットワークが、z を読んで3つの的を撃ち分けている。
-重みは1組だけ。的ごとに学習し直したわけではない。</code></pre>
+One network reads z and picks out a different target each time.
+There is a single set of weights; it was not retrained per target.</code></pre>
   </div>
 
   <p>損失が <strong>1.23 から 0.016 まで</strong>下がりました。学習に使っていない別のデータでも同じくらい下がっているので、<strong>データを丸暗記したのではなく、規則を掴んでいます</strong>。</p>

@@ -9,10 +9,10 @@ import mlp
 
 p = mlp.init_params(seed=0)
 
-print("パラメータの形と数:")
+print("parameter shapes and counts:")
 for k, v in p.items():
-    print(f"  {k:3} {str(v.shape):10} {v.size:>5} 個")
-print(f"  {'合計':3} {'':10} {sum(v.size for v in p.values()):>5} 個")
+    print(f"  {k:5} {str(v.shape):10} {v.size:>5}")
+print(f"  {'total':5} {'':10} {sum(v.size for v in p.values()):>5}")
 print()
 
 # 3つの観測を一度に流す。位置は原点、目標だけが違う。
@@ -21,13 +21,13 @@ x[0, 2] = x[1, 3] = x[2, 4] = 1.0   # one-hot の z
 
 y, (_, h1, h2) = mlp.forward(p, x)
 
-print("数の並びが形を変えていく:")
-print(f"  入力（観測）  {x.shape}   ← 位置2 + 目標3")
-print(f"  第1層の後     {h1.shape}   ← ニューロン64本ぶん")
-print(f"  第2層の後     {h2.shape}")
-print(f"  出力（行動）  {y.shape}   ← 速度指令2つ")
+print("the numbers change shape on the way through:")
+print(f"  input (obs)     {x.shape}   <- position 2 + goal 3")
+print(f"  after layer 1   {h1.shape}   <- 64 neurons")
+print(f"  after layer 2   {h2.shape}")
+print(f"  output (action) {y.shape}   <- 2 velocity commands")
 print()
 
-print("まだ学習していないので、出てくる行動はでたらめ:")
+print("not trained yet, so the actions are nonsense:")
 for name, row in zip(["left", "right", "up"], y):
-    print(f"  z = {name:5} → 行動 {np.round(row, 4)}")
+    print(f"  z = {name:5} -> action {np.round(row, 4)}")

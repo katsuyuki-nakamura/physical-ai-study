@@ -34,18 +34,18 @@ rng = np.random.default_rng(0)
 p = mlp.init_params(seed=0)
 x_test, y_test = make_batch(2000, np.random.default_rng(999))
 
-print(f"学習 {EPOCHS} 回  バッチ {BATCH}  学習率 {LR}")
+print(f"epochs {EPOCHS}  batch {BATCH}  learning rate {LR}")
 print()
 for epoch in range(EPOCHS + 1):
     x, y = make_batch(BATCH, rng)
     loss, grads = loss_and_grad(p, x, y)
     if epoch % 50 == 0:
         test_loss, _ = loss_and_grad(p, x_test, y_test)
-        print(f"  epoch {epoch:>4}   学習データの損失 {loss:.5f}   別データでの損失 {test_loss:.5f}")
+        print(f"  epoch {epoch:>4}   training loss {loss:.5f}   held-out loss {test_loss:.5f}")
     mlp.sgd_step(p, grads, LR)
 
 print()
-print("学習した方策を60ステップ動かす（原点から出発）:")
+print("running the trained policy for 60 steps (starting at the origin):")
 for gid, name in enumerate(NAMES):
     pos = np.zeros(2)
     z = np.eye(3)[gid]
@@ -54,8 +54,8 @@ for gid, name in enumerate(NAMES):
         action, _ = mlp.forward(p, obs)
         pos = np.clip(pos + STEP * np.clip(action[0], -1.0, 1.0), -1.0, 1.0)
     dist = float(np.linalg.norm(pos - TARGETS[gid]))
-    print(f"  z = {name:5} 目標 {TARGETS[gid]} → 到達 [{pos[0]:+.3f} {pos[1]:+.3f}]  距離 {dist:.4f}")
+    print(f"  z = {name:5} target {TARGETS[gid]} -> reached [{pos[0]:+.3f} {pos[1]:+.3f}]  dist {dist:.4f}")
 
 print()
-print("1つのネットワークが、z を読んで3つの的を撃ち分けている。")
-print("重みは1組だけ。的ごとに学習し直したわけではない。")
+print("One network reads z and picks out a different target each time.")
+print("There is a single set of weights; it was not retrained per target.")
