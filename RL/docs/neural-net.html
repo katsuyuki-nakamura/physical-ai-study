@@ -276,6 +276,7 @@ footer p { max-width: none; }
   <ol>
     <li><a href="#intro"><span class="n">序</span><span>何を作るのか</span></a></li>
     <li><a href="#problem"><span class="n">&#167;</span><span>解く問題</span></a></li>
+    <li><a href="#network"><span class="n">&#167;</span><span>作るネットワーク</span></a></li>
     <li><a href="#setup"><span class="n">&#167;</span><span>準備</span></a></li>
     <li><a href="#ch1"><span class="n">01</span><span>ニューロン1本</span></a></li>
     <li><a href="#ch2"><span class="n">02</span><span>層は行列積</span></a></li>
@@ -310,53 +311,7 @@ footer p { max-width: none; }
 
   <p class="lead">ニューラルネットワークは、<strong>数の並びを別の数の並びに変える箱</strong>です。中でやっているのは掛け算と足し算がほとんどで、魔法は入っていません。この本では、その箱を<strong>ライブラリなしで1つ作りきります</strong>。</p>
 
-  <figure class="diagram">
-    <svg viewBox="0 0 700 250" role="img" aria-label="観測5個が、64個のニューロンからなる隠れ層を2回通って行動2個になる流れ。層ごとのパラメータ数つき。">
-      <defs>
-        <marker id="nnah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-          <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"></path>
-        </marker>
-      </defs>
-
-      <rect x="20" y="86" width="124" height="62" rx="6" fill="none" stroke="var(--z)" stroke-width="2"></rect>
-      <text x="82" y="112" text-anchor="middle" font-size="13" fill="var(--z)">観測</text>
-      <text x="82" y="133" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="15" fill="var(--z)">5 個</text>
-
-      <rect x="216" y="86" width="112" height="62" rx="6" fill="none" stroke="currentColor" stroke-width="1.5"></rect>
-      <text x="272" y="112" text-anchor="middle" font-size="13" fill="currentColor">隠れ層</text>
-      <text x="272" y="133" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="15" fill="currentColor">64 個</text>
-
-      <rect x="392" y="86" width="112" height="62" rx="6" fill="none" stroke="currentColor" stroke-width="1.5"></rect>
-      <text x="448" y="112" text-anchor="middle" font-size="13" fill="currentColor">隠れ層</text>
-      <text x="448" y="133" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="15" fill="currentColor">64 個</text>
-
-      <rect x="568" y="86" width="112" height="62" rx="6" fill="none" stroke="var(--z)" stroke-width="2"></rect>
-      <text x="624" y="112" text-anchor="middle" font-size="13" fill="var(--z)">行動</text>
-      <text x="624" y="133" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="15" fill="var(--z)">2 個</text>
-
-      <line x1="148" y1="117" x2="211" y2="117" stroke="currentColor" stroke-width="1.5" marker-end="url(#nnah)"></line>
-      <line x1="332" y1="117" x2="387" y2="117" stroke="currentColor" stroke-width="1.5" marker-end="url(#nnah)"></line>
-      <line x1="508" y1="117" x2="563" y2="117" stroke="currentColor" stroke-width="1.5" marker-end="url(#nnah)"></line>
-
-      <text x="180" y="72" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="currentColor" opacity="0.8">W1 + tanh</text>
-      <text x="360" y="72" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="currentColor" opacity="0.8">W2 + tanh</text>
-      <text x="536" y="72" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="currentColor" opacity="0.8">W3</text>
-
-      <text x="180" y="172" text-anchor="middle" font-size="11.5" fill="currentColor" opacity="0.65">384 個</text>
-      <text x="360" y="172" text-anchor="middle" font-size="11.5" fill="currentColor" opacity="0.65">4,160 個</text>
-      <text x="536" y="172" text-anchor="middle" font-size="11.5" fill="currentColor" opacity="0.65">130 個</text>
-
-      <line x1="20" y1="200" x2="680" y2="200" stroke="currentColor" stroke-width="1" opacity="0.2"></line>
-      <text x="20" y="224" font-size="12.5" fill="currentColor" opacity="0.75">重みとバイアスは全部で 4,674 個。この本は、この箱を numpy だけで最初から作る。</text>
-    </svg>
-    <figcaption>作るネットワークの全体。観測5個を受け取り、64個のニューロンからなる隠れ層を2回通って、行動2個になる。矢印1本ぶんが「層」で、下の数がその層のパラメータ数。</figcaption>
-  </figure>
-
-  <p>作るのは、<strong>観測5個を受け取って行動2個を返す</strong>ネットワークです。この「5」と「2」は適当に決めた数ではありません。<strong>平面上の点を、3つの的のどれかに向かわせる</strong>——たった1つの問題から決まっています。</p>
-
-  <p>この問題はこの本の大前提で、写経コードの入力はすべてこの形をしています。3冊とも同じ問題を使うので、<strong>次の節で先に、世界のほうを説明します</strong>。</p>
-
-  <p>そして最後の第7章で、このネットワークは<strong>入力の後ろ3つを読んで行き先を変える</strong>ようになります。重みは1組だけ。的ごとに学習し直すのではありません。</p>
+  <p>ただし、<strong>何個の数を受け取って何個の数を返すのかは、ネットワークの側では決まりません</strong>。解く問題のほうが決めます。だからこの本は、ネットワークより先に<strong>世界の話から始めます</strong>。次の節で問題を決めて、その次の節で、作るネットワークの全体を見ます。</p>
 
   <div class="note">
     <span class="note-label">この本の位置づけ</span>
@@ -376,7 +331,7 @@ footer p { max-width: none; }
   <div class="ch-head"><span class="ch-num">&#167;</span></div>
   <h2>解く問題 ── 平面の上の点と、3つの的</h2>
 
-  <p class="lead">この本のネットワークは、最初から最後まで同じ1つの問題を相手にします。<strong>入力の5個も出力の2個も、すべてこの問題から出てきます</strong>。コードを書く前に、世界のほうを見ておきます。</p>
+  <p class="lead">この本のネットワークは、最初から最後まで同じ1つの問題を相手にします。<strong>何個の数を受け取って何個返すのかも、この問題が決めます</strong>。写経コードの入力はすべてこの形をしていて、3冊とも同じ問題を使います。コードを書く前に、世界のほうを見ておきます。</p>
 
   <h3>世界のきまり</h3>
 
@@ -497,6 +452,57 @@ footer p { max-width: none; }
     <p>この本は<strong>正解を教えて学ばせます</strong>（教師あり学習）。正解は「今回の的に向かってまっすぐ進む向き」で、こちらが計算して与えます。試行錯誤も報酬もここでは出てきません。</p>
     <p>その正解を取り上げて、<strong>報酬だけから同じ動きにたどり着かせる</strong>のが3冊目の『<a href="goal-vector.html">写経で覚える目標ベクトル</a>』です。同じ問題を、違うやり方で解き直すことになります。</p>
   </div>
+</section>
+
+<section id="network">
+  <div class="ch-head"><span class="ch-num">&#167;</span></div>
+  <h2>作るネットワーク ── 5個を受けて2個を返す</h2>
+
+  <p class="lead">問題が決まったので、作るものの形も決まりました。<strong>観測5個を受け取って行動2個を返す</strong>ネットワークです。この「5」と「2」は適当に決めた数ではなく、<a href="#problem">いま見た問題</a>からそのまま出てきています。</p>
+
+  <figure class="diagram">
+    <svg viewBox="0 0 700 250" role="img" aria-label="観測5個が、64個のニューロンからなる隠れ層を2回通って行動2個になる流れ。層ごとのパラメータ数つき。">
+      <defs>
+        <marker id="nnah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"></path>
+        </marker>
+      </defs>
+
+      <rect x="20" y="86" width="124" height="62" rx="6" fill="none" stroke="var(--z)" stroke-width="2"></rect>
+      <text x="82" y="112" text-anchor="middle" font-size="13" fill="var(--z)">観測</text>
+      <text x="82" y="133" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="15" fill="var(--z)">5 個</text>
+
+      <rect x="216" y="86" width="112" height="62" rx="6" fill="none" stroke="currentColor" stroke-width="1.5"></rect>
+      <text x="272" y="112" text-anchor="middle" font-size="13" fill="currentColor">隠れ層</text>
+      <text x="272" y="133" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="15" fill="currentColor">64 個</text>
+
+      <rect x="392" y="86" width="112" height="62" rx="6" fill="none" stroke="currentColor" stroke-width="1.5"></rect>
+      <text x="448" y="112" text-anchor="middle" font-size="13" fill="currentColor">隠れ層</text>
+      <text x="448" y="133" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="15" fill="currentColor">64 個</text>
+
+      <rect x="568" y="86" width="112" height="62" rx="6" fill="none" stroke="var(--z)" stroke-width="2"></rect>
+      <text x="624" y="112" text-anchor="middle" font-size="13" fill="var(--z)">行動</text>
+      <text x="624" y="133" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="15" fill="var(--z)">2 個</text>
+
+      <line x1="148" y1="117" x2="211" y2="117" stroke="currentColor" stroke-width="1.5" marker-end="url(#nnah)"></line>
+      <line x1="332" y1="117" x2="387" y2="117" stroke="currentColor" stroke-width="1.5" marker-end="url(#nnah)"></line>
+      <line x1="508" y1="117" x2="563" y2="117" stroke="currentColor" stroke-width="1.5" marker-end="url(#nnah)"></line>
+
+      <text x="180" y="72" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="currentColor" opacity="0.8">W1 + tanh</text>
+      <text x="360" y="72" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="currentColor" opacity="0.8">W2 + tanh</text>
+      <text x="536" y="72" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="currentColor" opacity="0.8">W3</text>
+
+      <text x="180" y="172" text-anchor="middle" font-size="11.5" fill="currentColor" opacity="0.65">384 個</text>
+      <text x="360" y="172" text-anchor="middle" font-size="11.5" fill="currentColor" opacity="0.65">4,160 個</text>
+      <text x="536" y="172" text-anchor="middle" font-size="11.5" fill="currentColor" opacity="0.65">130 個</text>
+
+      <line x1="20" y1="200" x2="680" y2="200" stroke="currentColor" stroke-width="1" opacity="0.2"></line>
+      <text x="20" y="224" font-size="12.5" fill="currentColor" opacity="0.75">重みとバイアスは全部で 4,674 個。この本は、この箱を numpy だけで最初から作る。</text>
+    </svg>
+    <figcaption>作るネットワークの全体。観測5個を受け取り、64個のニューロンからなる隠れ層を2回通って、行動2個になる。矢印1本ぶんが「層」で、下の数がその層のパラメータ数。</figcaption>
+  </figure>
+
+  <p>そして最後の第7章で、このネットワークは<strong>入力の後ろ3つを読んで行き先を変える</strong>ようになります。重みは1組だけ。的ごとに学習し直すのではありません。</p>
 </section>
 
 <section id="setup">
@@ -758,7 +764,7 @@ parameters in this layer = weights 320 (= 64 x 5) + biases 64 = 384</code></pre>
 
   <p>行列を離れて数1個で考えると分かりやすくなります——<strong>2倍してから3倍する</strong>のは、<strong>6倍する</strong>のと同じです。2ステップ実行しているのに、やれることは「ある1つの数を掛ける」だけ。何十回重ねても届くのは「○倍する」という形だけで、<strong>「2乗する」には絶対になりません</strong>。掛け算をいくら重ねても掛け算のまま——行列で起きているのもこれと同じことです。</p>
 
-  <p>写経コードの <span class="inline-code">W1</span> は <span class="inline-code">(64, 5)</span>、<span class="inline-code">W2</span> は <span class="inline-code">(2, 64)</span>——<strong>序章の図から隠れ層を1つ減らした形</strong>で、<span class="inline-code">W1</span> は第2章で作ったものそのものです。numpy の重み行列は <strong>(出す数, 受ける数)</strong> の順に並んでいる——つまり <strong>行がニューロン1本、列が入力1個</strong>に対応します。この形のまま <span class="inline-code">W2 @ W1</span> を先に計算すると、何が出てくるか。</p>
+  <p>写経コードの <span class="inline-code">W1</span> は <span class="inline-code">(64, 5)</span>、<span class="inline-code">W2</span> は <span class="inline-code">(2, 64)</span>——<strong><a href="#network">作るネットワーク</a>の図から隠れ層を1つ減らした形</strong>で、<span class="inline-code">W1</span> は第2章で作ったものそのものです。numpy の重み行列は <strong>(出す数, 受ける数)</strong> の順に並んでいる——つまり <strong>行がニューロン1本、列が入力1個</strong>に対応します。この形のまま <span class="inline-code">W2 @ W1</span> を先に計算すると、何が出てくるか。</p>
 
   <figure class="diagram">
     <svg viewBox="0 0 700 444" role="img" aria-label="活性化なしの2層（入力5個 → W1(64,5) → 隠れ層64個 → W2(2,64) → 出力2個）が、W2 @ W1 を先に計算すると (2,5) の行列1枚になり、隠れ層の64個が消えることを示す図。tanh を挟むと先に掛けられないことも示す。">
@@ -1072,7 +1078,7 @@ def forward(p: dict, x: np.ndarray):
 
   <h3>写経 ── 形が変わっていく様子を見る</h3>
 
-  <p>数の並びが <strong>5 → 64 → 64 → 2</strong> と形を変えて出てきます。序章の図がそのまま出力になっています。</p>
+  <p>数の並びが <strong>5 → 64 → 64 → 2</strong> と形を変えて出てきます。<a href="#network">作るネットワーク</a>の図が、そのまま出力になっています。</p>
 
   <p>パラメータの合計は <strong>4,674個</strong>。第2章で数えた384個（第1層）に、4,160個（第2層）と130個（出口）を足した数です。<strong>「入力数 × 出力数 + 出力数」を層ごとに足すだけ</strong>で、どんなネットワークでもパラメータ数は数えられます。</p>
 
