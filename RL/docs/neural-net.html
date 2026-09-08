@@ -825,6 +825,20 @@ parameters in this layer = weights 320 (= 64 x 5) + biases 64 = 384</code></pre>
 
   <p><strong>注目してほしいのは、潰したあとの形が <span class="inline-code">(2, 5)</span> になることです。</strong>真ん中の 64 が消えています。64本のニューロンを並べたはずなのに、出来上がったのは「入力5個を受けて2個を出す行列が1枚」でしかない。<strong>64 という数字は結果のどこにも残りません</strong>。図で言えば、隠れ層の箱ごと無かったことになります。</p>
 
+  <p>消える理由は、掛け算を1つずつ書き下すとはっきりします。</p>
+
+  <div class="pin">
+    <span class="pin-label">W = W2 @ W1 を書き下すと</span>
+    <code>W[j, k] = W2[j,0]*W1[0,k] + W2[j,1]*W1[1,k] + ... + W2[j,63]*W1[63,k]
+          m を 0 から 63 まで動かして、全部足し合わせる
+
+j = 0..1   出力2個
+k = 0..4   入力5個
+m = 0..63  隠れ層64本</code>
+  </div>
+
+  <p>右辺には <span class="inline-code">m</span> が出てきますが、<strong>0 から 63 まで全部足し合わされてしまう</strong>ので、左辺の添字は <span class="inline-code">j</span> と <span class="inline-code">k</span> だけです。<strong>これが「64 が消える」の正体</strong>です。隠れ層の64本は計算には使われるのに、結果を指す番号としては残りません。だから形が <span class="inline-code">(2, 5)</span> になります。</p>
+
   <p>パラメータで数えるともっとはっきりします。<span class="inline-code">64&#215;5 + 2&#215;64 = 448個</span>のパラメータを持っているのに、それをどう調整しても、出来上がるのは<strong>必ず <span class="inline-code">2&#215;5 = 10個</span>の数で書ける関数</strong>です。448個の値を動かせるつもりで、実際に変えられるのは10個ぶんの自由度だけ。<strong>残りの438個ぶんは、原理的に何も生みません</strong>——「深くする意味が消える」とはこの意味です。</p>
 
   <p>写経コードの前半では、2層ぶん計算した結果と、行列をまとめた1層の結果が<strong>完全に一致</strong>します。何層積んでも同じで、これでは深くする意味がありません。</p>
@@ -937,6 +951,31 @@ N個   x @ W.T + b     (N, 5)  @ (5, 64)  -> (N, 64)</code>
   <p>N は固定値ではありません。この章の写経では <strong>3</strong>、第5章と第7章の学習では <strong>256</strong>、第7章のテストでは <strong>2000</strong> です。<span class="inline-code">forward()</span> に <span class="inline-code">N</span> はどこにも書かれていません——<strong>何行来ても同じコードが動きます</strong>。</p>
 
   <p><span class="inline-code">.T</span> は<strong>転置</strong>——行と列を入れ替える操作で、<span class="inline-code">(64, 5)</span> の <span class="inline-code">W1</span> が <span class="inline-code">(5, 64)</span> になります。こうすると観測側の 5 と噛み合い、結果が <span class="inline-code">(N, 64)</span>、つまり<strong>1行が観測1個ぶんの出力</strong>という向きに揃います。<span class="inline-code">b1</span> は <span class="inline-code">(64,)</span> のまま足していますが、numpy が N 行すべてに同じバイアスを加算します（ブロードキャスト）。</p>
+
+  <div class="pin">
+    <span class="pin-label">書き下すと</span>
+    <code>h[i, j] = x[i,0]*W1[j,0] + x[i,1]*W1[j,1] + ... + x[i,4]*W1[j,4] + b1[j]
+          k を 0 から 4 まで動かして、全部足し合わせる（内積）
+
+i = 0..N-1  どの観測か
+j = 0..63   どのニューロンか</code>
+  </div>
+
+  <p>観測2個・ニューロン3本まで縮めて、全部書き出すとこうなります。</p>
+
+  <div class="pin">
+    <span class="pin-label">6個ぶん全部</span>
+    <code>h[0,0] = dot(x[0], W1[0]) + b1[0]      観測0 と ニューロン0
+h[0,1] = dot(x[0], W1[1]) + b1[1]      観測0 と ニューロン1
+h[0,2] = dot(x[0], W1[2]) + b1[2]      観測0 と ニューロン2
+h[1,0] = dot(x[1], W1[0]) + b1[0]      観測1 と ニューロン0
+h[1,1] = dot(x[1], W1[1]) + b1[1]      観測1 と ニューロン1
+h[1,2] = dot(x[1], W1[2]) + b1[2]      観測1 と ニューロン2</code>
+  </div>
+
+  <p><span class="inline-code">dot(...)</span> は第1章の内積です。<strong>6個の数それぞれが、観測1個とニューロン1本の内積</strong>になっています。<span class="inline-code">.T</span> が要るのは、<span class="inline-code">x[i]</span> の5個と <span class="inline-code">W1[j]</span> の5個を突き合わせるためです。</p>
+
+  <p>そして <span class="inline-code">b1</span> に注目してください。<span class="inline-code">h[0,0]</span> と <span class="inline-code">h[1,0]</span> はどちらも <span class="inline-code">b1[0]</span> を足しています。<strong>観測が変わっても、同じニューロンなら同じバイアス</strong>。<span class="inline-code">b1</span> の添字に <span class="inline-code">i</span> が無いからです——<strong>これがブロードキャストの中身</strong>で、次に見る形の話はこれを形式にしたものです。</p>
 
   <div class="pin">
     <span class="pin-label">バイアスの形をどう合わせているか</span>
