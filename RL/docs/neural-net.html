@@ -745,6 +745,13 @@ parameters in this layer = weights 320 (= 64 x 5) + biases 64 = 384</code></pre>
 
   <p class="lead">層を2つ重ねたとします。<span class="inline-code">W2 @ (W1 @ x)</span>。ところがこれは <span class="inline-code">(W2 @ W1) @ x</span> と書き直せます。<strong>行列を先に掛けてしまえば1つの行列</strong>——つまり<strong>2層が1層に潰れます</strong>。</p>
 
+  <div class="pin">
+    <span class="pin-label">結合法則</span>
+    <code>W2 @ (W1 @ x)  =  (W2 @ W1) @ x  =  W @ x        W := W2 @ W1</code>
+  </div>
+
+  <p>行列積には<strong>結合法則</strong>（associativity）が成り立ちます——<strong>括弧をどこに置いても結果は同じ</strong>。だから <span class="inline-code">W = W2 @ W1</span> と置いてしまえば、2層の計算は <span class="inline-code">x → W @ x</span> という<strong>1層とまったく同じもの</strong>になります。<strong>これで話は終わりです</strong>。成分も添字も要りません。</p>
+
   <p>この現象は一般には<strong>「線形変換をいくつ合成しても、やはり1つの線形変換にしかならない」</strong>と言います。この本では短く「潰れる」と呼びます。</p>
 
   <p>ここは「どちらも2層あるじゃないか」と引っかかるところです。その通りで、<strong>手順としてはどちらも2回掛けています</strong>。同じなのは手順ではなく、<strong>その手順で到達できる結果の範囲</strong>のほうです。</p>
@@ -825,7 +832,7 @@ parameters in this layer = weights 320 (= 64 x 5) + biases 64 = 384</code></pre>
 
   <p><strong>注目してほしいのは、潰したあとの形が <span class="inline-code">(2, 5)</span> になることです。</strong>真ん中の 64 が消えています。64本のニューロンを並べたはずなのに、出来上がったのは「入力5個を受けて2個を出す行列が1枚」でしかない。<strong>64 という数字は結果のどこにも残りません</strong>。図で言えば、隠れ層の箱ごと無かったことになります。</p>
 
-  <p>消える理由は、掛け算を1つずつ書き下すとはっきりします。</p>
+  <p>潰れること自体は、いま見た結合法則だけで言えます。そのうえで<strong>なぜ 64 が消えるのか</strong>は、掛け算を1つずつ書き下すとはっきりします。</p>
 
   <div class="pin">
     <span class="pin-label">W = W2 @ W1 を書き下すと</span>
@@ -840,6 +847,13 @@ m = 0..63  隠れ層64本</code>
   <p>右辺には <span class="inline-code">m</span> が出てきますが、<strong>0 から 63 まで全部足し合わされてしまう</strong>ので、左辺の添字は <span class="inline-code">j</span> と <span class="inline-code">k</span> だけです。<strong>これが「64 が消える」の正体</strong>です。隠れ層の64本は計算には使われるのに、結果を指す番号としては残りません。だから形が <span class="inline-code">(2, 5)</span> になります。</p>
 
   <p>パラメータで数えるともっとはっきりします。<span class="inline-code">64&#215;5 + 2&#215;64 = 448個</span>のパラメータを持っているのに、それをどう調整しても、出来上がるのは<strong>必ず <span class="inline-code">2&#215;5 = 10個</span>の数で書ける関数</strong>です。448個の値を動かせるつもりで、実際に変えられるのは10個ぶんの自由度だけ。<strong>残りの438個ぶんは、原理的に何も生みません</strong>——「深くする意味が消える」とはこの意味です。</p>
+
+  <div class="note">
+    <span class="note-label">10次元というのは、ぴったりの数です</span>
+    <p>上限でも近似でもありません。<strong><span class="inline-code">W2</span> と <span class="inline-code">W1</span> をどう動かしても、<span class="inline-code">W2 @ W1</span> として現れるのは <span class="inline-code">(2, 5)</span> 行列の全体</strong>です。</p>
+    <p>そこから<strong>出られない</strong>のは、積が必ず <span class="inline-code">(2, 5)</span> になるからです。逆に<strong>全部に届く</strong>のは、任意の <span class="inline-code">(2, 5)</span> 行列 <span class="inline-code">A</span> に対して、<span class="inline-code">W1</span> の先頭2行を <span class="inline-code">A</span>・残りを 0 とし、<span class="inline-code">W2</span> を <span class="inline-code">[I2 | 0]</span> とすれば <span class="inline-code">W2 @ W1 = A</span> になるからです。</p>
+    <p>つまり<strong>448個のパラメータの行き先が、ちょうど10次元</strong>。厳密には<strong>階数</strong>（rank）の話になりますが、ここは <span class="inline-code">(2, 5)</span> という形そのものが上限を与えているので、階数を持ち出さなくても足ります。</p>
+  </div>
 
   <p>写経コードの前半では、2層ぶん計算した結果と、行列をまとめた1層の結果が<strong>完全に一致</strong>します。何層積んでも同じで、これでは深くする意味がありません。</p>
 
@@ -995,6 +1009,17 @@ b1         (64,)    軸0 = どのニューロンか。観測の軸が無い
     <p>向きは逆にできません。「観測ごとに1つ」のつもりで <span class="inline-code">(N,)</span> を足すと、最後の軸どうし、64 と N が一致せずエラーになります。<strong>ただしバッチの数がちょうど 64 のときだけは形が一致するため、エラーにならずに計算が進みます</strong>——この本は256個ずつ流すので当たりませんが、幅やバッチを変えて試すときの落とし穴です。</p>
     <p>第6章では、この対応が逆向きになります。順伝播で1つのバイアスを N 行すべてに<strong>加算した</strong>のだから、逆伝播では N 行ぶんの勾配を<strong>合計して</strong>1つに戻します。バイアスの勾配だけ <span class="inline-code">.T @</span> ではなく <span class="inline-code">.sum(axis=0)</span> になっているのは、そのためです。</p>
   </div>
+
+  <div class="pin">
+    <span class="pin-label">数学の記法で書くと</span>
+    <code>H = X @ W1.T + 1 @ b1.T
+
+  1         (N, 1)    全部 1 の列ベクトル
+  b1.T      (1, 64)
+  1 @ b1.T  (N, 64)   どの行も b1 と同じ</code>
+  </div>
+
+  <p>numpy の <span class="inline-code">+ b1</span> を数学の記法に直すと、<strong>すべて 1 の列ベクトルとの積</strong>になります。<span class="inline-code">1 @ b1.T</span> は「<span class="inline-code">b1</span> と同じ行を N 本並べた行列」で、それを足しているという意味です（この形の積を outer product と呼びます）。<strong>式としてはこの行列を作っている、実装としては作らない</strong>——numpy が <span class="inline-code">(N, 64)</span> の配列を作らないという先ほどの話は、この対応で読めます。</p>
 
   <p>なお <span class="inline-code">x</span> を <span class="inline-code">(5, N)</span>（列が観測1個）にする流儀もあります。そちらなら <span class="inline-code">W @ x</span> で済んで、転置は要りません。それでもこの本が <span class="inline-code">(N, 5)</span> を採るのは、<strong>いま見たバイアスの足し方が短く書けるから</strong>です。<span class="inline-code">(N, 64)</span> は最後の軸がニューロン64本なので <span class="inline-code">(64,)</span> と一致しますが、<span class="inline-code">(64, N)</span> だと最後の軸が観測になり、バイアスを足すたびに <span class="inline-code">b[:, None]</span> と書き足すことになります——3層ぶんで3回です。<strong><span class="inline-code">.T</span> を1回書く代わりに、バイアスの記述が3箇所短くなる</strong>という選び方です。計算結果はどちらの向きも、転置しただけの同じものです。</p>
 
@@ -1537,6 +1562,7 @@ There is a single set of weights; it was not retrained per target.</code></pre>
         <tr><td>内積</td><td class="mono">dot product</td><td class="mono">np.dot(w, x)</td><td>掛けて全部足す。ニューロン1本ぶんの計算</td></tr>
         <tr><td>層</td><td class="mono">layer</td><td class="mono">W @ x + b</td><td>ニューロンを並べたもの。行列1つ</td></tr>
         <tr><td>行列積</td><td class="mono">matrix multiplication</td><td class="mono">W @ x</td><td>内積を行の数だけ並べたもの</td></tr>
+        <tr><td>結合法則</td><td class="mono">associativity</td><td class="mono">W2 @ (W1 @ x)</td><td>括弧の位置を変えても結果は同じ。第3章で層が潰れる根拠</td></tr>
         <tr><td>全結合層</td><td class="mono">linear / dense</td><td class="mono">同上</td><td>入力を全部使う層。この本はこれだけ</td></tr>
         <tr><td>隠れ層</td><td class="mono">hidden layer</td><td class="mono">h1, h2</td><td>入口と出口のあいだの層。この本は幅64が2つ</td></tr>
         <tr><td>軸</td><td class="mono">axis</td><td class="mono">axis=0, axis=1</td><td>配列の「番号を1つ使う方向」。本数が ndim</td></tr>
