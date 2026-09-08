@@ -409,6 +409,8 @@ footer p { max-width: none; }
 
   <p>目標は3択なのだから、<span class="inline-code">左=0, 右=1, 上=2</span> と1個の数で渡せばよさそうに見えます。しかしそれをすると、<strong>「上は左の2倍」「右は左と上のちょうど中間」という、ありもしない大小関係</strong>をネットワークに教えることになります。3つは順番のない、対等な選択肢です。</p>
 
+  <p>どういう関係を教えることになるのか、正解の行動を並べると見えます。原点から見た正解は <span class="inline-code">左 [-1, 0]</span>、<span class="inline-code">右 [1, 0]</span>、<span class="inline-code">上 [0, 1]</span>。<span class="inline-code">左=0, 右=1, 上=2</span> という渡し方は「右は左と上のちょうど中間」と言っていることになりますが、<strong>左と上の中間は <span class="inline-code">[-0.5, 0.5]</span> で、右の正解 <span class="inline-code">[1, 0]</span> とはほぼ正反対</strong>です。3つの的は平面上で<strong>三角形</strong>に置かれていて、等間隔の一直線には並んでいません。</p>
+
   <p>そこで<strong>選択肢の数だけ入力を用意して、当たっている1つだけを 1、残りを 0 にする</strong>。これを one-hot（1つだけ熱い）と呼びます。原点にいるときの観測5個は、目標ごとにこうなります。</p>
 
   <div class="tbl">
@@ -542,6 +544,12 @@ python -c "import numpy; print(numpy.__version__)"</code></pre>
   <p>入力が5個なので、<strong>重みも5個</strong>要ります。バイアスは<strong>ニューロン1本につき1つ</strong>です。ここが後でパラメータの数を数えるときの基本になります。</p>
 
   <p>写経では重みを <span class="inline-code">[0.5, -0.2, 1.3, 0.1, -0.7]</span>、バイアスを <span class="inline-code">0.4</span> にします。入力が <span class="inline-code">[0, 0, 1, 0, 0]</span> なので、3番目の項だけが残って <span class="inline-code">1.3 + 0.4 = 1.7</span>。0 が掛かった項は消えます。<strong>1つだけ 1 で残りが 0 という入力は、「重みの中から1つを選び出す」働きをする</strong>——この性質は3冊目でもう一度出てきます。</p>
+
+  <div class="note">
+    <span class="note-label">目標を数1個で渡すと、何が変わるか</span>
+    <p>one-hot なら、目標の寄与は <span class="inline-code">w[2]*z0 + w[3]*z1 + w[4]*z2</span> です。1 が立った1つだけが残るので、<strong>目標ごとに別の重みが使われます</strong>。3つの重みのあいだに関係はありません。</p>
+    <p>ところが <span class="inline-code">左=0, 右=1, 上=2</span> と1個の数 <span class="inline-code">g</span> で渡すと、目標の寄与は <span class="inline-code">w[2] * g</span> の<strong>1本だけ</strong>になります。左が <span class="inline-code">0 &#215; w[2]</span>、右が <span class="inline-code">1 &#215; w[2]</span>、上が <span class="inline-code">2 &#215; w[2]</span>。<strong>上の寄与は必ず右のちょうど2倍、左は必ず 0</strong>——重みをどう学習しても、この関係は壊せません。<a href="#problem">解く問題</a>で書いた「ありもしない大小関係」とは、これのことです。</p>
+  </div>
 
   <div class="note">
     <span class="note-label">重みとバイアスは何者か</span>
@@ -1508,6 +1516,14 @@ There is a single set of weights; it was not retrained per target.</code></pre>
   <p>損失が <strong>1.23 から 0.016 まで</strong>下がりました。学習に使っていない別のデータでも同じくらい下がっているので、<strong>データを丸暗記したのではなく、規則を掴んでいます</strong>。</p>
 
   <p>そして最後の3行が、この本の結論です。<strong>1つのネットワークが、入力の後ろ3つを読んで行き先を変えています。</strong>重みは1組だけ。的ごとに学習し直したのではありません。</p>
+
+  <div class="note">
+    <span class="note-label">one-hot でなかったら、どれだけ違うか</span>
+    <p>ここまでの条件（300回、バッチ256）で<strong>入力の作り方だけ入れ替えて</strong>測ってみると、差がはっきり出ます。目標を <span class="inline-code">左=0, 右=1, 上=2</span> の1個の数にすると、入力は5個から3個になります。</p>
+    <p>まず、<strong>この章の学習率 <span class="inline-code">0.5</span> では発散します</strong>。目標の情報が1つの入力に集まるぶん、そこを通る勾配が大きくなるためです。学習率を下げて比べると、テスト損失の最良は <strong>one-hot が 0.018（<span class="inline-code">lr=0.5</span>）、数1個は 0.156（<span class="inline-code">lr=0.1</span>）</strong>。<strong>約9倍の開き</strong>です。</p>
+    <p>層を重ねて活性化関数を挟んであるので、押し付けられた「上は右の2倍」という関係を打ち消すこと自体はできます。それでもここまで差が付くのは、<strong>打ち消す作業に容量を使わされている</strong>からです。序章の one-hot の話は、ここで効いてきます。</p>
+    <p>この比較は写経コードには含めていません。<span class="inline-code">nn7_train.py</span> の <span class="inline-code">make_batch</span> で <span class="inline-code">np.eye(3)[gid]</span> を <span class="inline-code">gid</span> 1個に変え、<span class="inline-code">mlp.N_IN</span> を 3 にすれば手元で確かめられます。</p>
+  </div>
 
   <div class="note">
     <span class="note-label">環境の正体は4行</span>
