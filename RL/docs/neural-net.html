@@ -311,7 +311,7 @@ footer p { max-width: none; }
   <p class="lead">ニューラルネットワークは、<strong>数の並びを別の数の並びに変える箱</strong>です。中でやっているのは掛け算と足し算がほとんどで、魔法は入っていません。この本では、その箱を<strong>ライブラリなしで1つ作りきります</strong>。</p>
 
   <figure class="diagram">
-    <svg viewBox="0 0 700 250" role="img" aria-label="観測5個が64個の中間表現を2回通って行動2個になる流れ。層ごとのパラメータ数つき。">
+    <svg viewBox="0 0 700 250" role="img" aria-label="観測5個が、64個のニューロンからなる隠れ層を2回通って行動2個になる流れ。層ごとのパラメータ数つき。">
       <defs>
         <marker id="nnah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
           <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"></path>
@@ -323,11 +323,11 @@ footer p { max-width: none; }
       <text x="82" y="133" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="15" fill="var(--z)">5 個</text>
 
       <rect x="216" y="86" width="112" height="62" rx="6" fill="none" stroke="currentColor" stroke-width="1.5"></rect>
-      <text x="272" y="112" text-anchor="middle" font-size="13" fill="currentColor">中間表現</text>
+      <text x="272" y="112" text-anchor="middle" font-size="13" fill="currentColor">隠れ層</text>
       <text x="272" y="133" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="15" fill="currentColor">64 個</text>
 
       <rect x="392" y="86" width="112" height="62" rx="6" fill="none" stroke="currentColor" stroke-width="1.5"></rect>
-      <text x="448" y="112" text-anchor="middle" font-size="13" fill="currentColor">中間表現</text>
+      <text x="448" y="112" text-anchor="middle" font-size="13" fill="currentColor">隠れ層</text>
       <text x="448" y="133" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="15" fill="currentColor">64 個</text>
 
       <rect x="568" y="86" width="112" height="62" rx="6" fill="none" stroke="var(--z)" stroke-width="2"></rect>
@@ -349,7 +349,7 @@ footer p { max-width: none; }
       <line x1="20" y1="200" x2="680" y2="200" stroke="currentColor" stroke-width="1" opacity="0.2"></line>
       <text x="20" y="224" font-size="12.5" fill="currentColor" opacity="0.75">重みとバイアスは全部で 4,674 個。この本は、この箱を numpy だけで最初から作る。</text>
     </svg>
-    <figcaption>作るネットワークの全体。観測5個を受け取り、64個の中間表現を2回通って、行動2個になる。矢印1本ぶんが「層」で、下の数がその層のパラメータ数。</figcaption>
+    <figcaption>作るネットワークの全体。観測5個を受け取り、64個のニューロンからなる隠れ層を2回通って、行動2個になる。矢印1本ぶんが「層」で、下の数がその層のパラメータ数。</figcaption>
   </figure>
 
   <p>作るのは、<strong>観測5個を受け取って行動2個を返す</strong>ネットワークです。この「5」と「2」は適当に決めた数ではありません。<strong>平面上の点を、3つの的のどれかに向かわせる</strong>——たった1つの問題から決まっています。</p>
@@ -529,6 +529,8 @@ python -c "import numpy; print(numpy.__version__)"</code></pre>
 
   <p class="lead">ニューラルネットワークの部品は「ニューロン」です。1本のニューロンがやることは1つだけ、<strong>入力に重みを掛けて全部足し、最後にバイアスを足す</strong>。それだけです。</p>
 
+  <p>この「掛けて全部足す」には名前があります——<strong>内積</strong>（dot product）です。<span class="inline-code">np.dot</span> の <span class="inline-code">dot</span> がそれで、第2章以降もこの計算がずっと中心にあります。</p>
+
   <p>写経コードの入力には、<a href="#problem">解く問題</a>で決めた観測5個をそのまま使います。<span class="inline-code">[0.0, 0.0, 1.0, 0.0, 0.0]</span> は<strong>「原点にいて、今回の目標は左」</strong>という状況です。</p>
 
   <p>入力が5個なので、<strong>重みも5個</strong>要ります。バイアスは<strong>ニューロン1本につき1つ</strong>です。ここが後でパラメータの数を数えるときの基本になります。</p>
@@ -619,6 +621,15 @@ One weight per input. One bias per neuron.</code></pre>
   <p class="lead">ニューロン1本では何もできません。<strong>同じ入力を見るニューロンを何本も並べる</strong>と、それが1つの「層」になります。並べた結果は、行列の掛け算そのものです。</p>
 
   <p><span class="inline-code">@</span> は <strong>行列積</strong>の演算子です（Python 3.5 以降。numpy の配列に対して使います）。<span class="inline-code">*</span> は要素ごとの掛け算で別物、<span class="inline-code">np.matmul(W, x)</span> と書くのと同じ意味になります。式を4つに分けると、やっていることは第1章と変わりません。</p>
+
+  <div class="note">
+    <span class="note-label">軸（axis）と形（shape）</span>
+    <p>ここから <span class="inline-code">(64, 5)</span> のような書き方が続くので、先に読み方を決めておきます。</p>
+    <p>numpy の配列から<strong>数を1個取り出すのに、番号をいくつ言う必要があるか</strong>——その個数が<strong>軸</strong>（axis）の本数です。<span class="inline-code">[10, 20, 30]</span> は「3番目」で決まるので軸1本。<span class="inline-code">[[1, 2, 3], [4, 5, 6]]</span> は「2行目の3番目」と2つ言って決まるので軸2本です。<strong>軸は、番号を1つ使う方向</strong>だと考えてください。</p>
+    <p>軸にはそれぞれ<strong>長さ</strong>があります。その方向に何個並んでいるかです。これを軸の順に並べたものが<strong>形</strong>（shape）で、<span class="inline-code">.shape</span> で取り出せます。<span class="inline-code">(2, 3)</span> なら軸0の長さが2、軸1の長さが3。<span class="inline-code">(3,)</span> なら軸は1本だけで、長さが3です。</p>
+    <p><span class="inline-code">(3,)</span> の末尾のカンマは Python のタプル記法で、<strong>要素が1個のタプル</strong>という印です。数が抜けているのではありません（カンマの無い <span class="inline-code">(3)</span> はただの整数になってしまいます）。</p>
+    <p>軸の本数は <span class="inline-code">ndim</span> と呼ばれ、「次元数」とも言います。ただし<strong>「3次元」は「軸が3本」とも「要素が3個」とも読めてしまう</strong>ので、1本1本を指すときは「軸」を使うのが安全です。numpy 自身も <span class="inline-code">axis=0</span> のように軸という名前を使っていて、第5章の <span class="inline-code">np.concatenate(..., axis=1)</span> や第6章の <span class="inline-code">.sum(axis=0)</span> がその番号です。</p>
+  </div>
 
   <div class="formula">
     <div class="formula-row">
@@ -734,14 +745,16 @@ parameters in this layer = weights 320 (= 64 x 5) + biases 64 = 384</code></pre>
 
   <p class="lead">層を2つ重ねたとします。<span class="inline-code">W2 @ (W1 @ x)</span>。ところがこれは <span class="inline-code">(W2 @ W1) @ x</span> と書き直せます。<strong>行列を先に掛けてしまえば1つの行列</strong>——つまり<strong>2層が1層に潰れます</strong>。</p>
 
+  <p>この現象は一般には<strong>「線形変換をいくつ合成しても、やはり1つの線形変換にしかならない」</strong>と言います。この本では短く「潰れる」と呼びます。</p>
+
   <p>ここは「どちらも2層あるじゃないか」と引っかかるところです。その通りで、<strong>手順としてはどちらも2回掛けています</strong>。同じなのは手順ではなく、<strong>その手順で到達できる結果の範囲</strong>のほうです。</p>
 
   <p>行列を離れて数1個で考えると分かりやすくなります——<strong>2倍してから3倍する</strong>のは、<strong>6倍する</strong>のと同じです。2ステップ実行しているのに、やれることは「ある1つの数を掛ける」だけ。何十回重ねても届くのは「○倍する」という形だけで、<strong>「2乗する」には絶対になりません</strong>。掛け算をいくら重ねても掛け算のまま——行列で起きているのもこれと同じことです。</p>
 
-  <p>写経コードの <span class="inline-code">W1</span> は <span class="inline-code">(64, 5)</span>、<span class="inline-code">W2</span> は <span class="inline-code">(2, 64)</span>——<strong>序章の図から中間層を1つ減らした形</strong>で、<span class="inline-code">W1</span> は第2章で作ったものそのものです。numpy の重み行列は <strong>(出す数, 受ける数)</strong> の順に並んでいる——つまり <strong>行がニューロン1本、列が入力1個</strong>に対応します。この形のまま <span class="inline-code">W2 @ W1</span> を先に計算すると、何が出てくるか。</p>
+  <p>写経コードの <span class="inline-code">W1</span> は <span class="inline-code">(64, 5)</span>、<span class="inline-code">W2</span> は <span class="inline-code">(2, 64)</span>——<strong>序章の図から隠れ層を1つ減らした形</strong>で、<span class="inline-code">W1</span> は第2章で作ったものそのものです。numpy の重み行列は <strong>(出す数, 受ける数)</strong> の順に並んでいる——つまり <strong>行がニューロン1本、列が入力1個</strong>に対応します。この形のまま <span class="inline-code">W2 @ W1</span> を先に計算すると、何が出てくるか。</p>
 
   <figure class="diagram">
-    <svg viewBox="0 0 700 444" role="img" aria-label="活性化なしの2層（入力5個 → W1(64,5) → 中間64個 → W2(2,64) → 出力2個）が、W2 @ W1 を先に計算すると (2,5) の行列1枚になり、中間の64個が消えることを示す図。tanh を挟むと先に掛けられないことも示す。">
+    <svg viewBox="0 0 700 444" role="img" aria-label="活性化なしの2層（入力5個 → W1(64,5) → 隠れ層64個 → W2(2,64) → 出力2個）が、W2 @ W1 を先に計算すると (2,5) の行列1枚になり、隠れ層の64個が消えることを示す図。tanh を挟むと先に掛けられないことも示す。">
       <defs>
         <marker id="ch3ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
           <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"></path>
@@ -755,7 +768,7 @@ parameters in this layer = weights 320 (= 64 x 5) + biases 64 = 384</code></pre>
       <text x="92" y="88" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="14" fill="var(--z)">5 個</text>
 
       <rect x="252" y="48" width="104" height="50" rx="6" fill="none" stroke="currentColor" stroke-width="1.5"></rect>
-      <text x="304" y="69" text-anchor="middle" font-size="12" fill="currentColor">中間</text>
+      <text x="304" y="69" text-anchor="middle" font-size="12" fill="currentColor">隠れ層</text>
       <text x="304" y="88" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="14" fill="currentColor">64 個</text>
 
       <rect x="464" y="48" width="104" height="50" rx="6" fill="none" stroke="var(--z)" stroke-width="2"></rect>
@@ -794,9 +807,9 @@ parameters in this layer = weights 320 (= 64 x 5) + biases 64 = 384</code></pre>
 
       <line x1="148" y1="296" x2="459" y2="296" stroke="currentColor" stroke-width="1.5" marker-end="url(#ch3ah)"></line>
       <text x="303" y="288" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="13" font-weight="700" fill="currentColor">W = W2 @ W1　(2, 5)</text>
-      <text x="303" y="314" text-anchor="middle" font-size="11.5" fill="var(--z)">中間の 64 は、もうどこにも無い</text>
+      <text x="303" y="314" text-anchor="middle" font-size="11.5" fill="var(--z)">隠れ層の 64 は、もうどこにも無い</text>
 
-      <text x="20" y="345" font-size="12.5" fill="currentColor" opacity="0.85">64本のニューロンを並べたはずが、残ったのは「5個を受けて2個を出す行列」1枚だけ。中間層のない1層と同じもの。</text>
+      <text x="20" y="345" font-size="12.5" fill="currentColor" opacity="0.85">64本のニューロンを並べたはずが、残ったのは「5個を受けて2個を出す行列」1枚だけ。隠れ層のない1層と同じもの。</text>
 
       <line x1="20" y1="364" x2="680" y2="364" stroke="currentColor" stroke-width="1" opacity="0.16"></line>
 
@@ -807,10 +820,10 @@ parameters in this layer = weights 320 (= 64 x 5) + biases 64 = 384</code></pre>
       <text x="250" y="414" font-size="12.5" fill="currentColor" opacity="0.85">tanh は行列ではないので、W2 と W1 を</text>
       <text x="250" y="432" font-size="12.5" fill="currentColor" opacity="0.85">先に掛けて1枚にまとめることができない</text>
     </svg>
-    <figcaption>活性化がないときの2層（&#9312;）は、<span class="inline-code">W2 @ W1</span> を先に計算するだけで &#9314; の1層になる。&#9313; のとおり向かい合う 64 が消えるので、<strong>中間の64個は結果のどこにも残らない</strong>。tanh は行列ではないため、この「先に掛ける」ができない（&#9315;）。</figcaption>
+    <figcaption>活性化がないときの2層（&#9312;）は、<span class="inline-code">W2 @ W1</span> を先に計算するだけで &#9314; の1層になる。&#9313; のとおり向かい合う 64 が消えるので、<strong>隠れ層の64個は結果のどこにも残らない</strong>。tanh は行列ではないため、この「先に掛ける」ができない（&#9315;）。</figcaption>
   </figure>
 
-  <p><strong>注目してほしいのは、潰したあとの形が <span class="inline-code">(2, 5)</span> になることです。</strong>真ん中の 64 が消えています。64本のニューロンを並べたはずなのに、出来上がったのは「入力5個を受けて2個を出す行列が1枚」でしかない。<strong>64 という数字は結果のどこにも残りません</strong>。図で言えば、中間の箱ごと無かったことになります。</p>
+  <p><strong>注目してほしいのは、潰したあとの形が <span class="inline-code">(2, 5)</span> になることです。</strong>真ん中の 64 が消えています。64本のニューロンを並べたはずなのに、出来上がったのは「入力5個を受けて2個を出す行列が1枚」でしかない。<strong>64 という数字は結果のどこにも残りません</strong>。図で言えば、隠れ層の箱ごと無かったことになります。</p>
 
   <p>パラメータで数えるともっとはっきりします。<span class="inline-code">64&#215;5 + 2&#215;64 = 448個</span>のパラメータを持っているのに、それをどう調整しても、出来上がるのは<strong>必ず <span class="inline-code">2&#215;5 = 10個</span>の数で書ける関数</strong>です。448個の値を動かせるつもりで、実際に変えられるのは10個ぶんの自由度だけ。<strong>残りの438個ぶんは、原理的に何も生みません</strong>——「深くする意味が消える」とはこの意味です。</p>
 
@@ -927,21 +940,24 @@ N個   x @ W.T + b     (N, 5)  @ (5, 64)  -> (N, 64)</code>
 
   <div class="pin">
     <span class="pin-label">バイアスの形をどう合わせているか</span>
-    <code>(N, 64)      &lt;- x @ W1.T
-   (64,)     &lt;- b1。右端から突き合わせ、足りない左は 1 とみなす
---------
-(N, 64)      &lt;- 長さ 1 の軸は、同じ64個を N 行すべてに使って足す</code>
+    <code>x @ W1.T   (N, 64)   軸0 = どの観測か   軸1 = どのニューロンか
+b1         (64,)    軸0 = どのニューロンか。観測の軸が無い
+
+1. 軸の本数を揃える     (64,) の左に長さ 1 の軸を補い (1, 64) とする
+2. 最後の軸から比べる    64 と 64  -&gt;  同じ
+                        N  と 1   -&gt;  1 のほうを N として扱う
+3. 結果                 (N, 64)</code>
   </div>
 
   <div class="note">
     <span class="note-label">なぜ全部の行に同じ値を足すのか</span>
-    <p>バイアスは<strong>ニューロンごとに1つ決まる値で、観測ごとに決まる値ではない</strong>からです。<span class="inline-code">b1</span> の64個は1本目から64本目までのニューロンに1つずつ対応していて、観測が256個に増えても64個のままです。<strong>観測1個目を計算するときも256個目を計算するときも、同じニューロンには同じバイアスが加算されます</strong>。重みが <span class="inline-code">W1</span> 1組しかないのと同じ理由です。</p>
+    <p>バイアスは<strong>ニューロンごとに1つ決まる値で、観測ごとに決まる値ではない</strong>からです。<span class="inline-code">b1</span> の64個は1本目から64本目までのニューロンに1つずつ対応していて、観測が256個に増えても64個のままです。形の上では、これは <strong><span class="inline-code">b1</span> に「観測の軸」が無い</strong>ということです。<strong>観測1個目を計算するときも256個目を計算するときも、同じニューロンには同じバイアスが加算されます</strong>。重みが <span class="inline-code">W1</span> 1組しかないのと同じ理由です。</p>
     <p>このとき numpy が <span class="inline-code">(N, 64)</span> の配列を作ることはありません。<strong>同じ64個を N 回読み直しているだけ</strong>で、メモリは <span class="inline-code">(64,)</span> のぶんしか使いません。</p>
-    <p>向きは逆にできません。「観測ごとに1つ」のつもりで <span class="inline-code">(N,)</span> を足すと、右端の 64 と N が一致せずエラーになります。<strong>ただしバッチの数がちょうど 64 のときだけは形が一致するため、エラーにならずに計算が進みます</strong>——この本は256個ずつ流すので当たりませんが、幅やバッチを変えて試すときの落とし穴です。</p>
+    <p>向きは逆にできません。「観測ごとに1つ」のつもりで <span class="inline-code">(N,)</span> を足すと、最後の軸どうし、64 と N が一致せずエラーになります。<strong>ただしバッチの数がちょうど 64 のときだけは形が一致するため、エラーにならずに計算が進みます</strong>——この本は256個ずつ流すので当たりませんが、幅やバッチを変えて試すときの落とし穴です。</p>
     <p>第6章では、この対応が逆向きになります。順伝播で1つのバイアスを N 行すべてに<strong>加算した</strong>のだから、逆伝播では N 行ぶんの勾配を<strong>合計して</strong>1つに戻します。バイアスの勾配だけ <span class="inline-code">.T @</span> ではなく <span class="inline-code">.sum(axis=0)</span> になっているのは、そのためです。</p>
   </div>
 
-  <p>なお <span class="inline-code">x</span> を <span class="inline-code">(5, N)</span>（列が観測1個）にする流儀もあります。そちらなら <span class="inline-code">W @ x</span> で済んで、転置は要りません。それでもこの本が <span class="inline-code">(N, 5)</span> を採るのは、<strong>いま見たバイアスの足し方が短く書けるから</strong>です。<span class="inline-code">(N, 64)</span> は右端がニューロン64本の軸なので <span class="inline-code">(64,)</span> と一致しますが、<span class="inline-code">(64, N)</span> だと右端が観測の軸になり、バイアスを足すたびに <span class="inline-code">b[:, None]</span> と書き足すことになります——3層ぶんで3回です。<strong><span class="inline-code">.T</span> を1回書く代わりに、バイアスの記述が3箇所短くなる</strong>という選び方です。計算結果はどちらの向きも、転置しただけの同じものです。</p>
+  <p>なお <span class="inline-code">x</span> を <span class="inline-code">(5, N)</span>（列が観測1個）にする流儀もあります。そちらなら <span class="inline-code">W @ x</span> で済んで、転置は要りません。それでもこの本が <span class="inline-code">(N, 5)</span> を採るのは、<strong>いま見たバイアスの足し方が短く書けるから</strong>です。<span class="inline-code">(N, 64)</span> は最後の軸がニューロン64本なので <span class="inline-code">(64,)</span> と一致しますが、<span class="inline-code">(64, N)</span> だと最後の軸が観測になり、バイアスを足すたびに <span class="inline-code">b[:, None]</span> と書き足すことになります——3層ぶんで3回です。<strong><span class="inline-code">.T</span> を1回書く代わりに、バイアスの記述が3箇所短くなる</strong>という選び方です。計算結果はどちらの向きも、転置しただけの同じものです。</p>
 
   <p>まとめて流すのは、第5章から<strong>256個の観測を一度に</strong>使うからです。行列積が1回で済むので速く、勾配も1個ずつより安定します。<span class="inline-code">forward()</span> の3行は、<strong>第2章の式に「まとめて流す」と「tanh を挟む」を足しただけ</strong>のものです。</p>
 
@@ -1065,7 +1081,7 @@ not trained yet, so the actions are nonsense:
     <code>loss = np.mean((pred - y) ** 2)</code>
   </div>
 
-  <p class="lead">学習するには、まず<strong>「いまどれくらい下手か」を1つの数にする</strong>必要があります。それが<strong>損失</strong>です。この本では正解の行動が分かるので、出力と正解のズレをそのまま損失にします。</p>
+  <p class="lead">学習するには、まず<strong>「いまの予測が正解からどれだけ外れているか」を1つの数にする</strong>必要があります。それが<strong>損失</strong>です。この本では正解の行動が分かるので、出力と正解のズレをそのまま損失にします。</p>
 
   <p>正解の行動は式で書けます。<strong>目標へ向かって、行き過ぎない分だけ動く</strong>——それだけです。</p>
 
@@ -1326,7 +1342,7 @@ For this net: 9348 passes -&gt; 1. That is what backprop is worth.</code></pre>
 
   <h3>写経 ── 学習して、走らせる</h3>
 
-  <p>300回学習させたあと、その方策を自分で60ステップ動かして、3つの的に届くか見ます。</p>
+  <p>300回学習させたあと、学習したネットワークを自分で60ステップ動かして、3つの的に届くか見ます。</p>
 
   <div class="code">
     <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>nn7_train.py</span><button class="copy" type="button">コピー</button></div>
@@ -1441,7 +1457,7 @@ There is a single set of weights; it was not retrained per target.</code></pre>
         <tr><td class="mono">W @ x + b</td><td>ニューロンを並べる = 層。形は (出力数, 入力数)</td><td class="ch">2</td></tr>
         <tr><td class="mono">np.tanh(...)</td><td>非線形。これが無いと層が潰れる</td><td class="ch">3</td></tr>
         <tr><td class="mono">forward()</td><td>順伝播。途中の値を残すのは逆伝播のため</td><td class="ch">4</td></tr>
-        <tr><td class="mono">np.mean((pred - y) ** 2)</td><td>損失。下手さを1つの数にする</td><td class="ch">5</td></tr>
+        <tr><td class="mono">np.mean((pred - y) ** 2)</td><td>損失。正解からのずれを1つの数にする</td><td class="ch">5</td></tr>
         <tr><td class="mono">(1 - h ** 2)</td><td>tanh の微分。順伝播の値を使い回せる</td><td class="ch">6</td></tr>
         <tr><td class="mono">backward()</td><td>逆伝播。全部の勾配を1回で。数値微分と突き合わせて確かめる</td><td class="ch">6</td></tr>
         <tr><td class="mono">p[k] -= lr * g[k]</td><td>更新。勾配の逆向きに少し動かす</td><td class="ch">7</td></tr>
@@ -1479,17 +1495,25 @@ There is a single set of weights; it was not retrained per target.</code></pre>
       </thead>
       <tbody>
         <tr><td>ニューロン</td><td class="mono">neuron / unit</td><td class="mono">W の1行</td><td>入力に重みを掛けて足す1本</td></tr>
+        <tr><td>内積</td><td class="mono">dot product</td><td class="mono">np.dot(w, x)</td><td>掛けて全部足す。ニューロン1本ぶんの計算</td></tr>
         <tr><td>層</td><td class="mono">layer</td><td class="mono">W @ x + b</td><td>ニューロンを並べたもの。行列1つ</td></tr>
+        <tr><td>行列積</td><td class="mono">matrix multiplication</td><td class="mono">W @ x</td><td>内積を行の数だけ並べたもの</td></tr>
         <tr><td>全結合層</td><td class="mono">linear / dense</td><td class="mono">同上</td><td>入力を全部使う層。この本はこれだけ</td></tr>
+        <tr><td>隠れ層</td><td class="mono">hidden layer</td><td class="mono">h1, h2</td><td>入口と出口のあいだの層。この本は幅64が2つ</td></tr>
+        <tr><td>軸</td><td class="mono">axis</td><td class="mono">axis=0, axis=1</td><td>配列の「番号を1つ使う方向」。本数が ndim</td></tr>
+        <tr><td>形</td><td class="mono">shape</td><td class="mono">.shape</td><td>軸ごとの長さを並べたもの。(64, 5) など</td></tr>
         <tr><td>重み / バイアス</td><td class="mono">weight / bias</td><td class="mono">W, b</td><td>学習で変わる数</td></tr>
         <tr><td>パラメータ</td><td class="mono">parameter</td><td class="mono">p の中身</td><td>重みとバイアスをまとめた呼び方</td></tr>
+        <tr><td>線形 / 非線形</td><td class="mono">linear / nonlinear</td><td class="mono">W @ x + b / np.tanh(...)</td><td>掛けて足すだけが線形。線形をいくつ合成しても1つの線形に戻る（第3章の「潰れる」）</td></tr>
         <tr><td>活性化関数</td><td class="mono">activation</td><td class="mono">np.tanh</td><td>層と層のあいだの非線形</td></tr>
         <tr><td>順伝播</td><td class="mono">forward</td><td class="mono">forward()</td><td>入力から出力へ計算する向き</td></tr>
-        <tr><td>損失</td><td class="mono">loss</td><td class="mono">np.mean((pred - y) ** 2)</td><td>いまの下手さを表す1つの数</td></tr>
+        <tr><td>転置</td><td class="mono">transpose</td><td class="mono">W.T</td><td>行と列を入れ替える</td></tr>
+        <tr><td>ブロードキャスト</td><td class="mono">broadcasting</td><td class="mono">x @ W.T + b</td><td>足りない軸について同じ値を使う numpy の規則</td></tr>
+        <tr><td>損失</td><td class="mono">loss</td><td class="mono">np.mean((pred - y) ** 2)</td><td>正解からのずれを表す1つの数</td></tr>
         <tr><td>勾配</td><td class="mono">gradient</td><td class="mono">grads</td><td>各パラメータを動かすと損失がどう変わるか</td></tr>
-        <tr><td>逆伝播</td><td class="mono">backpropagation</td><td class="mono">backward()</td><td>勾配を出力側から配る手続き</td></tr>
+        <tr><td>逆伝播</td><td class="mono">backpropagation</td><td class="mono">backward()</td><td>勾配を出力側から順に求める手続き</td></tr>
         <tr><td>学習率</td><td class="mono">learning rate</td><td class="mono">LR</td><td>1回でどれだけ動かすか</td></tr>
-        <tr><td>勾配降下法</td><td class="mono">SGD</td><td class="mono">sgd_step()</td><td>勾配の逆向きに動かす更新</td></tr>
+        <tr><td>勾配降下法 / 確率的勾配降下法</td><td class="mono">gradient descent / SGD</td><td class="mono">sgd_step()</td><td>勾配の逆向きに動かす更新。毎回ランダムな一部のデータで行うので「確率的」</td></tr>
         <tr><td>エポック / バッチ</td><td class="mono">epoch / batch</td><td class="mono">EPOCHS, BATCH</td><td>何回・何件ずつ学習するか</td></tr>
         <tr><td>教師あり学習</td><td class="mono">supervised learning</td><td class="mono">make_batch()</td><td>正解を教えて学ばせる方式</td></tr>
       </tbody>
