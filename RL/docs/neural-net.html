@@ -909,6 +909,20 @@ tanh squeezes any value into -1..1:
 N個   x @ W.T + b     (N, 5)  @ (5, 64)  -> (N, 64)</code>
   </div>
 
+  <p><span class="inline-code">(N, 5)</span> の <strong>5 と N は別々のところから来ています</strong>。<span class="inline-code">5</span> は<strong>観測1個の中身の数</strong>で、第1章から変わりません（自分の座標2個 + どの目標か3個）。<span class="inline-code">N</span> は<strong>観測を何個まとめて流すか</strong>で、1個ずつ流す代わりに縦に並べた個数でしかありません。</p>
+
+  <div class="pin">
+    <span class="pin-label">x の中身（N = 4 のとき）</span>
+    <code>行0  [ 0.274 -0.46   0.  1.  0. ]   &lt;- 観測1個ぶん
+行1  [-0.918 -0.967  0.  1.  0. ]   &lt;- 観測1個ぶん
+行2  [ 0.627  0.826  0.  1.  0. ]   &lt;- 観測1個ぶん
+行3  [ 0.213  0.459  0.  0.  1. ]   &lt;- 観測1個ぶん</code>
+  </div>
+
+  <p><strong>1行が観測1個、1列が「観測の何番目の数か」</strong>です。<span class="inline-code">x[0]</span> を取り出せば <span class="inline-code">(5,)</span> に戻ります——第1章から第3章まで使ってきた形そのもので、<span class="inline-code">(N, 5)</span> はそれを N 段重ねたものです。組み立てているのは第5章の <span class="inline-code">make_batch()</span> で、座標の <span class="inline-code">(N, 2)</span> と目標の <span class="inline-code">(N, 3)</span> を横方向に連結しています。</p>
+
+  <p>N は固定値ではありません。この章の写経では <strong>3</strong>、第5章と第7章の学習では <strong>256</strong>、第7章のテストでは <strong>2000</strong> です。<span class="inline-code">forward()</span> に <span class="inline-code">N</span> はどこにも書かれていません——<strong>何行来ても同じコードが動きます</strong>。</p>
+
   <p><span class="inline-code">.T</span> は<strong>転置</strong>——行と列を入れ替える操作で、<span class="inline-code">(64, 5)</span> の <span class="inline-code">W1</span> が <span class="inline-code">(5, 64)</span> になります。こうすると観測側の 5 と噛み合い、結果が <span class="inline-code">(N, 64)</span>、つまり<strong>1行が観測1個ぶんの出力</strong>という向きに揃います。<span class="inline-code">b1</span> は <span class="inline-code">(64,)</span> のまま足していますが、numpy が N 行すべてに同じバイアスを加算します（ブロードキャスト）。</p>
 
   <div class="pin">
@@ -926,6 +940,8 @@ N個   x @ W.T + b     (N, 5)  @ (5, 64)  -> (N, 64)</code>
     <p>向きは逆にできません。「観測ごとに1つ」のつもりで <span class="inline-code">(N,)</span> を足すと、右端の 64 と N が一致せずエラーになります。<strong>ただしバッチの数がちょうど 64 のときだけは形が一致するため、エラーにならずに計算が進みます</strong>——この本は256個ずつ流すので当たりませんが、幅やバッチを変えて試すときの落とし穴です。</p>
     <p>第6章では、この対応が逆向きになります。順伝播で1つのバイアスを N 行すべてに<strong>加算した</strong>のだから、逆伝播では N 行ぶんの勾配を<strong>合計して</strong>1つに戻します。バイアスの勾配だけ <span class="inline-code">.T @</span> ではなく <span class="inline-code">.sum(axis=0)</span> になっているのは、そのためです。</p>
   </div>
+
+  <p>なお <span class="inline-code">x</span> を <span class="inline-code">(5, N)</span>（列が観測1個）にする流儀もあります。そちらなら <span class="inline-code">W @ x</span> で済んで、転置は要りません。それでもこの本が <span class="inline-code">(N, 5)</span> を採るのは、<strong>いま見たバイアスの足し方が短く書けるから</strong>です。<span class="inline-code">(N, 64)</span> は右端がニューロン64本の軸なので <span class="inline-code">(64,)</span> と一致しますが、<span class="inline-code">(64, N)</span> だと右端が観測の軸になり、バイアスを足すたびに <span class="inline-code">b[:, None]</span> と書き足すことになります——3層ぶんで3回です。<strong><span class="inline-code">.T</span> を1回書く代わりに、バイアスの記述が3箇所短くなる</strong>という選び方です。計算結果はどちらの向きも、転置しただけの同じものです。</p>
 
   <p>まとめて流すのは、第5章から<strong>256個の観測を一度に</strong>使うからです。行列積が1回で済むので速く、勾配も1個ずつより安定します。<span class="inline-code">forward()</span> の3行は、<strong>第2章の式に「まとめて流す」と「tanh を挟む」を足しただけ</strong>のものです。</p>
 
