@@ -756,8 +756,8 @@ import numpy as np
 rng = np.random.default_rng(0)
 
 x = rng.normal(size=5)
-W1 = rng.normal(0.0, 0.5, size=(8, 5))
-W2 = rng.normal(0.0, 0.5, size=(4, 8))
+W1 = rng.normal(0.0, 0.5, size=(64, 5))
+W2 = rng.normal(0.0, 0.5, size=(2, 64))
 
 two_layers = W2 @ (W1 @ x)   # 2層ぶん計算する
 one_layer = (W2 @ W1) @ x    # 重みを先に掛けて1層にまとめる
@@ -785,13 +785,13 @@ for v in (-3.0, -1.0, 0.0, 1.0, 3.0):
   <div class="code is-out">
     <div class="code-bar"><span class="code-name"><span class="dot">&gt;</span>出力</span><button class="copy" type="button">コピー</button></div>
 <pre><code>--- without activation ---
-  two layers    : [-1.3008  0.3158 -0.9289 -0.8745]
-  folded to one : [-1.3008  0.3158 -0.9289 -0.8745]
+  two layers    : [ 2.1121 -0.2159]
+  folded to one : [ 2.1121 -0.2159]
   equal         : True
   -&gt; any number of layers collapses into one. Depth buys nothing.
 
 --- with tanh ---
-  two layers    : [-1.2142  0.2935 -0.8649 -0.8024]
+  two layers    : [ 1.7386 -0.5092]
   same as one   : False
   -&gt; no. Depth starts to mean something only once a nonlinearity sits in between.
 

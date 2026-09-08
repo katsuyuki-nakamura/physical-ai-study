@@ -8,8 +8,8 @@ import numpy as np
 rng = np.random.default_rng(0)
 
 x = rng.normal(size=5)
-W1 = rng.normal(0.0, 0.5, size=(8, 5))
-W2 = rng.normal(0.0, 0.5, size=(4, 8))
+W1 = rng.normal(0.0, 0.5, size=(64, 5))
+W2 = rng.normal(0.0, 0.5, size=(2, 64))
 
 two_layers = W2 @ (W1 @ x)   # 2層ぶん計算する
 one_layer = (W2 @ W1) @ x    # 重みを先に掛けて1層にまとめる
