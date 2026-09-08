@@ -836,12 +836,14 @@ parameters in this layer = weights 320 (= 64 x 5) + biases 64 = 384</code></pre>
 
   <div class="pin">
     <span class="pin-label">W = W2 @ W1 を書き下すと</span>
-    <code>W[j, k] = W2[j,0]*W1[0,k] + W2[j,1]*W1[1,k] + ... + W2[j,63]*W1[63,k]
-          m を 0 から 63 まで動かして、全部足し合わせる
+    <code>W[j, k] = W2[j,m] * W1[m,k] を、m = 0 から 63 まで足したもの
+
+        = W2[j,0]*W1[0,k] + W2[j,1]*W1[1,k] + ... + W2[j,63]*W1[63,k]
+                  m=0               m=1                      m=63
 
 j = 0..1   出力2個
 k = 0..4   入力5個
-m = 0..63  隠れ層64本</code>
+m = 0..63  隠れ層64本。足し合わされるので、左辺には残らない</code>
   </div>
 
   <p>右辺には <span class="inline-code">m</span> が出てきますが、<strong>0 から 63 まで全部足し合わされてしまう</strong>ので、左辺の添字は <span class="inline-code">j</span> と <span class="inline-code">k</span> だけです。<strong>これが「64 が消える」の正体</strong>です。隠れ層の64本は計算には使われるのに、結果を指す番号としては残りません。だから形が <span class="inline-code">(2, 5)</span> になります。</p>
@@ -968,11 +970,14 @@ N個   x @ W.T + b     (N, 5)  @ (5, 64)  -> (N, 64)</code>
 
   <div class="pin">
     <span class="pin-label">書き下すと</span>
-    <code>h[i, j] = x[i,0]*W1[j,0] + x[i,1]*W1[j,1] + ... + x[i,4]*W1[j,4] + b1[j]
-          k を 0 から 4 まで動かして、全部足し合わせる（内積）
+    <code>h[i, j] = x[i,k] * W1[j,k] を k = 0 から 4 まで足して、b1[j] を足したもの
+
+        = x[i,0]*W1[j,0] + x[i,1]*W1[j,1] + ... + x[i,4]*W1[j,4] + b1[j]
+                 k=0              k=1                     k=4
 
 i = 0..N-1  どの観測か
-j = 0..63   どのニューロンか</code>
+j = 0..63   どのニューロンか
+k = 0..4    入力5個ぶん。足し合わされるので、左辺には残らない</code>
   </div>
 
   <p>観測2個・ニューロン3本まで縮めて、全部書き出すとこうなります。</p>
