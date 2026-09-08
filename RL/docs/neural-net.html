@@ -627,7 +627,7 @@ One weight per input. One bias per neuron.</code></pre>
     </div>
     <div class="formula-row">
       <div class="formula-math">x</div>
-      <div class="formula-note">入力。形は <span class="inline-code">(5,)</span>。64本が<strong>同じ x を見ます</strong>。入力を配り分けるのではありません</div>
+      <div class="formula-note">入力。形は <span class="inline-code">(5,)</span>。64本が<strong>同じ x を見ます</strong>。入力を分割して1本ずつに割り当てるのではありません</div>
     </div>
     <div class="formula-row is-z">
       <div class="formula-math">W @ x</div>
@@ -667,9 +667,9 @@ One weight per input. One bias per neuron.</code></pre>
 
   <div class="note">
     <span class="note-label">rng とは何か</span>
-    <p><span class="inline-code">rng</span> は <strong>random number generator（乱数生成器）</strong>の略で、numpy が決めた名前ではなく<strong>ただの変数名</strong>です。<span class="inline-code">np.random.default_rng(0)</span> が返す「乱数を作る道具」を、慣習でこの名前に入れているだけで、<span class="inline-code">gen</span> でも動きます。</p>
+    <p><span class="inline-code">rng</span> は <strong>random number generator（乱数生成器）</strong>の略で、numpy が決めた名前ではなく<strong>ただの変数名</strong>です。<span class="inline-code">np.random.default_rng(0)</span> が返す<strong>乱数生成器</strong>を、慣習でこの名前に入れているだけで、<span class="inline-code">gen</span> でも動きます。</p>
     <p>引数の <span class="inline-code">0</span> は<strong>シード（種）</strong>です。乱数の出発点を固定する数で、<strong>同じシードなら何度実行しても同じ値が並びます</strong>。この本の出力がそのまま手元で再現できるのはこれのおかげです。<span class="inline-code">default_rng()</span> と省くと毎回変わります。</p>
-    <p><span class="inline-code">rng.normal(0.0, 0.5, size=(64, 5))</span> は<strong>平均 0・標準偏差 0.5 の正規分布から 64&#215;5 個の数を引いてくる</strong>、という意味です。重みを最初からばらつかせるのは、<strong>全部 0 にすると64本が完全に同じ数を出し、同じように更新されて、64本並べた意味が消えるから</strong>。バイアスを 0.1 と小さく振っているのは、最初は重みの側で差をつけたいからです。第4章の <span class="inline-code">mlp.py</span> では、この標準偏差を入力の数に応じて決めます。</p>
+    <p><span class="inline-code">rng.normal(0.0, 0.5, size=(64, 5))</span> は<strong>平均 0・標準偏差 0.5 の正規分布から 64&#215;5 個の数を引いてくる</strong>、という意味です。重みを最初からばらつかせるのは、<strong>全部 0 にすると64本が完全に同じ数を出し、同じように更新されて、64本並べた意味が消えるから</strong>。バイアスの標準偏差を 0.1 と小さくしているのは、最初は重みの側で差をつけたいからです。第4章の <span class="inline-code">mlp.py</span> では、この標準偏差を入力の数に応じて決めます。</p>
     <p>古いコードでは <span class="inline-code">np.random.seed(0)</span> と書いてから <span class="inline-code">np.random.normal(...)</span> を呼ぶ書き方をよく見かけます。こちらはプロセス全体で1つの乱数状態を共有するため、<span class="inline-code">default_rng</span> で<strong>独立した生成器を作るほうが今は推奨</strong>です。</p>
   </div>
 
@@ -734,9 +734,93 @@ parameters in this layer = weights 320 (= 64 x 5) + biases 64 = 384</code></pre>
 
   <p class="lead">層を2つ重ねたとします。<span class="inline-code">W2 @ (W1 @ x)</span>。ところがこれは <span class="inline-code">(W2 @ W1) @ x</span> と書き直せます。<strong>行列を先に掛けてしまえば1つの行列</strong>——つまり<strong>2層が1層に潰れます</strong>。</p>
 
+  <p>ここは「どちらも2層あるじゃないか」と引っかかるところです。その通りで、<strong>手順としてはどちらも2回掛けています</strong>。同じなのは手順ではなく、<strong>その手順で到達できる結果の範囲</strong>のほうです。</p>
+
+  <p>行列を離れて数1個で考えると分かりやすくなります——<strong>2倍してから3倍する</strong>のは、<strong>6倍する</strong>のと同じです。2ステップ実行しているのに、やれることは「ある1つの数を掛ける」だけ。何十回重ねても届くのは「○倍する」という形だけで、<strong>「2乗する」には絶対になりません</strong>。掛け算をいくら重ねても掛け算のまま——行列で起きているのもこれと同じことです。</p>
+
+  <p>写経コードの <span class="inline-code">W1</span> は <span class="inline-code">(64, 5)</span>、<span class="inline-code">W2</span> は <span class="inline-code">(2, 64)</span>——<strong>序章の図から中間層を1つ減らした形</strong>で、<span class="inline-code">W1</span> は第2章で作ったものそのものです。numpy の重み行列は <strong>(出す数, 受ける数)</strong> の順に並んでいる——つまり <strong>行がニューロン1本、列が入力1個</strong>に対応します。この形のまま <span class="inline-code">W2 @ W1</span> を先に計算すると、何が出てくるか。</p>
+
+  <figure class="diagram">
+    <svg viewBox="0 0 700 444" role="img" aria-label="活性化なしの2層（入力5個 → W1(64,5) → 中間64個 → W2(2,64) → 出力2個）が、W2 @ W1 を先に計算すると (2,5) の行列1枚になり、中間の64個が消えることを示す図。tanh を挟むと先に掛けられないことも示す。">
+      <defs>
+        <marker id="ch3ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"></path>
+        </marker>
+      </defs>
+
+      <text x="20" y="20" font-size="12" font-weight="700" fill="var(--z)">&#9312; 2層のまま　W2 @ (W1 @ x)</text>
+
+      <rect x="40" y="48" width="104" height="50" rx="6" fill="none" stroke="var(--z)" stroke-width="2"></rect>
+      <text x="92" y="69" text-anchor="middle" font-size="12" fill="var(--z)">入力 x</text>
+      <text x="92" y="88" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="14" fill="var(--z)">5 個</text>
+
+      <rect x="252" y="48" width="104" height="50" rx="6" fill="none" stroke="currentColor" stroke-width="1.5"></rect>
+      <text x="304" y="69" text-anchor="middle" font-size="12" fill="currentColor">中間</text>
+      <text x="304" y="88" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="14" fill="currentColor">64 個</text>
+
+      <rect x="464" y="48" width="104" height="50" rx="6" fill="none" stroke="var(--z)" stroke-width="2"></rect>
+      <text x="516" y="69" text-anchor="middle" font-size="12" fill="var(--z)">出力</text>
+      <text x="516" y="88" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="14" fill="var(--z)">2 個</text>
+
+      <line x1="148" y1="73" x2="247" y2="73" stroke="currentColor" stroke-width="1.5" marker-end="url(#ch3ah)"></line>
+      <line x1="360" y1="73" x2="459" y2="73" stroke="currentColor" stroke-width="1.5" marker-end="url(#ch3ah)"></line>
+
+      <text x="197" y="42" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="13" font-weight="700" fill="currentColor">W1 (64, 5)</text>
+      <text x="409" y="42" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="13" font-weight="700" fill="currentColor">W2 (2, 64)</text>
+
+      <text x="197" y="117" text-anchor="middle" font-size="11.5" fill="currentColor" opacity="0.72">行 64 = 出す数 ／ 列 5 = 受ける数</text>
+      <text x="409" y="117" text-anchor="middle" font-size="11.5" fill="currentColor" opacity="0.72">行 2 = 出す数 ／ 列 64 = 受ける数</text>
+
+      <line x1="20" y1="138" x2="680" y2="138" stroke="currentColor" stroke-width="1" opacity="0.16"></line>
+
+      <text x="20" y="163" font-size="12" font-weight="700" fill="var(--z)">&#9313; 形だけ並べると</text>
+
+      <text x="40" y="197" font-family="JetBrains Mono, monospace" font-size="17" fill="currentColor">(2, <tspan fill="var(--z)" font-weight="700">64</tspan>) @ (<tspan fill="var(--z)" font-weight="700">64</tspan>, 5)　→　(2, 5)</text>
+
+      <text x="350" y="191" font-size="12.5" fill="currentColor" opacity="0.85">向かい合う 64 どうしが消えて、</text>
+      <text x="350" y="209" font-size="12.5" fill="currentColor" opacity="0.85">(2, 5) の行列が1枚だけ残る</text>
+
+      <line x1="20" y1="222" x2="680" y2="222" stroke="currentColor" stroke-width="1" opacity="0.16"></line>
+
+      <text x="20" y="247" font-size="12" font-weight="700" fill="var(--z)">&#9314; つまり、これとまったく同じもの</text>
+
+      <rect x="40" y="271" width="104" height="50" rx="6" fill="none" stroke="var(--z)" stroke-width="2"></rect>
+      <text x="92" y="292" text-anchor="middle" font-size="12" fill="var(--z)">入力 x</text>
+      <text x="92" y="311" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="14" fill="var(--z)">5 個</text>
+
+      <rect x="464" y="271" width="104" height="50" rx="6" fill="none" stroke="var(--z)" stroke-width="2"></rect>
+      <text x="516" y="292" text-anchor="middle" font-size="12" fill="var(--z)">出力</text>
+      <text x="516" y="311" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="14" fill="var(--z)">2 個</text>
+
+      <line x1="148" y1="296" x2="459" y2="296" stroke="currentColor" stroke-width="1.5" marker-end="url(#ch3ah)"></line>
+      <text x="303" y="288" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="13" font-weight="700" fill="currentColor">W = W2 @ W1　(2, 5)</text>
+      <text x="303" y="314" text-anchor="middle" font-size="11.5" fill="var(--z)">中間の 64 は、もうどこにも無い</text>
+
+      <text x="20" y="345" font-size="12.5" fill="currentColor" opacity="0.85">64本のニューロンを並べたはずが、残ったのは「5個を受けて2個を出す行列」1枚だけ。中間層のない1層と同じもの。</text>
+
+      <line x1="20" y1="364" x2="680" y2="364" stroke="currentColor" stroke-width="1" opacity="0.16"></line>
+
+      <text x="20" y="389" font-size="12" font-weight="700" fill="var(--z)">&#9315; tanh を1つ挟むと</text>
+
+      <text x="40" y="420" font-family="JetBrains Mono, monospace" font-size="17" fill="currentColor">W2 @ <tspan fill="var(--z)" font-weight="700">tanh</tspan>(W1 @ x)</text>
+
+      <text x="250" y="414" font-size="12.5" fill="currentColor" opacity="0.85">tanh は行列ではないので、W2 と W1 を</text>
+      <text x="250" y="432" font-size="12.5" fill="currentColor" opacity="0.85">先に掛けて1枚にまとめることができない</text>
+    </svg>
+    <figcaption>活性化がないときの2層（&#9312;）は、<span class="inline-code">W2 @ W1</span> を先に計算するだけで &#9314; の1層になる。&#9313; のとおり向かい合う 64 が消えるので、<strong>中間の64個は結果のどこにも残らない</strong>。tanh は行列ではないため、この「先に掛ける」ができない（&#9315;）。</figcaption>
+  </figure>
+
+  <p><strong>注目してほしいのは、潰したあとの形が <span class="inline-code">(2, 5)</span> になることです。</strong>真ん中の 64 が消えています。64本のニューロンを並べたはずなのに、出来上がったのは「入力5個を受けて2個を出す行列が1枚」でしかない。<strong>64 という数字は結果のどこにも残りません</strong>。図で言えば、中間の箱ごと無かったことになります。</p>
+
+  <p>パラメータで数えるともっとはっきりします。<span class="inline-code">64&#215;5 + 2&#215;64 = 448個</span>のパラメータを持っているのに、それをどう調整しても、出来上がるのは<strong>必ず <span class="inline-code">2&#215;5 = 10個</span>の数で書ける関数</strong>です。448個の値を動かせるつもりで、実際に変えられるのは10個ぶんの自由度だけ。<strong>残りの438個ぶんは、原理的に何も生みません</strong>——「深くする意味が消える」とはこの意味です。</p>
+
   <p>写経コードの前半では、2層ぶん計算した結果と、行列をまとめた1層の結果が<strong>完全に一致</strong>します。何層積んでも同じで、これでは深くする意味がありません。</p>
 
   <p>途中に <span class="inline-code">tanh</span> を1つ挟むだけで一致しなくなります。<strong>層と層のあいだに非線形な処理を入れることで、初めて「重ねた」ことになる</strong>。この挟むものを<strong>活性化関数</strong>と呼びます。</p>
+
+  <p>潰せなくなる理由は単純で、<span class="inline-code">tanh</span> が<strong>行列ではない</strong>からです。<span class="inline-code">W2 @ W1</span> のように「先に掛けてしまう」ことができない。<strong>「W1 を掛けて、tanh を通して、W2 を掛ける」という一連の計算と同じ結果を返す <span class="inline-code">(2, 5)</span> の行列は、どう探しても存在しません</strong>。だから初めて、1層では届かない場所に届きます。</p>
+
+  <p>図形で言えば、行列にできるのは<strong>回転・拡大縮小・せん断</strong>だけです。まっすぐな線はまっすぐなまま、平行な線は平行なまま。何枚重ねてもまっすぐなままです。<strong>曲がった境界を引きたければ、途中に非線形な処理を挟むしかない</strong>——それが活性化関数の仕事です。</p>
 
   <p><span class="inline-code">tanh</span> は値を <span class="inline-code">-1</span> 〜 <span class="inline-code">1</span> に押し込む関数です。大きい値ほど 1 に、小さい値ほど -1 に近づき、0 のあたりはほぼそのまま通します。よく使われる活性化関数には他に <span class="inline-code">ReLU</span>（負を 0 にする）などがありますが、この本では <span class="inline-code">tanh</span> を使います。第6章で微分するときに形が綺麗だからです。</p>
 
@@ -825,7 +909,23 @@ tanh squeezes any value into -1..1:
 N個   x @ W.T + b     (N, 5)  @ (5, 64)  -> (N, 64)</code>
   </div>
 
-  <p><span class="inline-code">.T</span> は<strong>転置</strong>——行と列を入れ替える操作で、<span class="inline-code">(64, 5)</span> の <span class="inline-code">W1</span> が <span class="inline-code">(5, 64)</span> になります。こうすると観測側の 5 と噛み合い、結果が <span class="inline-code">(N, 64)</span>、つまり<strong>1行が観測1個ぶんの出力</strong>という向きに揃います。<span class="inline-code">b1</span> は <span class="inline-code">(64,)</span> のまま足していますが、numpy が N 行すべてに同じバイアスを配ってくれます（ブロードキャスト）。</p>
+  <p><span class="inline-code">.T</span> は<strong>転置</strong>——行と列を入れ替える操作で、<span class="inline-code">(64, 5)</span> の <span class="inline-code">W1</span> が <span class="inline-code">(5, 64)</span> になります。こうすると観測側の 5 と噛み合い、結果が <span class="inline-code">(N, 64)</span>、つまり<strong>1行が観測1個ぶんの出力</strong>という向きに揃います。<span class="inline-code">b1</span> は <span class="inline-code">(64,)</span> のまま足していますが、numpy が N 行すべてに同じバイアスを加算します（ブロードキャスト）。</p>
+
+  <div class="pin">
+    <span class="pin-label">バイアスの形をどう合わせているか</span>
+    <code>(N, 64)      &lt;- x @ W1.T
+   (64,)     &lt;- b1。右端から突き合わせ、足りない左は 1 とみなす
+--------
+(N, 64)      &lt;- 長さ 1 の軸は、同じ64個を N 行すべてに使って足す</code>
+  </div>
+
+  <div class="note">
+    <span class="note-label">なぜ全部の行に同じ値を足すのか</span>
+    <p>バイアスは<strong>ニューロンごとに1つ決まる値で、観測ごとに決まる値ではない</strong>からです。<span class="inline-code">b1</span> の64個は1本目から64本目までのニューロンに1つずつ対応していて、観測が256個に増えても64個のままです。<strong>観測1個目を計算するときも256個目を計算するときも、同じニューロンには同じバイアスが加算されます</strong>。重みが <span class="inline-code">W1</span> 1組しかないのと同じ理由です。</p>
+    <p>このとき numpy が <span class="inline-code">(N, 64)</span> の配列を作ることはありません。<strong>同じ64個を N 回読み直しているだけ</strong>で、メモリは <span class="inline-code">(64,)</span> のぶんしか使いません。</p>
+    <p>向きは逆にできません。「観測ごとに1つ」のつもりで <span class="inline-code">(N,)</span> を足すと、右端の 64 と N が一致せずエラーになります。<strong>ただしバッチの数がちょうど 64 のときだけは形が一致するため、エラーにならずに計算が進みます</strong>——この本は256個ずつ流すので当たりませんが、幅やバッチを変えて試すときの落とし穴です。</p>
+    <p>第6章では、この対応が逆向きになります。順伝播で1つのバイアスを N 行すべてに<strong>加算した</strong>のだから、逆伝播では N 行ぶんの勾配を<strong>合計して</strong>1つに戻します。バイアスの勾配だけ <span class="inline-code">.T @</span> ではなく <span class="inline-code">.sum(axis=0)</span> になっているのは、そのためです。</p>
+  </div>
 
   <p>まとめて流すのは、第5章から<strong>256個の観測を一度に</strong>使うからです。行列積が1回で済むので速く、勾配も1個ずつより安定します。<span class="inline-code">forward()</span> の3行は、<strong>第2章の式に「まとめて流す」と「tanh を挟む」を足しただけ</strong>のものです。</p>
 
@@ -1063,7 +1163,7 @@ Doing this for every weight would train the net, but there are far too many.
     <code>mlp.py に backward() を足す</code>
   </div>
 
-  <p class="lead">逆伝播は、<strong>出力側から入力側へ向かって勾配を配っていく</strong>手続きです。順伝播1回ぶんとほぼ同じ手間で、全パラメータの勾配が一度に出ます。数値微分の9,348回が1回になります。</p>
+  <p class="lead">逆伝播は、<strong>出力側から入力側へ向かって順に勾配を求めていく</strong>手続きです。順伝播1回ぶんとほぼ同じ手間で、全パラメータの勾配が一度に出ます。数値微分の9,348回が1回になります。</p>
 
   <p>種明かしをすると、やっているのは<strong>合成関数の微分（連鎖律）</strong>です。「出力の勾配」が分かれば、その1つ手前の層の勾配が計算でき、それを繰り返して入口まで戻ります。</p>
 
@@ -1196,7 +1296,7 @@ For this net: 9348 passes -&gt; 1. That is what backprop is worth.</code></pre>
     <code>mlp.py に sgd_step() を足す</code>
   </div>
 
-  <p class="lead">道具が揃いました。<strong>損失を測り、勾配を出し、逆向きに少し動かす</strong>。これを繰り返すだけです。</p>
+  <p class="lead">必要な関数が揃いました。<strong>損失を測り、勾配を出し、逆向きに少し動かす</strong>。これを繰り返すだけです。</p>
 
   <p>書き足すのは3行です。<strong>勾配の逆向きに、学習率 <span class="inline-code">lr</span> の分だけ動かす</strong>。これを<strong>勾配降下法</strong>と呼び、毎回ランダムな一部のデータで行うので<strong>確率的</strong>勾配降下法（SGD）と言います。</p>
 
