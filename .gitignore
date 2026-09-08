@@ -1,0 +1,14 @@
+# リポジトリ全体に効く除外。RL/ 固有のものは RL/.gitignore にある。
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# OS / エディタ
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
