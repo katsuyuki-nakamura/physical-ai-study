@@ -686,6 +686,35 @@ One weight per input. One bias per neuron.</code></pre>
 
   <p>形の読み方も1つだけ覚えておくと後が楽です——<span class="inline-code">(64, 5) @ (5,) → (64,)</span>。<strong>向かい合う 5 どうしが消えて、外側の 64 が残る</strong>。この2つの数が食い違っていればその場でエラーになります。層をつなぐときに気にするのは、ここだけです。</p>
 
+
+  <p>なぜ消えるのか。<strong>その番号が足し合わせに使われて、答えの中に残らないから</strong>です。小さくして全部書くと見えます。</p>
+
+  <div class="pin">
+    <span class="pin-label">(2, 3) @ (3,) を全部書く</span>
+    <code>W = [[1, 2, 3],      (2, 3)
+     [4, 5, 6]]
+
+x = [10, 20, 30]     (3,)
+
+out[0] = 1*10 + 2*20 + 3*30 = 140
+out[1] = 4*10 + 5*20 + 6*30 = 320
+
+out = [140, 320]     (2,)</code>
+  </div>
+
+  <p>2つの数は役割が違います。<strong><span class="inline-code">3</span> は「1本の計算で何項足すか」</strong>。3項を足すと <span class="inline-code">140</span> という数1つになり、足した時点で3つの区別は無くなります。だから<strong>答えを指すのに <span class="inline-code">3</span> は要りません</strong>。<strong><span class="inline-code">2</span> は「その計算を何本やるか」</strong>。<span class="inline-code">out[0]</span> と <span class="inline-code">out[1]</span> は別の数として残るので、<strong>答えを指すのに <span class="inline-code">2</span> が要ります</strong>。</p>
+
+  <div class="pin">
+    <span class="pin-label">添字で書くと</span>
+    <code>out[j] = W[j,k] * x[k] を、k = 0, 1, 2 で足したもの
+
+  k  足し合わせに使う番号 -> 答えを指すのには要らない -> 消える
+  j  答えのどれかを指す番号 -> 要る                 -> 残る</code>
+  </div>
+
+  <p><strong>残った添字が、そのまま形になります。</strong><span class="inline-code">j</span> だけが残るので <span class="inline-code">(2,)</span>。<span class="inline-code">(64, 5) @ (5,) → (64,)</span> なら、<strong>5個の積を足して1つにする計算を、64本ぶん行う</strong>——だから答えは64個です。</p>
+
+  <p>一致していないといけない理由も、これで分かります。<span class="inline-code">W[j,k]</span> と <span class="inline-code">x[k]</span> は<strong>同じ <span class="inline-code">k</span> を使っています</strong>。<span class="inline-code">W</span> の1行に3個、<span class="inline-code">x</span> に3個あるので、1番目どうし・2番目どうしと対応が付く。<span class="inline-code">x</span> が4個だと4番目に掛ける相手が <span class="inline-code">W</span> の行に無いので、計算そのものが定義できません。「向かい合う」と書きましたが、実体は<strong>同じ添字を共有する2つの軸</strong>のことです。</p>
   <p>64本のニューロンがそれぞれ5個の入力を見るので、重みは <span class="inline-code">64 &#215; 5 = 320</span> 個。バイアスは1本につき1つで64個。合わせて <strong>384個</strong>がこの層のパラメータです。</p>
 
   <p>写経コードの <span class="inline-code">out_loop</span> は、この64行を <span class="inline-code">for</span> で1行ずつ書いたものです。<strong>同じ計算を、自分で回すか演算子1つに任せるかの違いしかありません</strong>。だから <span class="inline-code">exactly equal : True</span> になります。</p>
@@ -870,7 +899,7 @@ k = 0..4   入力5個
 m = 0..63  隠れ層64本。足し合わされるので、左辺には残らない</code>
   </div>
 
-  <p>右辺には <span class="inline-code">m</span> が出てきますが、<strong>0 から 63 まで全部足し合わされてしまう</strong>ので、左辺の添字は <span class="inline-code">j</span> と <span class="inline-code">k</span> だけです。<strong>これが「64 が消える」の正体</strong>です。隠れ層の64本は計算には使われるのに、結果を指す番号としては残りません。だから形が <span class="inline-code">(2, 5)</span> になります。</p>
+  <p>右辺には <span class="inline-code">m</span> が出てきますが、<strong>0 から 63 まで全部足し合わされてしまう</strong>ので、左辺の添字は <span class="inline-code">j</span> と <span class="inline-code">k</span> だけです。<strong>これが「64 が消える」の正体</strong>です。<a href="#ch2">第2章</a>で見た「足し合わせに使う添字は答えに残らない」が、そのまま効いています。隠れ層の64本は計算には使われるのに、結果を指す番号としては残りません。だから形が <span class="inline-code">(2, 5)</span> になります。</p>
 
   <p>パラメータで数えるともっとはっきりします。<span class="inline-code">64&#215;5 + 2&#215;64 = 448個</span>のパラメータを持っているのに、それをどう調整しても、出来上がるのは<strong>必ず <span class="inline-code">2&#215;5 = 10個</span>の数で書ける関数</strong>です。448個の値を動かせるつもりで、実際に変えられるのは10個ぶんの自由度だけ。<strong>残りの438個ぶんは、原理的に何も生みません</strong>——「深くする意味が消える」とはこの意味です。</p>
 
