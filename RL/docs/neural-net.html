@@ -368,6 +368,7 @@ footer p { max-width: none; }
     <span class="note-label">この本の読み方</span>
     <p>第1〜3章は部品を1つずつ確かめる回で、ファイルは残しません。<strong>第4章から <span class="inline-code">mlp.py</span> という1つのファイルを作り始め</strong>、第6章・第7章で足していきます。最後にはそれが完成品になります。</p>
     <p>各章の頭に「この章で書き足す行」を置いてあります。写経コードはすべて数秒で終わります（いちばん重い第7章の学習でも1秒未満）。</p>
+    <p>章の中は<strong>説明 → 写経 → 出力</strong>の順です。写す前に何をする行なのか読めるようにしてあるので、<strong>上から順に読んでから写してください</strong>。</p>
   </div>
 </section>
 
@@ -530,7 +531,19 @@ python -c "import numpy; print(numpy.__version__)"</code></pre>
 
   <p>写経コードの入力には、<a href="#problem">解く問題</a>で決めた観測5個をそのまま使います。<span class="inline-code">[0.0, 0.0, 1.0, 0.0, 0.0]</span> は<strong>「原点にいて、今回の目標は左」</strong>という状況です。</p>
 
+  <p>入力が5個なので、<strong>重みも5個</strong>要ります。バイアスは<strong>ニューロン1本につき1つ</strong>です。ここが後でパラメータの数を数えるときの基本になります。</p>
+
+  <p>写経では重みを <span class="inline-code">[0.5, -0.2, 1.3, 0.1, -0.7]</span>、バイアスを <span class="inline-code">0.4</span> にします。入力が <span class="inline-code">[0, 0, 1, 0, 0]</span> なので、3番目の項だけが残って <span class="inline-code">1.3 + 0.4 = 1.7</span>。0 が掛かった項は消えます。<strong>1つだけ 1 で残りが 0 という入力は、「重みの中から1つを選び出す」働きをする</strong>——この性質は3冊目でもう一度出てきます。</p>
+
+  <div class="note">
+    <span class="note-label">重みとバイアスは何者か</span>
+    <p>この2つが<strong>学習で変わる数</strong>です。ネットワークが「覚える」とは、この数を少しずつ書き換えることを指します。入力と出力は毎回変わりますが、重みとバイアスは<strong>使い回されます</strong>。</p>
+    <p>いまは適当な値を入れていますが、第7章でこれを自動的に決めます。</p>
+  </div>
+
   <h3>写経 ── 1本を手で計算する</h3>
+
+  <p>1本ぶんの計算を1項ずつ書き下してから、numpy の1行に置き換えます。</p>
 
   <div class="code">
     <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>nn1_neuron.py</span><button class="copy" type="button">コピー</button></div>
@@ -591,15 +604,7 @@ one line with numpy:
 One weight per input. One bias per neuron.</code></pre>
   </div>
 
-  <p>入力が5個なので、<strong>重みも5個</strong>要ります。バイアスは<strong>ニューロン1本につき1つ</strong>です。ここが後でパラメータの数を数えるときの基本になります。</p>
-
-  <p>今回の入力は <span class="inline-code">[0, 0, 1, 0, 0]</span> なので、3番目の項だけが残って <span class="inline-code">1.3 + 0.4 = 1.7</span>。0 が掛かった項は消えます。<strong>1つだけ 1 で残りが 0 という入力は、「重みの中から1つを選び出す」働きをする</strong>——この性質は3冊目でもう一度出てきます。</p>
-
-  <div class="note">
-    <span class="note-label">重みとバイアスは何者か</span>
-    <p>この2つが<strong>学習で変わる数</strong>です。ネットワークが「覚える」とは、この数を少しずつ書き換えることを指します。入力と出力は毎回変わりますが、重みとバイアスは<strong>使い回されます</strong>。</p>
-    <p>いまは適当な値を入れていますが、第7章でこれを自動的に決めます。</p>
-  </div>
+  <p>出力の最後、<span class="inline-code">total = +1.70</span> がいま辿った通りの内訳になっています。0 が掛かった4項は消え、残ったのは3番目の重み <span class="inline-code">1.3</span> とバイアス <span class="inline-code">0.4</span> だけです。</p>
 </section>
 
 <section id="ch2">
@@ -613,7 +618,60 @@ One weight per input. One bias per neuron.</code></pre>
 
   <p class="lead">ニューロン1本では何もできません。<strong>同じ入力を見るニューロンを何本も並べる</strong>と、それが1つの「層」になります。並べた結果は、行列の掛け算そのものです。</p>
 
+  <p><span class="inline-code">@</span> は <strong>行列積</strong>の演算子です（Python 3.5 以降。numpy の配列に対して使います）。<span class="inline-code">*</span> は要素ごとの掛け算で別物、<span class="inline-code">np.matmul(W, x)</span> と書くのと同じ意味になります。式を4つに分けると、やっていることは第1章と変わりません。</p>
+
+  <div class="formula">
+    <div class="formula-row">
+      <div class="formula-math">W</div>
+      <div class="formula-note">重みの行列。形は <span class="inline-code">(64, 5)</span>。<strong>1行が、ニューロン1本ぶんの重み5個</strong></div>
+    </div>
+    <div class="formula-row">
+      <div class="formula-math">x</div>
+      <div class="formula-note">入力。形は <span class="inline-code">(5,)</span>。64本が<strong>同じ x を見ます</strong>。入力を配り分けるのではありません</div>
+    </div>
+    <div class="formula-row is-z">
+      <div class="formula-math">W @ x</div>
+      <div class="formula-note">行列積。形は <span class="inline-code">(64,)</span>。<strong>j 番目の数は <span class="inline-code">np.dot(W[j], x)</span></strong>——第1章の「掛けて全部足す」そのものが、64行ぶん並んだもの</div>
+    </div>
+    <div class="formula-row">
+      <div class="formula-math">+ b</div>
+      <div class="formula-note">形は <span class="inline-code">(64,)</span>。64個の結果に、<strong>ニューロン1本につき1つのバイアス</strong>をそれぞれ足す</div>
+    </div>
+  </div>
+
+  <div class="pin">
+    <span class="pin-label">書き下すと</span>
+    <code>(W @ x)[0]  = W[0,0]*x[0]  + W[0,1]*x[1]  + ... + W[0,4]*x[4]     1本目
+(W @ x)[1]  = W[1,0]*x[0]  + W[1,1]*x[1]  + ... + W[1,4]*x[4]     2本目
+   ...
+(W @ x)[63] = W[63,0]*x[0] + W[63,1]*x[1] + ... + W[63,4]*x[4]    64本目</code>
+  </div>
+
+  <p>行列 <span class="inline-code">W</span> の形が <span class="inline-code">(64, 5)</span> なのは、<strong>「64本ぶん × 入力5個」を縦横に並べたから</strong>です。行が1本のニューロン、列が入力に対応します。ライブラリで <span class="inline-code">Linear(in_features=5, out_features=64)</span> と書いたときに内部で作られるのも、この形の行列です。</p>
+
+  <p>形の読み方も1つだけ覚えておくと後が楽です——<span class="inline-code">(64, 5) @ (5,) → (64,)</span>。<strong>向かい合う 5 どうしが消えて、外側の 64 が残る</strong>。この2つの数が食い違っていればその場でエラーになります。層をつなぐときに気にするのは、ここだけです。</p>
+
+  <p>64本のニューロンがそれぞれ5個の入力を見るので、重みは <span class="inline-code">64 &#215; 5 = 320</span> 個。バイアスは1本につき1つで64個。合わせて <strong>384個</strong>がこの層のパラメータです。</p>
+
+  <p>写経コードの <span class="inline-code">out_loop</span> は、この64行を <span class="inline-code">for</span> で1行ずつ書いたものです。<strong>同じ計算を、自分で回すか演算子1つに任せるかの違いしかありません</strong>。だから <span class="inline-code">exactly equal : True</span> になります。</p>
+
+  <div class="note">
+    <span class="note-label">なぜ行列積で書くのか</span>
+    <p>結果はループと同じですが、速度が全く違います。行列積は numpy の内部で最適化された処理に落ちるので、64本を1本ずつ回すより桁違いに速い。GPU が効くのもここです。</p>
+    <p><strong>「層 = 行列を1つ掛けること」</strong>と覚えてしまって構いません。この本のネットワークは、行列を3つ掛けるだけのものです。</p>
+  </div>
+
   <h3>写経 ── ループと行列積が一致することを見る</h3>
+
+  <p>同じ層を、<span class="inline-code">for</span> で64回書いたものと <span class="inline-code">@</span> 1つで書いたものの両方で計算し、一致するか確かめます。</p>
+
+  <div class="note">
+    <span class="note-label">rng とは何か</span>
+    <p><span class="inline-code">rng</span> は <strong>random number generator（乱数生成器）</strong>の略で、numpy が決めた名前ではなく<strong>ただの変数名</strong>です。<span class="inline-code">np.random.default_rng(0)</span> が返す「乱数を作る道具」を、慣習でこの名前に入れているだけで、<span class="inline-code">gen</span> でも動きます。</p>
+    <p>引数の <span class="inline-code">0</span> は<strong>シード（種）</strong>です。乱数の出発点を固定する数で、<strong>同じシードなら何度実行しても同じ値が並びます</strong>。この本の出力がそのまま手元で再現できるのはこれのおかげです。<span class="inline-code">default_rng()</span> と省くと毎回変わります。</p>
+    <p><span class="inline-code">rng.normal(0.0, 0.5, size=(64, 5))</span> は<strong>平均 0・標準偏差 0.5 の正規分布から 64&#215;5 個の数を引いてくる</strong>、という意味です。重みを最初からばらつかせるのは、<strong>全部 0 にすると64本が完全に同じ数を出し、同じように更新されて、64本並べた意味が消えるから</strong>。バイアスを 0.1 と小さく振っているのは、最初は重みの側で差をつけたいからです。第4章の <span class="inline-code">mlp.py</span> では、この標準偏差を入力の数に応じて決めます。</p>
+    <p>古いコードでは <span class="inline-code">np.random.seed(0)</span> と書いてから <span class="inline-code">np.random.normal(...)</span> を呼ぶ書き方をよく見かけます。こちらはプロセス全体で1つの乱数状態を共有するため、<span class="inline-code">default_rng</span> で<strong>独立した生成器を作るほうが今は推奨</strong>です。</p>
+  </div>
 
   <div class="code">
     <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>nn2_layer.py</span><button class="copy" type="button">コピー</button></div>
@@ -662,15 +720,7 @@ exactly equal : True
 parameters in this layer = weights 320 (= 64 x 5) + biases 64 = 384</code></pre>
   </div>
 
-  <p>64本のニューロンがそれぞれ5個の入力を見るので、重みは <span class="inline-code">64 &#215; 5 = 320</span> 個。バイアスは1本につき1つで64個。合わせて <strong>384個</strong>がこの層のパラメータです。</p>
-
-  <p>行列 <span class="inline-code">W</span> の形が <span class="inline-code">(64, 5)</span> なのは、<strong>「64本ぶん × 入力5個」を縦横に並べたから</strong>です。行が1本のニューロン、列が入力に対応します。ライブラリで <span class="inline-code">Linear(in_features=5, out_features=64)</span> と書いたときに内部で作られるのも、この形の行列です。</p>
-
-  <div class="note">
-    <span class="note-label">なぜ行列積で書くのか</span>
-    <p>結果はループと同じですが、速度が全く違います。行列積は numpy の内部で最適化された処理に落ちるので、64本を1本ずつ回すより桁違いに速い。GPU が効くのもここです。</p>
-    <p><strong>「層 = 行列を1つ掛けること」</strong>と覚えてしまって構いません。この本のネットワークは、行列を3つ掛けるだけのものです。</p>
-  </div>
+  <p>ループ版と行列版の先頭3個がそのまま同じ値で、<span class="inline-code">exactly equal : True</span>。最後の行の 384 が、いま数えたパラメータ数です。</p>
 </section>
 
 <section id="ch3">
@@ -684,7 +734,15 @@ parameters in this layer = weights 320 (= 64 x 5) + biases 64 = 384</code></pre>
 
   <p class="lead">層を2つ重ねたとします。<span class="inline-code">W2 @ (W1 @ x)</span>。ところがこれは <span class="inline-code">(W2 @ W1) @ x</span> と書き直せます。<strong>行列を先に掛けてしまえば1つの行列</strong>——つまり<strong>2層が1層に潰れます</strong>。</p>
 
+  <p>写経コードの前半では、2層ぶん計算した結果と、行列をまとめた1層の結果が<strong>完全に一致</strong>します。何層積んでも同じで、これでは深くする意味がありません。</p>
+
+  <p>途中に <span class="inline-code">tanh</span> を1つ挟むだけで一致しなくなります。<strong>層と層のあいだに非線形な処理を入れることで、初めて「重ねた」ことになる</strong>。この挟むものを<strong>活性化関数</strong>と呼びます。</p>
+
+  <p><span class="inline-code">tanh</span> は値を <span class="inline-code">-1</span> 〜 <span class="inline-code">1</span> に押し込む関数です。大きい値ほど 1 に、小さい値ほど -1 に近づき、0 のあたりはほぼそのまま通します。よく使われる活性化関数には他に <span class="inline-code">ReLU</span>（負を 0 にする）などがありますが、この本では <span class="inline-code">tanh</span> を使います。第6章で微分するときに形が綺麗だからです。</p>
+
   <h3>写経 ── 潰れる様子と、潰れなくなる様子</h3>
+
+  <p>前半で活性化なし、後半で <span class="inline-code">tanh</span> を挟んだ場合を計算します。</p>
 
   <div class="code">
     <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>nn3_activation.py</span><button class="copy" type="button">コピー</button></div>
@@ -745,11 +803,7 @@ tanh squeezes any value into -1..1:
   tanh(+3.0) = +0.9951</code></pre>
   </div>
 
-  <p>前半では2層ぶん計算した結果と、行列をまとめた1層の結果が<strong>完全に一致</strong>します。何層積んでも同じで、これでは深くする意味がありません。</p>
-
-  <p>途中に <span class="inline-code">tanh</span> を1つ挟むだけで一致しなくなります。<strong>層と層のあいだに非線形な処理を入れることで、初めて「重ねた」ことになる</strong>。この挟むものを<strong>活性化関数</strong>と呼びます。</p>
-
-  <p><span class="inline-code">tanh</span> は値を <span class="inline-code">-1</span> 〜 <span class="inline-code">1</span> に押し込む関数です。大きい値ほど 1 に、小さい値ほど -1 に近づき、0 のあたりはほぼそのまま通します。よく使われる活性化関数には他に <span class="inline-code">ReLU</span>（負を 0 にする）などがありますが、この本では <span class="inline-code">tanh</span> を使います。第6章で微分するときに形が綺麗だからです。</p>
+  <p>出力の前半は2層と1層が最後の桁まで一致し、<span class="inline-code">equal : True</span>。tanh を挟んだ後半は <span class="inline-code">foldable : False</span> になります。</p>
 </section>
 
 <section id="ch4">
@@ -762,6 +816,22 @@ tanh squeezes any value into -1..1:
   </div>
 
   <p class="lead">部品が揃ったので、ここから<strong>この本の主役ファイル <span class="inline-code">mlp.py</span></strong> を作り始めます。まず、観測を入れて行動を出すところまで。この向きの計算を<strong>順伝播</strong>と呼びます。</p>
+
+  <p>第2章では <span class="inline-code">W @ x + b</span> と書いたのに、これから書く <span class="inline-code">forward()</span> では <span class="inline-code">x @ p["W1"].T + p["b1"]</span> になっています。<strong>計算そのものは同じ</strong>で、違うのは<strong>観測を1個流すか、まとめて流すか</strong>だけです。</p>
+
+  <div class="pin">
+    <span class="pin-label">1個ぶんと、まとめて流す形</span>
+    <code>1個   W @ x + b       (64, 5) @ (5,)     -> (64,)
+N個   x @ W.T + b     (N, 5)  @ (5, 64)  -> (N, 64)</code>
+  </div>
+
+  <p><span class="inline-code">.T</span> は<strong>転置</strong>——行と列を入れ替える操作で、<span class="inline-code">(64, 5)</span> の <span class="inline-code">W1</span> が <span class="inline-code">(5, 64)</span> になります。こうすると観測側の 5 と噛み合い、結果が <span class="inline-code">(N, 64)</span>、つまり<strong>1行が観測1個ぶんの出力</strong>という向きに揃います。<span class="inline-code">b1</span> は <span class="inline-code">(64,)</span> のまま足していますが、numpy が N 行すべてに同じバイアスを配ってくれます（ブロードキャスト）。</p>
+
+  <p>まとめて流すのは、第5章から<strong>256個の観測を一度に</strong>使うからです。行列積が1回で済むので速く、勾配も1個ずつより安定します。<span class="inline-code">forward()</span> の3行は、<strong>第2章の式に「まとめて流す」と「tanh を挟む」を足しただけ</strong>のものです。</p>
+
+  <p>初期化で重みを乱数にしているのは、<strong>全部同じ値から始めると全ニューロンが同じ計算をしてしまい、何本並べても1本と変わらなくなる</strong>からです。バイアスは 0 で構いません。</p>
+
+  <p><span class="inline-code">forward()</span> が途中の値 <span class="inline-code">(x, h1, h2)</span> も返しているのは、第6章の逆伝播で使うからです。いまは気にしなくて構いません。</p>
 
   <div class="code">
     <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>mlp.py（ここまで書く）</span><button class="copy" type="button">コピー</button></div>
@@ -799,11 +869,13 @@ def forward(p: dict, x: np.ndarray):
     return y, (x, h1, h2)</code></pre>
   </div>
 
-  <p><span class="inline-code">forward()</span> が途中の値 <span class="inline-code">(x, h1, h2)</span> も返しているのは、第6章の逆伝播で使うからです。いまは気にしなくて構いません。</p>
-
-  <p>初期化で重みを乱数にしているのは、<strong>全部同じ値から始めると全ニューロンが同じ計算をしてしまい、何本並べても1本と変わらなくなる</strong>からです。バイアスは 0 で構いません。</p>
-
   <h3>写経 ── 形が変わっていく様子を見る</h3>
+
+  <p>数の並びが <strong>5 → 64 → 64 → 2</strong> と形を変えて出てきます。序章の図がそのまま出力になっています。</p>
+
+  <p>パラメータの合計は <strong>4,674個</strong>。第2章で数えた384個（第1層）に、4,160個（第2層）と130個（出口）を足した数です。<strong>「入力数 × 出力数 + 出力数」を層ごとに足すだけ</strong>で、どんなネットワークでもパラメータ数は数えられます。</p>
+
+  <p>まだ学習していないので、出てくる行動はでたらめです。3つの目標で値が違うのは、単に <span class="inline-code">z</span> の位置が違うから。<strong>意味のある違いではありません</strong>——それを意味のある違いにするのが、残りの3章です。</p>
 
   <div class="code">
     <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>nn4_forward.py</span><button class="copy" type="button">コピー</button></div>
@@ -865,11 +937,7 @@ not trained yet, so the actions are nonsense:
   z = up    -&gt; action [-0.4919 -0.1574]</code></pre>
   </div>
 
-  <p>数の並びが <strong>5 → 64 → 64 → 2</strong> と形を変えて出てきます。序章の図がそのまま出力になっています。</p>
-
-  <p>パラメータの合計は <strong>4,674個</strong>。第2章で数えた384個（第1層）に、4,160個（第2層）と130個（出口）を足した数です。<strong>「入力数 × 出力数 + 出力数」を層ごとに足すだけ</strong>で、どんなネットワークでもパラメータ数は数えられます。</p>
-
-  <p>まだ学習していないので、出てくる行動はでたらめです。3つの目標で値が違うのは、単に <span class="inline-code">z</span> の位置が違うから。<strong>意味のある違いではありません</strong>——それを意味のある違いにするのが、残りの3章です。</p>
+  <p>形についている先頭の <span class="inline-code">3</span> は、観測を3個まとめて流したぶんです。1個だけ流せば <span class="inline-code">(5,) → (64,) → (64,) → (2,)</span> になり、後ろの並びは変わりません。</p>
 </section>
 
 <section id="ch5">
@@ -890,7 +958,19 @@ not trained yet, so the actions are nonsense:
     <code>y = np.clip((TARGETS[gid] - pos) / STEP, -1.0, 1.0)</code>
   </div>
 
+  <p>写経コードでやるのは、<strong>坂の傾きを測る</strong>ことです。重みを少し増やして損失がどう動いたか、少し減らしてどう動いたか。その差を取れば、この重みについての<strong>勾配</strong>が出ます。</p>
+
+  <p>勾配が <span class="inline-code">+0.009</span> なら、「この重みを増やすと損失が増える」。だから<strong>逆向きに、少しだけ動かせばいい</strong>。これが学習の全てです。</p>
+
+  <div class="note">
+    <span class="note-label">この方法では現実的でない</span>
+    <p>この測り方（数値微分）は正しいのですが、<strong>重み1つにつき順伝播が2回</strong>必要です。このネットワークは4,674個あるので、1回更新するのに<strong>9,348回</strong>の順伝播が要ります。</p>
+    <p>実際のネットワークは数百万〜数十億のパラメータを持つので、この方法はまったく使えません。だから次の章の<strong>逆伝播</strong>が要ります。</p>
+  </div>
+
   <h3>写経 ── 重みを1つ動かして、損失の変化を見る</h3>
+
+  <p>損失を1つ計算したあと、重みを1つだけ動かして、損失がどれだけ変わるかを見ます。</p>
 
   <div class="code">
     <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>nn5_loss.py</span><button class="copy" type="button">コピー</button></div>
@@ -971,15 +1051,7 @@ Doing this for every weight would train the net, but there are far too many.
 (this net has 4674 weights. One update would need 9348 forward passes)</code></pre>
   </div>
 
-  <p>やっているのは<strong>坂の傾きを測る</strong>ことです。重みを少し増やして損失がどう動いたか、少し減らしてどう動いたか。その差を取れば、この重みについての<strong>勾配</strong>が出ます。</p>
-
-  <p>勾配が <span class="inline-code">+0.009</span> なら、「この重みを増やすと損失が増える」。だから<strong>逆向きに、少しだけ動かせばいい</strong>。これが学習の全てです。</p>
-
-  <div class="note">
-    <span class="note-label">この方法では現実的でない</span>
-    <p>この測り方（数値微分）は正しいのですが、<strong>重み1つにつき順伝播が2回</strong>必要です。このネットワークは4,674個あるので、1回更新するのに<strong>9,348回</strong>の順伝播が要ります。</p>
-    <p>実際のネットワークは数百万〜数十億のパラメータを持つので、この方法はまったく使えません。だから次の章の<strong>逆伝播</strong>が要ります。</p>
-  </div>
+  <p>重みを <span class="inline-code">+0.0001</span> 動かしたときと <span class="inline-code">-0.0001</span> 動かしたときの損失の差から、傾き <span class="inline-code">+0.009138</span> が出ています。</p>
 </section>
 
 <section id="ch6">
@@ -995,6 +1067,8 @@ Doing this for every weight would train the net, but there are far too many.
 
   <p>種明かしをすると、やっているのは<strong>合成関数の微分（連鎖律）</strong>です。「出力の勾配」が分かれば、その1つ手前の層の勾配が計算でき、それを繰り返して入口まで戻ります。</p>
 
+  <p><span class="inline-code">tanh</span> を選んだ理由がここで効きます。<span class="inline-code">tanh</span> の微分は <span class="inline-code">1 - tanh(x)&#178;</span> なので、<strong>順伝播で計算した値 <span class="inline-code">h</span> をそのまま使って <span class="inline-code">1 - h**2</span> と書けます</strong>。だから <span class="inline-code">forward()</span> が途中の値を返していました。</p>
+
   <div class="code">
     <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>mlp.py（backward を足す）</span><button class="copy" type="button">コピー</button></div>
 <pre><code class="language-python">def backward(p: dict, cache, dy: np.ndarray) -> dict:
@@ -1009,8 +1083,6 @@ Doing this for every weight would train the net, but there are far too many.
     g["W1"], g["b1"] = d1.T @ x, d1.sum(axis=0)
     return g</code></pre>
   </div>
-
-  <p><span class="inline-code">tanh</span> を選んだ理由がここで効きます。<span class="inline-code">tanh</span> の微分は <span class="inline-code">1 - tanh(x)&#178;</span> なので、<strong>順伝播で計算した値 <span class="inline-code">h</span> をそのまま使って <span class="inline-code">1 - h**2</span> と書けます</strong>。だから <span class="inline-code">forward()</span> が途中の値を返していました。</p>
 
   <h3>写経 ── 数値微分と一致するか確かめる（勾配チェック）</h3>
 
@@ -1126,6 +1198,8 @@ For this net: 9348 passes -&gt; 1. That is what backprop is worth.</code></pre>
 
   <p class="lead">道具が揃いました。<strong>損失を測り、勾配を出し、逆向きに少し動かす</strong>。これを繰り返すだけです。</p>
 
+  <p>書き足すのは3行です。<strong>勾配の逆向きに、学習率 <span class="inline-code">lr</span> の分だけ動かす</strong>。これを<strong>勾配降下法</strong>と呼び、毎回ランダムな一部のデータで行うので<strong>確率的</strong>勾配降下法（SGD）と言います。</p>
+
   <div class="code">
     <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>mlp.py（sgd_step を足す。これで完成）</span><button class="copy" type="button">コピー</button></div>
 <pre><code class="language-python">def sgd_step(p: dict, g: dict, lr: float) -> None:
@@ -1134,9 +1208,9 @@ For this net: 9348 passes -&gt; 1. That is what backprop is worth.</code></pre>
         p[k] -= lr * g[k]</code></pre>
   </div>
 
-  <p>3行です。<strong>勾配の逆向きに、学習率 <span class="inline-code">lr</span> の分だけ動かす</strong>。これを<strong>勾配降下法</strong>と呼び、毎回ランダムな一部のデータで行うので<strong>確率的</strong>勾配降下法（SGD）と言います。</p>
-
   <h3>写経 ── 学習して、走らせる</h3>
+
+  <p>300回学習させたあと、その方策を自分で60ステップ動かして、3つの的に届くか見ます。</p>
 
   <div class="code">
     <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>nn7_train.py</span><button class="copy" type="button">コピー</button></div>
