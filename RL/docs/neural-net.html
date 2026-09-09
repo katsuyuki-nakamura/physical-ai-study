@@ -177,6 +177,7 @@ strong { font-weight: 600; }
 .tex { margin: 18px 0 0; max-width: 66ch; overflow-x: auto; padding: 6px 0; }
 .tex .katex-display { margin: 0; }
 .tex .katex { font-size: 1.05em; color: var(--ink); }
+.tex-inline .katex { font-size: 1.05em; }
 .tex pre { font-family: "JetBrains Mono", monospace; font-size: 12px; white-space: pre-wrap; color: var(--ink-2); }
 
 .formula { display: flex; flex-direction: column; margin: 28px 0 0; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; background: var(--surface); max-width: 66ch; }
@@ -562,6 +563,13 @@ python -c "import numpy; print(numpy.__version__)"</code></pre>
   <p>入力が5個なので、<strong>重みも5個</strong>要ります。バイアスは<strong>ニューロン1本につき1つ</strong>です。ここが後でパラメータの数を数えるときの基本になります。</p>
 
   <p>写経では重みを <span class="inline-code">[0.5, -0.2, 1.3, 0.1, -0.7]</span>、バイアスを <span class="inline-code">0.4</span> にします。入力が <span class="inline-code">[0, 0, 1, 0, 0]</span> なので、3番目の項だけが残って <span class="inline-code">1.3 + 0.4 = 1.7</span>。0 が掛かった項は消えます。<strong>1つだけ 1 で残りが 0 という入力は、「重みの中から1つを選び出す」働きをする</strong>——この性質は3冊目でもう一度出てきます。</p>
+  <div class="tex"><script type="text/x-tex">
+y = w \cdot x + b
+= \begin{bmatrix}0.5 & -0.2 & 1.3 & 0.1 & -0.7\end{bmatrix}
+  \begin{bmatrix}0\\0\\1\\0\\0\end{bmatrix} + 0.4
+= 1.3 + 0.4 = 1.7
+</script></div>
+
 
   <div class="note">
     <span class="note-label">目標を数1個で渡すと、何が変わるか</span>
@@ -681,6 +689,12 @@ One weight per input. One bias per neuron.</code></pre>
       <div class="formula-note">形は <span class="inline-code">(64,)</span>。64個の結果に、<strong>ニューロン1本につき1つのバイアス</strong>をそれぞれ足す</div>
     </div>
   </div>
+
+  <div class="tex"><script type="text/x-tex">
+\underbrace{h}_{(64,)} \;=\; \underbrace{W}_{(64,\,5)}\,\underbrace{x}_{(5,)} \;+\; \underbrace{b}_{(64,)}
+\qquad\qquad
+h_j \;=\; \sum_{k=0}^{4} W_{j,k}\,x_k \;+\; b_j
+</script></div>
 
   <div class="pin">
     <span class="pin-label">書き下すと</span>
@@ -860,6 +874,11 @@ parameters in this layer = weights 320 (= 64 x 5) + biases 64 = 384</code></pre>
     <span class="pin-label">結合法則</span>
     <code>W2 @ (W1 @ x)  =  (W2 @ W1) @ x  =  W @ x        W := W2 @ W1</code>
   </div>
+  <div class="tex"><script type="text/x-tex">
+W_2\,(W_1 x) \;=\; (W_2 W_1)\,x \;=\; W x,
+\qquad
+\underbrace{W_2}_{(2,\,64)}\;\underbrace{W_1}_{(64,\,5)} \;\longrightarrow\; \underbrace{W}_{(2,\,5)}
+</script></div>
 
   <p>行列積には<strong>結合法則</strong>（associativity）が成り立ちます——<strong>括弧をどこに置いても結果は同じ</strong>。だから <span class="inline-code">W = W2 @ W1</span> と置いてしまえば、2層の計算は <span class="inline-code">x → W @ x</span> という<strong>1層とまったく同じもの</strong>になります。<strong>これで話は終わりです</strong>。成分も添字も要りません。</p>
 
@@ -956,6 +975,11 @@ j = 0..1   出力2個
 k = 0..4   入力5個
 m = 0..63  隠れ層64本。足し合わされるので、左辺には残らない</code>
   </div>
+  <div class="tex"><script type="text/x-tex">
+W_{j,k} \;=\; \sum_{m=0}^{63} (W_2)_{j,m}\,(W_1)_{m,k}
+\qquad\qquad
+y = W_2\,\tanh(W_1 x)\ \text{ は }\ (W_2 W_1)\,x\ \text{ の形に戻せない}
+</script></div>
 
   <p>右辺には <span class="inline-code">m</span> が出てきますが、<strong>0 から 63 まで全部足し合わされてしまう</strong>ので、左辺の添字は <span class="inline-code">j</span> と <span class="inline-code">k</span> だけです。<strong>これが「64 が消える」の正体</strong>です。<a href="#ch2">第2章</a>で見た「足し合わせに使う添字は答えに残らない」が、そのまま効いています。隠れ層の64本は計算には使われるのに、結果を指す番号としては残りません。だから形が <span class="inline-code">(2, 5)</span> になります。</p>
 
@@ -1090,6 +1114,10 @@ i = 0..N-1  どの観測か
 j = 0..63   どのニューロンか
 k = 0..4    入力5個ぶん。足し合わされるので、左辺には残らない</code>
   </div>
+  <div class="tex"><script type="text/x-tex">
+h_{i,j} \;=\; \sum_{k=0}^{4} x_{i,k}\,W_{j,k} \;+\; b_j
+\qquad (i = 0..N\!-\!1,\ \ j = 0..63)
+</script></div>
 
   <p><span class="inline-code">k</span> が消えて <span class="inline-code">i</span> と <span class="inline-code">j</span> が残るのは、<a href="#ch2">第2章</a>で見たとおりです——<strong>足し合わせに使う添字は答えに残りません</strong>。残った2つがそのまま形になるので、結果は <span class="inline-code">(N, 64)</span> です。</p>
 
@@ -1128,20 +1156,27 @@ b1         (64,)    軸0 = どのニューロンか。観測の軸が無い
     <p>第6章では、この対応が逆向きになります。順伝播で1つのバイアスを N 行すべてに<strong>加算した</strong>のだから、逆伝播では N 行ぶんの勾配を<strong>合計して</strong>1つに戻します。バイアスの勾配だけ <span class="inline-code">.T @</span> ではなく <span class="inline-code">.sum(axis=0)</span> になっているのは、そのためです。</p>
   </div>
 
-  <div class="pin">
-    <span class="pin-label">数学の記法で書くと</span>
-    <code>H = X @ W1.T + 1 @ b1.T
-
-  1         (N, 1)    全部 1 の列ベクトル
-  b1.T      (1, 64)
-  1 @ b1.T  (N, 64)   どの行も b1 と同じ</code>
-  </div>
+  <div class="tex"><script type="text/x-tex">
+\underbrace{H}_{(N,\,64)} \;=\; \underbrace{X}_{(N,\,5)}\,\underbrace{W_1^{\top}}_{(5,\,64)}
+\;+\; \underbrace{\mathbf{1}}_{(N,\,1)}\,\underbrace{b_1^{\top}}_{(1,\,64)},
+\qquad
+\mathbf{1}\,b_1^{\top} = \begin{bmatrix} b_1^{\top} \\ b_1^{\top} \\ \vdots \\ b_1^{\top}\end{bmatrix}
+\ \text{（N 行すべて同じ）}
+</script></div>
 
   <p>numpy の <span class="inline-code">+ b1</span> を数学の記法に直すと、<strong>すべて 1 の列ベクトルとの積</strong>になります。<span class="inline-code">1 @ b1.T</span> は「<span class="inline-code">b1</span> と同じ行を N 本並べた行列」で、それを足しているという意味です（この形の積を outer product と呼びます）。<strong>式としてはこの行列を作っている、実装としては作らない</strong>——numpy が <span class="inline-code">(N, 64)</span> の配列を作らないという先ほどの話は、この対応で読めます。</p>
 
   <p>なお <span class="inline-code">x</span> を <span class="inline-code">(5, N)</span>（列が観測1個）にする流儀もあります。そちらなら <span class="inline-code">W @ x</span> で済んで、転置は要りません。それでもこの本が <span class="inline-code">(N, 5)</span> を採るのは、<strong>いま見たバイアスの足し方が短く書けるから</strong>です。<span class="inline-code">(N, 64)</span> は最後の軸がニューロン64本なので <span class="inline-code">(64,)</span> と一致しますが、<span class="inline-code">(64, N)</span> だと最後の軸が観測になり、バイアスを足すたびに <span class="inline-code">b[:, None]</span> と書き足すことになります——3層ぶんで3回です。<strong><span class="inline-code">.T</span> を1回書く代わりに、バイアスの記述が3箇所短くなる</strong>という選び方です。計算結果はどちらの向きも、転置しただけの同じものです。</p>
 
   <p>まとめて流すのは、第5章から<strong>256個の観測を一度に</strong>使うからです。行列積が1回で済むので速く、勾配も1個ずつより安定します。<span class="inline-code">forward()</span> の3行は、<strong>第2章の式に「まとめて流す」と「tanh を挟む」を足しただけ</strong>のものです。</p>
+  <div class="tex"><script type="text/x-tex">
+\begin{aligned}
+h_1 &= \tanh\!\left(X\,W_1^{\top} + \mathbf{1}\,b_1^{\top}\right) &&(N,5)\to(N,64)\\[2pt]
+h_2 &= \tanh\!\left(h_1\,W_2^{\top} + \mathbf{1}\,b_2^{\top}\right) &&(N,64)\to(N,64)\\[2pt]
+y   &= h_2\,W_3^{\top} + \mathbf{1}\,b_3^{\top} &&(N,64)\to(N,2)
+\end{aligned}
+</script></div>
+
 
   <p>初期化で重みを乱数にしているのは、<strong>全部同じ値から始めると全ニューロンが同じ計算をしてしまい、何本並べても1本と変わらなくなる</strong>からです。バイアスは 0 で構いません。</p>
 
@@ -1264,6 +1299,11 @@ not trained yet, so the actions are nonsense:
   </div>
 
   <p class="lead">学習するには、まず<strong>「いまの予測が正解からどれだけ外れているか」を1つの数にする</strong>必要があります。それが<strong>損失</strong>です。この本では正解の行動が分かるので、出力と正解のズレをそのまま損失にします。</p>
+  <div class="tex"><script type="text/x-tex">
+L \;=\; \frac{1}{2N}\sum_{i=1}^{N}\sum_{j=1}^{2}\left(\hat{y}_{i,j} - y_{i,j}\right)^{2}
+\qquad \text{（N 個 × 2 個、全部の平均）}
+</script></div>
+
 
   <p>正解の行動は式で書けます。<strong>目標へ向かって、行き過ぎない分だけ動く</strong>——それだけです。</p>
 
@@ -1271,8 +1311,18 @@ not trained yet, so the actions are nonsense:
     <span class="pin-label">正解の行動</span>
     <code>y = np.clip((TARGETS[gid] - pos) / STEP, -1.0, 1.0)</code>
   </div>
+  <div class="tex"><script type="text/x-tex">
+y \;=\; \operatorname{clip}\!\left(\frac{t_g - p}{\text{STEP}},\ -1,\ 1\right)
+\qquad p:\ \text{いまの位置},\ \ t_g:\ \text{目標 } g \text{ の座標}
+</script></div>
+
 
   <p>写経コードでやるのは、<strong>坂の傾きを測る</strong>ことです。重みを少し増やして損失がどう動いたか、少し減らしてどう動いたか。その差を取れば、この重みについての<strong>勾配</strong>が出ます。</p>
+  <div class="tex"><script type="text/x-tex">
+\frac{\partial L}{\partial w} \;\approx\; \frac{L(w+\varepsilon) - L(w-\varepsilon)}{2\varepsilon},
+\qquad \varepsilon = 10^{-4}
+</script></div>
+
 
   <p>勾配が <span class="inline-code">+0.009</span> なら、「この重みを増やすと損失が増える」。だから<strong>逆向きに、少しだけ動かせばいい</strong>。これが学習の全てです。</p>
 
@@ -1380,8 +1430,30 @@ Doing this for every weight would train the net, but there are far too many.
   <p class="lead">逆伝播は、<strong>出力側から入力側へ向かって順に勾配を求めていく</strong>手続きです。順伝播1回ぶんとほぼ同じ手間で、全パラメータの勾配が一度に出ます。数値微分の9,348回が1回になります。</p>
 
   <p>種明かしをすると、やっているのは<strong>合成関数の微分（連鎖律）</strong>です。「出力の勾配」が分かれば、その1つ手前の層の勾配が計算でき、それを繰り返して入口まで戻ります。</p>
+  <div class="tex"><script type="text/x-tex">
+\begin{aligned}
+\delta_y &= \frac{\partial L}{\partial y} = \frac{1}{N}\,(\hat{y}-y) &&(N,2)\\[4pt]
+\frac{\partial L}{\partial W_3} &= \delta_y^{\top}\,h_2, \qquad
+\frac{\partial L}{\partial b_3} = \sum_{i}\delta_{y,i} &&(2,64),\ (2,)\\[4pt]
+\delta_2 &= \left(\delta_y\,W_3\right)\odot\left(1-h_2^{\,2}\right) &&(N,64)\\[4pt]
+\frac{\partial L}{\partial W_2} &= \delta_2^{\top}\,h_1, \qquad
+\frac{\partial L}{\partial b_2} = \sum_{i}\delta_{2,i}\\[4pt]
+\delta_1 &= \left(\delta_2\,W_2\right)\odot\left(1-h_1^{\,2}\right) &&(N,64)\\[4pt]
+\frac{\partial L}{\partial W_1} &= \delta_1^{\top}\,x, \qquad
+\frac{\partial L}{\partial b_1} = \sum_{i}\delta_{1,i}
+\end{aligned}
+</script></div>
+
+  <p><span class="inline-code">&#8857;</span> は<strong>要素ごとの積</strong>（同じ位置どうしを掛ける。行列積ではありません）。<span class="inline-code">backward()</span> の各行は、この式を上から順に numpy に写したものです。<span class="inline-code">dy</span> が <span class="inline-code">&#948;<sub>y</sub></span>、<span class="inline-code">d2</span> が <span class="inline-code">&#948;<sub>2</sub></span>、<span class="inline-code">d1</span> が <span class="inline-code">&#948;<sub>1</sub></span> にあたります。バイアスの勾配が <span class="inline-code">.sum(axis=0)</span> なのは、第4章で <span class="inline-code">b</span> を N 行すべてに加算した対応です。</p>
+
 
   <p><span class="inline-code">tanh</span> を選んだ理由がここで効きます。<span class="inline-code">tanh</span> の微分は <span class="inline-code">1 - tanh(x)&#178;</span> なので、<strong>順伝播で計算した値 <span class="inline-code">h</span> をそのまま使って <span class="inline-code">1 - h**2</span> と書けます</strong>。だから <span class="inline-code">forward()</span> が途中の値を返していました。</p>
+  <div class="tex"><script type="text/x-tex">
+\frac{d}{dx}\tanh x \;=\; 1 - \tanh^{2} x
+\qquad\Longrightarrow\qquad
+h = \tanh(\,\cdot\,)\ \text{ なら }\ \frac{dh}{d(\cdot)} = 1 - h^{2}
+</script></div>
+
 
   <div class="code">
     <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>mlp.py（backward を足す）</span><button class="copy" type="button">コピー</button></div>
@@ -1513,6 +1585,11 @@ For this net: 9348 passes -&gt; 1. That is what backprop is worth.</code></pre>
   <p class="lead">必要な関数が揃いました。<strong>損失を測り、勾配を出し、逆向きに少し動かす</strong>。これを繰り返すだけです。</p>
 
   <p>書き足すのは3行です。<strong>勾配の逆向きに、学習率 <span class="inline-code">lr</span> の分だけ動かす</strong>。これを<strong>勾配降下法</strong>と呼び、毎回ランダムな一部のデータで行うので<strong>確率的</strong>勾配降下法（SGD）と言います。</p>
+  <div class="tex"><script type="text/x-tex">
+\theta \;\leftarrow\; \theta \;-\; \eta\,\frac{\partial L}{\partial \theta}
+\qquad \theta \in \{W_1, b_1, W_2, b_2, W_3, b_3\},\quad \eta = \text{lr}
+</script></div>
+
 
   <div class="code">
     <div class="code-bar"><span class="code-name"><span class="dot">&#9679;</span>mlp.py（sgd_step を足す。これで完成）</span><button class="copy" type="button">コピー</button></div>
@@ -1730,16 +1807,17 @@ There is a single set of weights; it was not retrained per target.</code></pre>
     });
   }
 
-  document.querySelectorAll('.tex').forEach(function (el) {
+  document.querySelectorAll('.tex, .tex-inline').forEach(function (el) {
     var src = el.querySelector('script[type="text/x-tex"]');
     if (!src) return;
     var tex = src.textContent.trim();
-    var out = document.createElement(window.katex ? 'div' : 'pre');
+    var display = el.classList.contains('tex');
+    var out = document.createElement(display ? 'div' : 'span');
     if (window.katex) {
-      try { window.katex.render(tex, out, { displayMode: true, throwOnError: false }); }
-      catch (e) { out = document.createElement('pre'); out.textContent = tex; }
+      try { window.katex.render(tex, out, { displayMode: display, throwOnError: false, trust: true }); }
+      catch (e) { out = document.createElement(display ? 'pre' : 'code'); out.textContent = tex; }
     } else {
-      out.textContent = tex;
+      out = document.createElement(display ? 'pre' : 'code'); out.textContent = tex;
     }
     el.appendChild(out);
   });
