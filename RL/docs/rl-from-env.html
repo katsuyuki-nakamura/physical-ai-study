@@ -1,8 +1,11 @@
+<!doctype html>
 <title>環境から入る強化学習</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600&family=IBM+Plex+Sans:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.js"></script>
 
 <style>
 :root {
@@ -170,6 +173,12 @@ strong { font-weight: 600; }
 
 .pin .pin-label { display: block; font-family: "JetBrains Mono", monospace; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--z); font-weight: 700; margin-bottom: 5px; }
 .pin code { font-size: 13px; color: var(--ink); white-space: pre; display: block; line-height: 1.7; }
+
+.tex { margin: 18px 0 0; max-width: 66ch; overflow-x: auto; padding: 6px 0; }
+.tex .katex-display { margin: 0; }
+.tex .katex { font-size: 1.05em; color: var(--ink); }
+.tex pre { font-family: "JetBrains Mono", monospace; font-size: 12px; white-space: pre-wrap; color: var(--ink-2); }
+.tex-inline .katex { font-size: 1.05em; }
 
 .formula { display: flex; flex-direction: column; margin: 28px 0 0; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; background: var(--surface); max-width: 66ch; }
 .formula-row { display: grid; grid-template-columns: minmax(0, auto) minmax(0, 1fr); gap: 8px 28px; align-items: baseline; padding: 18px 22px; }
@@ -827,7 +836,9 @@ undiscounted return of this episode = -7.521</code></pre>
 
   <div class="pin">
     <span class="pin-label">この節が説明する記号</span>
-    <code>P(s&#8242; | s, a)    R(s, a)    &#960;(a | s)    V^&#960;(s) = E[G | s, &#960;]</code>
+  <div class="tex"><script type="text/x-tex">
+P(s' \mid s, a) \qquad R(s, a) \qquad \pi(a \mid s) \qquad V^{\pi}(s) = \mathbb{E}\!\left[\,G \mid s, \pi\,\right]
+</script></div>
   </div>
 
   <p class="lead">次の章から式が出てきます。といっても覚えることは多くありません。<strong>縦棒の右を「入力」、左を「出力」と読む</strong>——この一手で、この本に出てくる式は全部読めます。順に組み立てます。</p>
@@ -1097,11 +1108,11 @@ undiscounted return of this episode = -7.521</code></pre>
 
   <div class="formula">
     <div class="formula-row">
-      <div class="formula-math">P(s&#8242; | s, a)</div>
+      <div class="formula-math"><span class="tex-inline"><script type="text/x-tex">P(s' \mid s, a)</script></span></div>
       <div class="formula-note"><strong>次に何が起きるかが、いまの観測と行動だけで決まる。</strong>過去の履歴を持ち出さなくていい</div>
     </div>
     <div class="formula-row is-z">
-      <div class="formula-math">R(s, a)</div>
+      <div class="formula-math"><span class="tex-inline"><script type="text/x-tex">R(s, a)</script></span></div>
       <div class="formula-note"><strong>もらえる報酬も、いまの観測と行動だけで決まる。</strong>観測に映っていない事情で報酬が変わってはいけない</div>
     </div>
   </div>
@@ -1279,6 +1290,9 @@ what happens when an action outside the declared range is sent
     <code>dist = float(np.linalg.norm(self.pos - TARGETS[self.goal_id]))
 reward = -dist  # 目標に近いほど高い</code>
   </div>
+  <div class="tex"><script type="text/x-tex">
+r \;=\; -\,\bigl\lVert\, p - t_g \,\bigr\rVert \qquad p:\ \text{いまの位置},\ \ t_g:\ \text{今回の目標の座標}
+</script></div>
 
   <p class="lead">報酬はスカラー1個です。ベクトルでも辞書でもなく、数字がひとつ。ここに書けるのは「<strong>何をしてほしいか</strong>」だけで、「<strong>どうやってほしいか</strong>」は書けません。やり方のほうは学習が見つけます。</p>
 
@@ -1373,10 +1387,13 @@ Reward design is about checking there is a signal at all, before training.</code
 
   <div class="formula">
     <div class="formula-row is-z">
-      <div class="formula-math">G = r&#8320; + &#947;r&#8321; + &#947;&#178;r&#8322; + &hellip;</div>
+      <div class="formula-math"><span class="tex-inline"><script type="text/x-tex">\displaystyle G = r_0 + \gamma\, r_1 + \gamma^{2} r_2 + \cdots = \sum_{t \ge 0} \gamma^{t} r_t</script></span></div>
       <div class="formula-note">いま貰う報酬はそのまま、1手先は &#947; 倍、2手先は &#947;&#178; 倍。<strong>先の報酬ほど割り引く</strong></div>
     </div>
   </div>
+  <div class="tex"><script type="text/x-tex">
+G_t \;=\; r_t + \gamma\,G_{t+1} \qquad \text{（後ろから畳むと1行で計算できる。写経コードはこの形）}
+</script></div>
 
   <p>&#947;（ガンマ）は 0 以上 1 以下の数で、<strong>どれだけ先まで気にするか</strong>のつまみです。0 なら次の一手しか見ない近視眼。1 に近いほど遠い将来まで勘定に入れます。</p>
 
@@ -1448,10 +1465,13 @@ gamma is the knob for how far ahead you care.
 
   <div class="formula">
     <div class="formula-row is-z">
-      <div class="formula-math">V<sup>&#960;</sup>(s) = E[G | s, &#960;]</div>
+      <div class="formula-math"><span class="tex-inline"><script type="text/x-tex">V^{\pi}(s) = \mathbb{E}\!\left[\,G \mid s, \pi\,\right]</script></span></div>
       <div class="formula-note">状態 s から方策 &#960; で動いたときの、<strong>リターンの期待値</strong></div>
     </div>
   </div>
+  <div class="tex"><script type="text/x-tex">
+V^{\pi}(s) \;\approx\; \frac{1}{N}\sum_{n=1}^{N} G^{(n)} \qquad \text{（s から π で N 本走らせたリターンの平均）}
+</script></div>
 
   <p>読み方は <a href="#notation">§ 式の読み方</a> の手順どおりです。<span class="inline-code">E</span> は期待値＝<strong>ばらつくものの平均</strong>、縦棒の右の <span class="inline-code">s, &#960;</span> が「与えられているもの」。つまり「s から &#960; で動く、という前提でのリターンの平均」と読みます。</p>
 
@@ -1596,6 +1616,12 @@ truncated = self.t &gt;= self.max_steps</code>
   </div>
 
   <p>第6章のアドバンテージを思い出してください。学習は「いま貰った報酬 + この先の見込み」を目標にします。この<strong>「この先」をゼロにするかどうか</strong>が、2つの違いです。</p>
+  <div class="tex"><script type="text/x-tex">
+\text{目標} \;=\; \underbrace{r + \gamma\,V(s')}_{\text{truncated: 先はまだある}}
+\qquad\text{または}\qquad
+\underbrace{r + \gamma \cdot 0}_{\text{terminated: 先は無い}}
+</script></div>
+
 
   <h3>写経 ── 取り違えるとどれだけずれるか</h3>
 
@@ -1725,6 +1751,21 @@ That is why step() returns the two as separate values.</code></pre>
       try { window.hljs.highlightElement(el); } catch (e) {}
     });
   }
+
+  document.querySelectorAll('.tex, .tex-inline').forEach(function (el) {
+    var src = el.querySelector('script[type="text/x-tex"]');
+    if (!src) return;
+    var tex = src.textContent.trim();
+    var display = el.classList.contains('tex');
+    var out = document.createElement(display ? 'div' : 'span');
+    if (window.katex) {
+      try { window.katex.render(tex, out, { displayMode: display, throwOnError: false, trust: true }); }
+      catch (e) { out = document.createElement(display ? 'pre' : 'code'); out.textContent = tex; }
+    } else {
+      out = document.createElement(display ? 'pre' : 'code'); out.textContent = tex;
+    }
+    el.appendChild(out);
+  });
 
   document.querySelectorAll('.copy').forEach(function (btn) {
     btn.addEventListener('click', function () {
