@@ -1,8 +1,11 @@
+<!doctype html>
 <title>写経で覚える目標ベクトル</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600&family=IBM+Plex+Sans:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.js"></script>
 
 <style>
 :root {
@@ -307,6 +310,12 @@ hr.rule { border: 0; border-top: 1px solid var(--rule); margin: 0; }
 .formula-row + .formula-row { border-top: 1px solid var(--rule); }
 .formula-row.is-z { background: var(--z-soft); }
 
+
+.tex { margin: 18px 0 0; max-width: 66ch; overflow-x: auto; padding: 6px 0; }
+.tex .katex-display { margin: 0; }
+.tex .katex { font-size: 1.05em; color: var(--ink); }
+.tex pre { font-family: "JetBrains Mono", monospace; font-size: 12px; white-space: pre-wrap; color: var(--ink-2); }
+.tex-inline .katex { font-size: 1.05em; }
 .formula-math {
   font-family: "JetBrains Mono", monospace;
   font-size: 17px;
@@ -615,16 +624,23 @@ footer {
 
   <div class="formula">
     <div class="formula-row">
-      <div class="formula-math">&pi;(a | s)</div>
+      <div class="formula-math"><span class="tex-inline"><script type="text/x-tex">\pi(a \mid s)</script></span></div>
       <div class="formula-note">観測 <span class="inline-code">s</span> から行動 <span class="inline-code">a</span> を決める。目的は1つに固定</div>
     </div>
     <div class="formula-row is-z">
-      <div class="formula-math">&pi;(a | s, <span class="zed">z</span>)</div>
+      <div class="formula-math"><span class="tex-inline"><script type="text/x-tex">\pi(a \mid s,\ \htmlClass{zed}{z})</script></span></div>
       <div class="formula-note">観測 <span class="inline-code">s</span> と「今回の目的」<span class="inline-code">z</span> から行動を決める。<strong>z を差し替えると振る舞いが変わる</strong></div>
     </div>
   </div>
 
   <p>この <span class="inline-code">z</span> が目標ベクトルです。実装上は本当にただの追加入力で、<strong>観測ベクトルの後ろに数値を何個か繋ぐだけ</strong>。今回は的が3つなので <span class="inline-code">[1,0,0]</span> <span class="inline-code">[0,1,0]</span> <span class="inline-code">[0,0,1]</span> という <strong>one-hot</strong>（1つだけ 1、残りは全部 0 のベクトル）を使います。</p>
+  <div class="tex"><script type="text/x-tex">
+o \;=\; \begin{bmatrix} s \\ z \end{bmatrix}
+\;=\; \begin{bmatrix} x & y & z_0 & z_1 & z_2 \end{bmatrix}^{\top},
+\qquad
+z \in \Bigl\{\begin{bmatrix}1\\0\\0\end{bmatrix},\ \begin{bmatrix}0\\1\\0\end{bmatrix},\ \begin{bmatrix}0\\0\\1\end{bmatrix}\Bigr\}
+</script></div>
+
 
   <p>one-hot にする理由——<span class="inline-code">goal_id</span> を <span class="inline-code">0, 1, 2</span> という数字1つで渡すと、「1 は 0 と 2 の中間」という、この問題には存在しない関係を持ち込んでしまうからです。詳しくは本02の <a href="rl-from-env.html#transcribe">reach_env.py を書き写す</a> の &#9314; で扱っています。</p>
   <p>なぜベクトルかというと、ニューラルネットの入力層に入る形が数値の並びしかないからです。それ以上の意味はありません。</p>
@@ -1149,6 +1165,21 @@ if __name__ == "__main__":
       try { window.hljs.highlightElement(el); } catch (e) {}
     });
   }
+
+  document.querySelectorAll('.tex, .tex-inline').forEach(function (el) {
+    var src = el.querySelector('script[type="text/x-tex"]');
+    if (!src) return;
+    var tex = src.textContent.trim();
+    var display = el.classList.contains('tex');
+    var out = document.createElement(display ? 'div' : 'span');
+    if (window.katex) {
+      try { window.katex.render(tex, out, { displayMode: display, throwOnError: false, trust: true }); }
+      catch (e) { out = document.createElement(display ? 'pre' : 'code'); out.textContent = tex; }
+    } else {
+      out = document.createElement(display ? 'pre' : 'code'); out.textContent = tex;
+    }
+    el.appendChild(out);
+  });
 
   document.querySelectorAll('.copy').forEach(function (btn) {
     btn.addEventListener('click', function () {
