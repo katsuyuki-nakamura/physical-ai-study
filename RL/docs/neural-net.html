@@ -715,6 +715,23 @@ out = [140, 320]     (2,)</code>
   <p><strong>残った添字が、そのまま形になります。</strong><span class="inline-code">j</span> だけが残るので <span class="inline-code">(2,)</span>。<span class="inline-code">(64, 5) @ (5,) → (64,)</span> なら、<strong>5個の積を足して1つにする計算を、64本ぶん行う</strong>——だから答えは64個です。</p>
 
   <p>一致していないといけない理由も、これで分かります。<span class="inline-code">W[j,k]</span> と <span class="inline-code">x[k]</span> は<strong>同じ <span class="inline-code">k</span> を使っています</strong>。<span class="inline-code">W</span> の1行に3個、<span class="inline-code">x</span> に3個あるので、1番目どうし・2番目どうしと対応が付く。<span class="inline-code">x</span> が4個だと4番目に掛ける相手が <span class="inline-code">W</span> の行に無いので、計算そのものが定義できません。「向かい合う」と書きましたが、実体は<strong>同じ添字を共有する2つの軸</strong>のことです。</p>
+
+  <div class="note">
+    <span class="note-label">(5,) に縦横の区別はありません</span>
+    <p>数学では縦ベクトルと横ベクトルを区別しますが、<span class="inline-code">(5,)</span> は<strong>軸が1本しかないので、どちらとも決まっていません</strong>。それでも <span class="inline-code">@</span> が通るのは、numpy が<strong>計算のあいだだけ軸を1本足して、終わったら外している</strong>からです。<span class="inline-code">np.matmul</span> の説明文にも「2つ目が1次元なら、後ろに 1 を足して行列にする。計算後、足した 1 は取り除く」と書かれています。</p>
+    <p>確かめられます。<span class="inline-code">x</span> を自分で <span class="inline-code">(5, 1)</span> にすると <span class="inline-code">(64, 5) @ (5, 1) → (64, 1)</span> となり、<strong>1 が残ったまま</strong>です。その 1 を外せば <span class="inline-code">(64,)</span> で、値も一致します。<span class="inline-code">@</span> はこれを自動でやっています。</p>
+    <p>足す位置は左右で違い、<strong>左が1次元なら前に、右が1次元なら後ろに</strong> 1 を足します。おかげで4つの場合が同じ規則で決まります。</p>
+  </div>
+
+  <div class="pin">
+    <span class="pin-label">@ の形の決まり方</span>
+    <code>(64, 5) @ (5, 3)  -&gt;  (64, 3)   どちらも2次元。5 が消える
+(64, 5) @ (5,)    -&gt;  (64,)     右に (5,1) を足し、あとで外す
+(5,)    @ (5, 64) -&gt;  (64,)     左に (1,5) を足し、あとで外す
+(5,)    @ (5,)    -&gt;  スカラー  両方に足して (1,1)、両方外れる</code>
+  </div>
+
+  <p>最後の行が<a href="#ch1">第1章</a>の <span class="inline-code">np.dot(w, x)</span> です。<strong>内積は <span class="inline-code">@</span> の特別な場合</strong>で、同じ規則で説明が付きます。第4章で出てくる <span class="inline-code">x @ W1.T</span> は1行目の場合で、<span class="inline-code">(N, 5) @ (5, 64) → (N, 64)</span>。<strong>やはり 5 が消えます</strong>。</p>
   <p>64本のニューロンがそれぞれ5個の入力を見るので、重みは <span class="inline-code">64 &#215; 5 = 320</span> 個。バイアスは1本につき1つで64個。合わせて <strong>384個</strong>がこの層のパラメータです。</p>
 
   <p>写経コードの <span class="inline-code">out_loop</span> は、この64行を <span class="inline-code">for</span> で1行ずつ書いたものです。<strong>同じ計算を、自分で回すか演算子1つに任せるかの違いしかありません</strong>。だから <span class="inline-code">exactly equal : True</span> になります。</p>
