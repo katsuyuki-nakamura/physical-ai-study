@@ -1,8 +1,11 @@
+<!doctype html>
 <title>写経で作るニューラルネットワーク</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600&family=IBM+Plex+Sans:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.js"></script>
 
 <style>
 :root {
@@ -170,6 +173,11 @@ strong { font-weight: 600; }
 
 .pin .pin-label { display: block; font-family: "JetBrains Mono", monospace; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--z); font-weight: 700; margin-bottom: 5px; }
 .pin code { font-size: 13px; color: var(--ink); white-space: pre; display: block; line-height: 1.7; }
+
+.tex { margin: 18px 0 0; max-width: 66ch; overflow-x: auto; padding: 6px 0; }
+.tex .katex-display { margin: 0; }
+.tex .katex { font-size: 1.05em; color: var(--ink); }
+.tex pre { font-family: "JetBrains Mono", monospace; font-size: 12px; white-space: pre-wrap; color: var(--ink-2); }
 
 .formula { display: flex; flex-direction: column; margin: 28px 0 0; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; background: var(--surface); max-width: 66ch; }
 .formula-row { display: grid; grid-template-columns: minmax(0, auto) minmax(0, 1fr); gap: 8px 28px; align-items: baseline; padding: 18px 22px; }
@@ -681,6 +689,39 @@ One weight per input. One bias per neuron.</code></pre>
    ...
 (W @ x)[63] = W[63,0]*x[0] + W[63,1]*x[1] + ... + W[63,4]*x[4]    64本目</code>
   </div>
+
+  <p>数を入れて、ニューロン3本で実際に計算するとこうなります。64本でも行が64本になるだけで、1行の計算は同じです。</p>
+
+  <div class="tex"><script type="text/x-tex">
+\begin{aligned}
+W x + b
+&= \begin{bmatrix}1&2&3&4&5\\2&0&1&0&3\\0&1&0&1&0\end{bmatrix}
+   \begin{bmatrix}1\\2\\0\\1\\2\end{bmatrix}
+ + \begin{bmatrix}10\\20\\30\end{bmatrix} \\[6pt]
+&= \begin{bmatrix}
+     1\cdot1+2\cdot2+3\cdot0+4\cdot1+5\cdot2\\
+     2\cdot1+0\cdot2+1\cdot0+0\cdot1+3\cdot2\\
+     0\cdot1+1\cdot2+0\cdot0+1\cdot1+0\cdot2
+   \end{bmatrix}
+ + \begin{bmatrix}10\\20\\30\end{bmatrix} \\[6pt]
+&= \begin{bmatrix}19\\8\\3\end{bmatrix}
+ + \begin{bmatrix}10\\20\\30\end{bmatrix}
+ = \begin{bmatrix}29\\28\\33\end{bmatrix}
+\end{aligned}
+</script></div>
+
+  <p><span class="inline-code">W</span> の1行と <span class="inline-code">x</span> で5個の積を足すと、数が1つになります。それが行の数だけ、つまり3回あるので答えは3個です。<span class="inline-code">(3, 5) @ (5,) → (3,)</span> の <strong>5 は「1行で何個足すか」、3 は「それを何行やるか」</strong>——形はこの2つの回数です。<span class="inline-code">b</span> はニューロン1本につき1つなので、3個の答えにそれぞれ1つずつ足しています。</p>
+
+  <p>本の観測 <span class="inline-code">[0, 0, 1, 0, 0]</span> を入れると、0 を掛けた列は消えて、<strong><span class="inline-code">W</span> の3列目だけが残ります</strong>。</p>
+
+  <div class="tex"><script type="text/x-tex">
+W \begin{bmatrix}0\\0\\1\\0\\0\end{bmatrix}
+= \begin{bmatrix}1&2&\mathbf{3}&4&5\\2&0&\mathbf{1}&0&3\\0&1&\mathbf{0}&1&0\end{bmatrix}
+  \begin{bmatrix}0\\0\\1\\0\\0\end{bmatrix}
+= \begin{bmatrix}\mathbf{3}\\ \mathbf{1}\\ \mathbf{0}\end{bmatrix}
+</script></div>
+
+  <p><a href="#ch1">第1章</a>の「1つだけ 1 で残りが 0 という入力は、重みの中から1つを選び出す」を、層でやるとこうなります。ニューロン1本では重み1個が残りましたが、層では<strong>列が1本まるごと</strong>残ります。</p>
 
   <p>行列 <span class="inline-code">W</span> の形が <span class="inline-code">(64, 5)</span> なのは、<strong>「64本ぶん × 入力5個」を縦横に並べたから</strong>です。行が1本のニューロン、列が入力に対応します。ライブラリで <span class="inline-code">Linear(in_features=5, out_features=64)</span> と書いたときに内部で作られるのも、この形の行列です。</p>
 
@@ -1688,6 +1729,20 @@ There is a single set of weights; it was not retrained per target.</code></pre>
       try { window.hljs.highlightElement(el); } catch (e) {}
     });
   }
+
+  document.querySelectorAll('.tex').forEach(function (el) {
+    var src = el.querySelector('script[type="text/x-tex"]');
+    if (!src) return;
+    var tex = src.textContent.trim();
+    var out = document.createElement(window.katex ? 'div' : 'pre');
+    if (window.katex) {
+      try { window.katex.render(tex, out, { displayMode: true, throwOnError: false }); }
+      catch (e) { out = document.createElement('pre'); out.textContent = tex; }
+    } else {
+      out.textContent = tex;
+    }
+    el.appendChild(out);
+  });
 
   document.querySelectorAll('.copy').forEach(function (btn) {
     btn.addEventListener('click', function () {
